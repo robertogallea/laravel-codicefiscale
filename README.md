@@ -72,6 +72,7 @@ produces the following result:
 [
   "gender" => "M"
   "birth_place" => "F205"
+  "birth_place_complete" => "Milano",
   "day" => "05"
   "month" => "05"
   "year" => "1995"

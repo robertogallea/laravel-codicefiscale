@@ -29,6 +29,8 @@ class CodiceFiscale
     private $tabControlCode = null;
     private $tabDecodeMonths = null;
 
+    private static $cities = null;
+
     public function __construct()
     {
         $this->tabDecodeOmocodia = [
@@ -268,6 +270,7 @@ class CodiceFiscale
         return [
             'gender' => $this->getGender(),
             'birth_place' => $this->getBirthPlace(),
+            'birth_place_complete' => $this->getBirthPlaceComplete(),
             'day'=> $this->getDay(),
             'month' => $this->getMonth(),
             'year' => $this->getYear(),
@@ -301,6 +304,11 @@ class CodiceFiscale
     public function getBirthPlace()
     {
         return $this->birthPlace;
+    }
+
+    public function getBirthPlaceComplete()
+    {
+        return ucfirst(strtolower(ItalianCities::list[$this->getBirthPlace()]));
     }
 
     public function getYear()
