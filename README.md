@@ -82,7 +82,7 @@ produces the following result:
 ```
 
 
-in case of error, <code>CodiceFiscale::parse()</code> return false, and you will find information about the error using 
+in case of error, <code>CodiceFiscale::parse()</code> returns false, and you will find information about the error using 
 <code>CodiceFiscale::getError()</code>, which returns one of the defined constants among the following:<br>
 <ul>
 <li>CodiceFiscale::NO_ERROR
