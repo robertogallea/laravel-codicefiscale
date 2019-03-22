@@ -100,5 +100,5 @@ use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 
 $cf = new CodiceFiscale();
 $result = $cf->parse('RSSMRA95E0');
-echo $cf->getError()
+echo $cf->getError();
 ```
