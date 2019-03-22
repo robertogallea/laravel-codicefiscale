@@ -198,7 +198,7 @@ class CodiceFiscale
         $this->year = null;
         $this->error = null;
 
-        if ($cf === "") {
+        if (($cf === null) || ($cf === "")) {
             $this->isValid = false;
             $this->error = self::NO_CODE;
             return false;
@@ -308,6 +308,9 @@ class CodiceFiscale
 
     public function getBirthPlaceComplete()
     {
+        if ($this->getBirthPlace() === null) {
+            return null;
+        }
         return ucfirst(strtolower(ItalianCities::list[$this->getBirthPlace()]));
     }
 

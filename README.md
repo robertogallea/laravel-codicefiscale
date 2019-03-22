@@ -48,7 +48,7 @@ $app->register(robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider::
 To validate a codice fiscale, use the `codice_fiscale` keyword in your validation rules array
 
 ```php
-'codicefiscale_field'       => 'codice_fiscale',
+'codice_fiscale_field'       => 'codice_fiscale',
 ```
 
 ## 3. Utility CodiceFiscale class
