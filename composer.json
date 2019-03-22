@@ -1,0 +1,29 @@
+{
+    "name": "robertogallea/laravel-codicefiscale",
+    "description": "Codice fiscale validation for php/laravel",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Roberto Gallea",
+            "email": "write@robertogallea.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.1",
+        "illuminate/support": ">=5.0,<5.9",
+        "illuminate/validation": ">=5.0,<5.9",
+        "nesbot/carbon": "^2.16"
+    },
+	"autoload": {
+        "psr-4": {
+            "robertogallea\\LaravelCodiceFiscale\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "robertogallea\\LaravelCodiceFiscale\\CodiceFiscaleServiceProvider"
+            ]
+        }
+    }
+}
