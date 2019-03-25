@@ -29,7 +29,6 @@ class CodiceFiscale
     private $tabControlCode = null;
     private $tabDecodeMonths = null;
 
-    private static $cities = null;
 
     public function __construct()
     {
@@ -187,6 +186,26 @@ class CodiceFiscale
         ];
     }
 
+    public static function generate(string $first_name, string $last_name, $birth_date, string $place, string $gender): string
+    {
+        $cf_gen = new CodiceFiscaleGenerator();
+
+        $cf_gen->nome = $first_name;
+        $cf_gen->cognome = $last_name;
+
+        $cf_gen->comune = $place;
+        $cf_gen->sesso = $gender;
+        $cf_gen->formatoData('Y-m-d');
+        if ($birth_date instanceof Carbon) {
+            $date = $birth_date;
+        } else {
+            $date = Carbon::createFromFormat('Y-m-d', $birth_date);
+        }
+        $cf_gen->data = $date;
+        return $cf_gen->calcola();
+
+    }
+
     public function parse($cf)
     {
         $this->cf = $cf;
@@ -221,12 +240,11 @@ class CodiceFiscale
         $cfArray = str_split($cf);
 
         for ($i = 0; $i < count($this->tabReplacementOmocodia); $i++) {
-            if (!is_numeric($cfArray[$this->tabReplacementOmocodia[$i]])) {
-                if ($this->tabDecodeOmocodia[$cfArray[$this->tabReplacementOmocodia[$i]]] === "!") {
-                    $this->isValid = false;
-                    $this->error = self::BAD_OMOCODIA_CHAR;
-                    return false;
-                }
+            if ((!is_numeric($cfArray[$this->tabReplacementOmocodia[$i]])) &&
+                ($this->tabDecodeOmocodia[$cfArray[$this->tabReplacementOmocodia[$i]]] === "!")) {
+                $this->isValid = false;
+                $this->error = self::BAD_OMOCODIA_CHAR;
+                return false;
             }
         }
 

@@ -103,3 +103,18 @@ $cf = new CodiceFiscale();
 $result = $cf->parse('RSSMRA95E0');
 echo $cf->getError();
 ```
+
+## Codice fiscale Generation
+Class <code>CodiceFiscale</code> could be used to generate codice fiscale strings from input values:
+```php
+$first_name = 'Mario';
+$last_name = 'Rossi';
+$birth_date = '1995-05-05'; // or Carbon::parse('1995-05-05')
+$birth_place = 'F205';      // or 'Milano'
+$gender = 'M';
+
+$cf_string = CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
+```
+
+
+
