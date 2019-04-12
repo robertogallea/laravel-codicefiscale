@@ -2,8 +2,8 @@
 
 namespace robertogallea\LaravelCodiceFiscale;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\ServiceProvider;
 
 class CodiceFiscaleServiceProvider extends ServiceProvider
 {
@@ -12,33 +12,32 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot() {
+    public function boot()
+    {
         Validator::extend('codice_fiscale', function ($attribute, $value, $parameters, $validator) {
             $cf = new CodiceFiscale();
             $result = $cf->parse($value);
 
-
-
-            if(!$result){
+            if (!$result) {
                 $error_msg = null;
                 switch ($cf->getError()) {
                     case CodiceFiscale::NO_CODE:
-                        $error_msg = str_replace([':attribute'], [$attribute], trans("validation.codice_fiscale.no_code"));
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.no_code'));
                         break;
                     case CodiceFiscale::WRONG_SIZE:
-                        $error_msg = str_replace([':attribute'], [$attribute], trans("validation.codice_fiscale.wrong_size"));
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_size'));
                         break;
                     case CodiceFiscale::BAD_CHARACTERS:
-                        $error_msg = str_replace([':attribute'], [$attribute], trans("validation.codice_fiscale.wrong_size"));
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_size'));
                         break;
                     case CodiceFiscale::BAD_OMOCODIA_CHAR:
-                        $error_msg = str_replace([':attribute'], [$attribute], trans("validation.codice_fiscale.wrong_size"));
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_size'));
                         break;
                     case CodiceFiscale::WRONG_CODE:
-                        $error_msg = str_replace([':attribute'], [$attribute], trans("validation.codice_fiscale.wrong_code"));
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_code'));
                         break;
                 }
-                $validator->addReplacer('codice_fiscale',  function ($message, $attribute, $rule, $parameters) use ($error_msg) {
+                $validator->addReplacer('codice_fiscale', function ($message, $attribute, $rule, $parameters) use ($error_msg) {
                     return str_replace([':attribute'], [$attribute], str_replace('codice fiscale', ':attribute', $error_msg));
                 });
 
@@ -47,8 +46,6 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
 
             return true;
         });
-
-
     }
 
     /**
