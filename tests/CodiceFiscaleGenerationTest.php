@@ -3,12 +3,11 @@
  * Created by PhpStorm.
  * User: Roberto Gallea
  * Date: 25/03/2019
- * Time: 08:13
+ * Time: 08:13.
  */
-
-use \robertogallea\LaravelCodiceFiscale\CodiceFiscale;
-use \robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleException;
 use Carbon\Carbon;
+use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
+use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleException;
 
 class CodiceFiscaleGenerationTest extends PHPUnit_Framework_TestCase
 {
@@ -118,9 +117,5 @@ class CodiceFiscaleGenerationTest extends PHPUnit_Framework_TestCase
 
         $res = CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
         $this->assertEquals('RSSMAX95E05F205P', $res);
-
     }
-
-
-
 }

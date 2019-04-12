@@ -2,5 +2,6 @@
 
 namespace robertogallea\LaravelCodiceFiscale\Exceptions;
 
-
-class CodiceFiscaleException extends \Exception {}
+class CodiceFiscaleException extends \Exception
+{
+}

@@ -48,7 +48,6 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($code, CodiceFiscale::NO_ERROR);
     }
 
-
     public function testWrongOmocodiaCode()
     {
         $codice_fiscale = 'RSSMRA95E05F20OU';
@@ -83,7 +82,6 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $code = $cf->getError();
 
         $this->assertEquals($code, CodiceFiscale::BAD_CHARACTERS);
-
     }
 
     public function testFemaleCode()
@@ -96,7 +94,5 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $code = $cf->getError();
 
         $this->assertEquals($code, CodiceFiscale::NO_ERROR);
-
     }
-
 }
