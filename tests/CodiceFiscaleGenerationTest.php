@@ -8,6 +8,7 @@
 
 use \robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use \robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleException;
+use \robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 use Carbon\Carbon;
 
 class CodiceFiscaleGenerationTest extends PHPUnit_Framework_TestCase
@@ -32,7 +33,7 @@ class CodiceFiscaleGenerationTest extends PHPUnit_Framework_TestCase
         $birth_place = 'F205';
         $gender = 'M';
 
-        $this->setExpectedException(CodiceFiscaleException::class);
+        $this->setExpectedException(CodiceFiscaleGenerationException::class);
         CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
     }
 
@@ -56,7 +57,7 @@ class CodiceFiscaleGenerationTest extends PHPUnit_Framework_TestCase
         $birth_place = 'F205';
         $gender = 'M';
 
-        $this->setExpectedException(CodiceFiscaleException::class);
+        $this->setExpectedException(CodiceFiscaleGenerationException::class);
         CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
     }
 

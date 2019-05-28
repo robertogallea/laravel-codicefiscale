@@ -116,5 +116,26 @@ $gender = 'M';
 $cf_string = CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
 ```
 
+# City code parsing
+By default, the package use the class `InternationalCitiesStaticList` to lookup the city from the code and viceversa.
+However you could use your own class to change the strategy used.  
 
+You just need to implement the `CityDecoderInterface` and its `getList()` method.
+Then, to use it, just pass an istance to the `CodiceFiscale` class.  
 
+For example:
+```php
+class MyCityList implements CityDecoderInterface
+{
+  public function getList()
+  {
+    // Implementation
+  }
+}
+```
+
+```php
+...
+$cf = new CodiceFiscale(new MyCityList)
+...
+```

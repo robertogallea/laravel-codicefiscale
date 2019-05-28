@@ -4,15 +4,16 @@ namespace robertogallea\LaravelCodiceFiscale;
 
 
 use Carbon\Carbon;
+use robertogallea\LaravelCodiceFiscale\Checks\CheckForBadChars;
+use robertogallea\LaravelCodiceFiscale\Checks\CheckForEmptyCode;
+use robertogallea\LaravelCodiceFiscale\Checks\CheckForOmocodiaChars;
+use robertogallea\LaravelCodiceFiscale\Checks\CheckForWrongSize;
+use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
+use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\ItalianCitiesStaticList;
 
 class CodiceFiscale
 {
-    public const NO_ERROR = 0;
-    public const NO_CODE = 1;
-    public const WRONG_SIZE = 2;
-    public const BAD_CHARACTERS = 3;
-    public const BAD_OMOCODIA_CHAR = 4;
-    public const WRONG_CODE = 5;
+    protected $cityDecoder;
 
     private $cf = null;
     private $isValid = null;
@@ -22,16 +23,24 @@ class CodiceFiscale
     private $month = null;
     private $year = null;
     private $error = null;
+
     private $tabDecodeOmocodia = null;
     private $tabReplacementOmocodia = null;
-    private $tabEvenChars = null;
-    private $tabOddChars = null;
-    private $tabControlCode = null;
     private $tabDecodeMonths = null;
 
+    private $checks = [
+        CheckForEmptyCode::class,
+        CheckForWrongSize::class,
+        CheckForBadChars::class,
+        CheckForOmocodiaChars::class,
+    ];
 
-    public function __construct()
+
+    public function __construct(CityDecoderInterface $cityDecoder = null)
     {
+        $this->cityDecoder = isset($cityDecoder) ? $cityDecoder : new ItalianCitiesStaticList();
+        $this->tabReplacementOmocodia = [6, 7, 9, 10, 12, 13, 14];
+
         $this->tabDecodeOmocodia = [
             "A" => "!",
             "B" => "!",
@@ -59,115 +68,6 @@ class CodiceFiscale
             "X" => "!",
             "Y" => "!",
             "Z" => "!",
-        ];
-
-        $this->tabReplacementOmocodia = [6, 7, 9, 10, 12, 13, 14];
-
-        $this->tabEvenChars = [
-            "0" => 0,
-            "1" => 1,
-            "2" => 2,
-            "3" => 3,
-            "4" => 4,
-            "5" => 5,
-            "6" => 6,
-            "7" => 7,
-            "8" => 8,
-            "9" => 9,
-            "A" => 0,
-            "B" => 1,
-            "C" => 2,
-            "D" => 3,
-            "E" => 4,
-            "F" => 5,
-            "G" => 6,
-            "H" => 7,
-            "I" => 8,
-            "J" => 9,
-            "K" => 10,
-            "L" => 11,
-            "M" => 12,
-            "N" => 13,
-            "O" => 14,
-            "P" => 15,
-            "Q" => 16,
-            "R" => 17,
-            "S" => 18,
-            "T" => 19,
-            "U" => 20,
-            "V" => 21,
-            "W" => 22,
-            "X" => 23,
-            "Y" => 24,
-            "Z" => 25,
-        ];
-
-        $this->tabOddChars = [
-            "0" => 1,
-            "1" => 0,
-            "2" => 5,
-            "3" => 7,
-            "4" => 9,
-            "5" => 13,
-            "6" => 15,
-            "7" => 17,
-            "8" => 19,
-            "9" => 21,
-            "A" => 1,
-            "B" => 0,
-            "C" => 5,
-            "D" => 7,
-            "E" => 9,
-            "F" => 13,
-            "G" => 15,
-            "H" => 17,
-            "I" => 19,
-            "J" => 21,
-            "K" => 2,
-            "L" => 4,
-            "M" => 18,
-            "N" => 20,
-            "O" => 11,
-            "P" => 3,
-            "Q" => 6,
-            "R" => 8,
-            "S" => 12,
-            "T" => 14,
-            "U" => 16,
-            "V" => 10,
-            "W" => 22,
-            "X" => 25,
-            "Y" => 24,
-            "Z" => 23,
-        ];
-        
-        $this->tabControlCode = [
-            0 => "A",
-            1 => "B",
-            2 => "C",
-            3 => "D",
-            4 => "E",
-            5 => "F",
-            6 => "G",
-            7 => "H",
-            8 => "I",
-            9 => "J",
-            10 => "K",
-            11 => "L",
-            12 => "M",
-            13 => "N",
-            14 => "O",
-            15 => "P",
-            16 => "Q",
-            17 => "R",
-            18 => "S",
-            19 => "T",
-            20 => "U",
-            21 => "V",
-            22 => "W",
-            23 => "X",
-            24 => "Y",
-            25 => "Z",
         ];
 
         $this->tabDecodeMonths = [
@@ -217,74 +117,35 @@ class CodiceFiscale
         $this->year = null;
         $this->error = null;
 
-        if (($cf === null) || ($cf === "")) {
-            $this->isValid = false;
-            $this->error = self::NO_CODE;
-            return false;
-        }
-
-        if (strlen($cf) !== 16) {
-            $this->isValid = false;
-            $this->error = self::WRONG_SIZE;
-            return false;
-        }
-
-        $cf = strtoupper($cf);
-
-        if (!preg_match("/^[A-Z0-9]+$/", $cf)) {
-            $this->isValid = false;
-            $this->error = self::BAD_CHARACTERS;
-            return false;
+        foreach ($this->checks as $check) {
+            (new $check)->check($cf);
         }
 
         $cfArray = str_split($cf);
 
         for ($i = 0; $i < count($this->tabReplacementOmocodia); $i++) {
-            if ((!is_numeric($cfArray[$this->tabReplacementOmocodia[$i]])) &&
-                ($this->tabDecodeOmocodia[$cfArray[$this->tabReplacementOmocodia[$i]]] === "!")) {
-                $this->isValid = false;
-                $this->error = self::BAD_OMOCODIA_CHAR;
-                return false;
+            if (!is_numeric($cfArray[$this->tabReplacementOmocodia[$i]])) {
+                $cfArray[$this->tabReplacementOmocodia[$i]] =
+                    $this->tabDecodeOmocodia[$cfArray[$this->tabReplacementOmocodia[$i]]];
             }
         }
 
-        $even = 0;
-        $odd = $this->tabOddChars[$cfArray[14]];
+        $adaptedCF = implode($cfArray);
 
-        for ($i = 0; $i < 13; $i += 2) {
-            $odd = $odd + $this->tabOddChars[$cfArray[$i]];
-            $even = $even + $this->tabEvenChars[$cfArray[$i + 1]];
+        $this->isValid = true;
+
+        $this->gender = (substr($adaptedCF, 9, 2) > "40" ? "F" : "M");
+        $this->birthPlace = substr($adaptedCF, 11, 4);
+        $this->year = substr($adaptedCF, 6, 2);
+        $this->month = $this->tabDecodeMonths[substr($adaptedCF, 8, 1)];
+
+        $this->day = substr($adaptedCF, 9, 2);
+        if ($this->gender === "F") {
+            $this->day = $this->day - 40;
+            if (strlen($this->day) === 1)
+                $this->day = "0" . $this->day;
         }
 
-        if (!($this->tabControlCode[($even + $odd) % 26] === $cfArray[15]) || (!$this->checkRegex($cf))) {
-            $this->isValid = false;
-            $this->error = self::WRONG_CODE;
-            return false;
-        } else {
-            for ($i = 0; $i < count($this->tabReplacementOmocodia); $i++) {
-                if (!is_numeric($cfArray[$this->tabReplacementOmocodia[$i]])) {
-                    $cfArray[$this->tabReplacementOmocodia[$i]] = 
-                        $this->tabDecodeOmocodia[$cfArray[$this->tabReplacementOmocodia[$i]]];
-                }
-            }
-
-            $adaptedCF = implode($cfArray);
-
-            $this->isValid = true;
-            $this->error = self::NO_ERROR;
-
-            $this->gender = (substr($adaptedCF, 9, 2) > "40" ? "F" : "M");
-            $this->birthPlace = substr($adaptedCF, 11, 4);
-            $this->year = substr($adaptedCF, 6, 2);
-            $this->month = $this->tabDecodeMonths[substr($adaptedCF, 8, 1)];
-
-            $this->day = substr($adaptedCF, 9, 2);
-            if ($this->gender === "F") {
-                $this->day = $this->day - 40;
-                if (strlen($this->day) === 1)
-                    $this->day = "0" . $this->day;
-            }
-        }
         return [
             'gender' => $this->getGender(),
             'birth_place' => $this->getBirthPlace(),
@@ -294,14 +155,6 @@ class CodiceFiscale
             'year' => $this->getYear(),
             'birthdate' => $this->getBirthdate(),
         ];
-    }
-
-    private function checkRegex($cf)
-    {
-        return preg_match('/^(?:(?:[B-DF-HJ-NP-TV-Z]|[AEIOU])[AEIOU][AEIOUX]|[B-DF-HJ-NP-TV-Z]{2}[A-Z]){2}' .
-            '[\dLMNP-V]{2}(?:[A-EHLMPR-T](?:[04LQ][1-9MNP-V]|[1256LMRS][\dLMNP-V])|[DHPS][37PT][0L]|[ACELMRT][37PT' .
-            '][01LM])(?:[A-MZ][1-9MNP-V][\dLMNP-V]{2}|[A-M][0L](?:[1-9MNP-V][\dLMNP-V]|[0L][1-9MNP-V]))[A-Z]$/i',
-            $cf);
     }
 
     public function isValid()
@@ -329,7 +182,8 @@ class CodiceFiscale
         if ($this->getBirthPlace() === null) {
             return null;
         }
-        return ucfirst(strtolower(ItalianCities::list[$this->getBirthPlace()]));
+
+        return ucwords(strtolower($this->cityDecoder->getList()[$this->getBirthPlace()]));
     }
 
     public function getYear()

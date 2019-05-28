@@ -3,10 +3,13 @@
 namespace robertogallea\LaravelCodiceFiscale;
 
 use Carbon\Carbon;
-use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleException;
+use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
+use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\ItalianCitiesStaticList;
+use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 
 class CodiceFiscaleGenerator
 {
+    protected $cityDecoder;
 
     protected $_formatoData = 'd-m-Y';
 
@@ -60,6 +63,11 @@ class CodiceFiscaleGenerator
         '24' => 'Y', '25' => 'Z'
     );
 
+    public function __construct(CityDecoderInterface $cityDecoder = null)
+    {
+        $this->cityDecoder = isset($cityDecoder) ? $cityDecoder : new ItalianCitiesStaticList();
+    }
+
     protected function _scomponi($string, array $haystack) {
         $letters = array();
         foreach(str_split($string) as $needle) {
@@ -93,7 +101,7 @@ class CodiceFiscaleGenerator
 
     protected function _calcolaNome() {
         if (!$this->nome) {
-            throw new CodiceFiscaleException('First name not enetered');
+            throw new CodiceFiscaleGenerationException('First name not enetered');
         }
         $nome = $this->_pulisci($this->nome);
 
@@ -124,7 +132,7 @@ class CodiceFiscaleGenerator
 
     protected function _calcolaCognome() {
         if (!$this->cognome) {
-            throw new CodiceFiscaleException('Last name not entered');
+            throw new CodiceFiscaleGenerationException('Last name not entered');
         }
         $cognome = $this->_pulisci($this->cognome);
 
@@ -151,11 +159,11 @@ class CodiceFiscaleGenerator
 
     protected function _calcolaDataNascita() {
         if (!$this->data) {
-            throw new CodiceFiscaleException('Birth date not entered');
+            throw new CodiceFiscaleGenerationException('Birth date not entered');
         }
 
         if (!$this->sesso) {
-            throw new CodiceFiscaleException('Geneder not entered');
+            throw new CodiceFiscaleGenerationException('Geneder not entered');
         }
 
 
@@ -181,10 +189,10 @@ class CodiceFiscaleGenerator
 
     protected function _calcolaCatastale() {
         $place = strtoupper($this->comune);
-        if (array_key_exists($place, ItalianCities::list)) {
+        if (array_key_exists($place, $this->cityDecoder->getList())) {
             $place_code = $place;
         } else {
-            $place_code = array_search($place, ItalianCities::list);
+            $place_code = array_search($place, $this->cityDecoder->getList());
             if (!$place_code) {
                 throw new \InvalidArgumentException('$birth_place must be a valid city code or name');
             }
@@ -211,7 +219,7 @@ class CodiceFiscaleGenerator
             $this->_calcolaCatastale();
         $codice .= $this->_calcolaCifraControllo($codice);
         if (strlen($codice) != 16) {
-            throw new CodiceFiscaleException('Generated code has not 16 digits: '. $codice);
+            throw new CodiceFiscaleGenerationException('Generated code has not 16 digits: '. $codice);
         }
         return $codice;
     }

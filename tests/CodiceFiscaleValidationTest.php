@@ -1,6 +1,8 @@
 <?php
 
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
+use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
+use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList;
 
 class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
 {
@@ -8,44 +10,37 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
     {
         $codice_fiscale = null;
         $cf = new CodiceFiscale();
-        $res = $cf->parse($codice_fiscale);
-        $this->assertFalse($res);
 
-        $code = $cf->getError();
-        $this->assertEquals($code, CodiceFiscale::NO_CODE);
+        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $res = $cf->parse($codice_fiscale);
     }
 
     public function testCodiceFiscaleTooShort()
     {
         $codice_fiscale = 'ABC';
         $cf = new CodiceFiscale();
-        $res = $cf->parse($codice_fiscale);
-        $this->assertFalse($res);
 
-        $code = $cf->getError();
-        $this->assertEquals($code, CodiceFiscale::WRONG_SIZE);
+        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $res = $cf->parse($codice_fiscale);
     }
 
     public function testCodiceFiscaleTooLong()
     {
         $codice_fiscale = 'ABCDEF01G23H456IX';
         $cf = new CodiceFiscale();
-        $res = $cf->parse($codice_fiscale);
-        $this->assertFalse($res);
 
-        $code = $cf->getError();
-        $this->assertEquals($code, CodiceFiscale::WRONG_SIZE);
+        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $res = $cf->parse($codice_fiscale);
     }
 
     public function testGoodCode()
     {
         $codice_fiscale = 'RSSMRA95E05F205Z';
         $cf = new CodiceFiscale();
+
         $res = $cf->parse($codice_fiscale);
         $this->assertEquals($res['birth_place_complete'], 'Milano');
 
-        $code = $cf->getError();
-        $this->assertEquals($code, CodiceFiscale::NO_ERROR);
     }
 
 
@@ -53,37 +48,28 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
     {
         $codice_fiscale = 'RSSMRA95E05F20OU';
         $cf = new CodiceFiscale();
+
+        $this->setExpectedException(CodiceFiscaleValidationException::class);
         $res = $cf->parse($codice_fiscale);
-        $this->assertEquals($res['birth_place_complete'], null);
-
-        $code = $cf->getError();
-
-        $this->assertEquals($code, CodiceFiscale::BAD_OMOCODIA_CHAR);
     }
 
     public function testOmocodiaCode()
     {
         $codice_fiscale = 'RSSMRA95E05F20RU';
         $cf = new CodiceFiscale();
+
         $res = $cf->parse($codice_fiscale);
         $this->assertEquals($res['birth_place_complete'], 'Milano');
 
-        $code = $cf->getError();
-
-        $this->assertEquals($code, CodiceFiscale::NO_ERROR);
     }
 
     public function testUnregularCode()
     {
         $codice_fiscale = '%SSMRA95E05F20RU';
         $cf = new CodiceFiscale();
+
+        $this->setExpectedException(CodiceFiscaleValidationException::class);
         $res = $cf->parse($codice_fiscale);
-        $this->assertEquals($res['birth_place_complete'], null);
-
-        $code = $cf->getError();
-
-        $this->assertEquals($code, CodiceFiscale::BAD_CHARACTERS);
-
     }
 
     public function testFemaleCode()
@@ -92,11 +78,15 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $cf = new CodiceFiscale();
         $res = $cf->parse($codice_fiscale);
         $this->assertEquals($res['birth_place_complete'], 'Milano');
+    }
 
-        $code = $cf->getError();
+    public function test_international_fiscalcode()
+    {
+        $codice_fiscale = 'RSSMRA95E05Z907Z';
+        $cf = new CodiceFiscale(new InternationalCitiesStaticList());
 
-        $this->assertEquals($code, CodiceFiscale::NO_ERROR);
-
+        $res = $cf->parse($codice_fiscale);
+        $this->assertEquals($res['birth_place_complete'], 'Sud Sudan');
     }
 
 }
