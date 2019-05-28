@@ -2,10 +2,10 @@
 
 namespace robertogallea\LaravelCodiceFiscale\Checks;
 
-
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
 
-class CheckForWrongSize implements Check {
+class CheckForWrongSize implements Check
+{
     public function check($code)
     {
         if (strlen($code) !== 16) {

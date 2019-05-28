@@ -2,7 +2,6 @@
 
 namespace robertogallea\LaravelCodiceFiscale;
 
-
 use Carbon\Carbon;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForBadChars;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForEmptyCode;
@@ -35,54 +34,53 @@ class CodiceFiscale
         CheckForOmocodiaChars::class,
     ];
 
-
     public function __construct(CityDecoderInterface $cityDecoder = null)
     {
         $this->cityDecoder = isset($cityDecoder) ? $cityDecoder : new ItalianCitiesStaticList();
         $this->tabReplacementOmocodia = [6, 7, 9, 10, 12, 13, 14];
 
         $this->tabDecodeOmocodia = [
-            "A" => "!",
-            "B" => "!",
-            "C" => "!",
-            "D" => "!",
-            "E" => "!",
-            "F" => "!",
-            "G" => "!",
-            "H" => "!",
-            "I" => "!",
-            "J" => "!",
-            "K" => "!",
-            "L" => "0",
-            "M" => "1",
-            "N" => "2",
-            "O" => "!",
-            "P" => "3",
-            "Q" => "4",
-            "R" => "5",
-            "S" => "6",
-            "T" => "7",
-            "U" => "8",
-            "V" => "9",
-            "W" => "!",
-            "X" => "!",
-            "Y" => "!",
-            "Z" => "!",
+            'A' => '!',
+            'B' => '!',
+            'C' => '!',
+            'D' => '!',
+            'E' => '!',
+            'F' => '!',
+            'G' => '!',
+            'H' => '!',
+            'I' => '!',
+            'J' => '!',
+            'K' => '!',
+            'L' => '0',
+            'M' => '1',
+            'N' => '2',
+            'O' => '!',
+            'P' => '3',
+            'Q' => '4',
+            'R' => '5',
+            'S' => '6',
+            'T' => '7',
+            'U' => '8',
+            'V' => '9',
+            'W' => '!',
+            'X' => '!',
+            'Y' => '!',
+            'Z' => '!',
         ];
 
         $this->tabDecodeMonths = [
-            "A" => "01",
-            "B" => "02",
-            "C" => "03",
-            "D" => "04",
-            "E" => "05",
-            "H" => "06",
-            "L" => "07",
-            "M" => "08",
-            "P" => "09",
-            "R" => "10",
-            "S" => "11",
-            "T" => "12",
+            'A' => '01',
+            'B' => '02',
+            'C' => '03',
+            'D' => '04',
+            'E' => '05',
+            'H' => '06',
+            'L' => '07',
+            'M' => '08',
+            'P' => '09',
+            'R' => '10',
+            'S' => '11',
+            'T' => '12',
         ];
     }
 
@@ -102,8 +100,8 @@ class CodiceFiscale
             $date = Carbon::createFromFormat('Y-m-d', $birth_date);
         }
         $cf_gen->data = $date;
-        return $cf_gen->calcola();
 
+        return $cf_gen->calcola();
     }
 
     public function parse($cf)
@@ -118,7 +116,7 @@ class CodiceFiscale
         $this->error = null;
 
         foreach ($this->checks as $check) {
-            (new $check)->check($cf);
+            (new $check())->check($cf);
         }
 
         $cfArray = str_split($cf);
@@ -134,26 +132,27 @@ class CodiceFiscale
 
         $this->isValid = true;
 
-        $this->gender = (substr($adaptedCF, 9, 2) > "40" ? "F" : "M");
+        $this->gender = (substr($adaptedCF, 9, 2) > '40' ? 'F' : 'M');
         $this->birthPlace = substr($adaptedCF, 11, 4);
         $this->year = substr($adaptedCF, 6, 2);
         $this->month = $this->tabDecodeMonths[substr($adaptedCF, 8, 1)];
 
         $this->day = substr($adaptedCF, 9, 2);
-        if ($this->gender === "F") {
+        if ($this->gender === 'F') {
             $this->day = $this->day - 40;
-            if (strlen($this->day) === 1)
-                $this->day = "0" . $this->day;
+            if (strlen($this->day) === 1) {
+                $this->day = '0'.$this->day;
+            }
         }
 
         return [
-            'gender' => $this->getGender(),
-            'birth_place' => $this->getBirthPlace(),
+            'gender'               => $this->getGender(),
+            'birth_place'          => $this->getBirthPlace(),
             'birth_place_complete' => $this->getBirthPlaceComplete(),
-            'day'=> $this->getDay(),
-            'month' => $this->getMonth(),
-            'year' => $this->getYear(),
-            'birthdate' => $this->getBirthdate(),
+            'day'                  => $this->getDay(),
+            'month'                => $this->getMonth(),
+            'year'                 => $this->getYear(),
+            'birthdate'            => $this->getBirthdate(),
         ];
     }
 
@@ -180,7 +179,7 @@ class CodiceFiscale
     public function getBirthPlaceComplete()
     {
         if ($this->getBirthPlace() === null) {
-            return null;
+            return;
         }
 
         return ucwords(strtolower($this->cityDecoder->getList()[$this->getBirthPlace()]));
@@ -190,14 +189,15 @@ class CodiceFiscale
     {
         $current_year = Carbon::today()->year;
         if (2000 + $this->year < $current_year) {
-            return '20' . $this->year;
+            return '20'.$this->year;
         }
-        return '19' . $this->year;
+
+        return '19'.$this->year;
     }
 
     public function getBirthdate(): Carbon
     {
-        return Carbon::parse($this->getYear() . '-' . $this->getMonth() . '-' . $this->getDay());
+        return Carbon::parse($this->getYear().'-'.$this->getMonth().'-'.$this->getDay());
     }
 
     public function getMonth()

@@ -2,6 +2,7 @@
 
 namespace robertogallea\LaravelCodiceFiscale\Checks;
 
-interface Check {
+interface Check
+{
     public function check($code);
 }
