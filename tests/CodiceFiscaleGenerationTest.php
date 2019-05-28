@@ -1,9 +1,8 @@
 <?php
 
-use \robertogallea\LaravelCodiceFiscale\CodiceFiscale;
-use \robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleException;
-use \robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 use Carbon\Carbon;
+use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
+use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 
 class CodiceFiscaleGenerationTest extends PHPUnit_Framework_TestCase
 {

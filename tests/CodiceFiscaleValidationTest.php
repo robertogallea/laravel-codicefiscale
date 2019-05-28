@@ -1,8 +1,8 @@
 <?php
 
+use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
-use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList;
 
 class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
 {
@@ -40,9 +40,7 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
 
         $res = $cf->parse($codice_fiscale);
         $this->assertEquals($res['birth_place_complete'], 'Milano');
-
     }
-
 
     public function testWrongOmocodiaCode()
     {
@@ -60,7 +58,6 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
 
         $res = $cf->parse($codice_fiscale);
         $this->assertEquals($res['birth_place_complete'], 'Milano');
-
     }
 
     public function testUnregularCode()
@@ -88,5 +85,4 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $res = $cf->parse($codice_fiscale);
         $this->assertEquals($res['birth_place_complete'], 'Sud Sudan');
     }
-
 }
