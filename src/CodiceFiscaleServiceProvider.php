@@ -15,9 +15,8 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot(Repository $config, CodiceFiscale $codiceFiscale)
+    public function boot(CodiceFiscale $codiceFiscale)
     {
-        $this->publishConfig();
         $this->registerValidator($codiceFiscale);
     }
 
@@ -28,9 +27,12 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton(CodiceFiscale::class, function (Container $app) {
+        $this->publishConfig();
+
+        $this->app->singleton(CodiceFiscale::class, function () {
+            $decoder = config('codicefiscale.city-decoder');
             return new CodiceFiscale(
-                new $app['config']['codicefiscale.city-decoder']()
+                new $decoder()
             );
         });
     }
