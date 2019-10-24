@@ -29,6 +29,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
 
         $this->app->singleton(CodiceFiscale::class, function () {
             $decoder = config('codicefiscale.city-decoder');
+
             return new CodiceFiscale(
                 new $decoder()
             );
@@ -87,5 +88,4 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
     {
         return __DIR__."/../$path";
     }
-
 }
