@@ -2,8 +2,6 @@
 
 namespace robertogallea\LaravelCodiceFiscale;
 
-use Illuminate\Contracts\Config\Repository;
-use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
@@ -89,4 +87,5 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
     {
         return __DIR__."/../$path";
     }
+
 }
