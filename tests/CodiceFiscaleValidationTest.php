@@ -85,4 +85,13 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $res = $cf->parse($codice_fiscale);
         $this->assertEquals($res['birth_place_complete'], 'Sud Sudan');
     }
+
+    public function test_wrong_date()
+    {
+        $codice_fiscale = 'LOIMLC71A77F979V';
+        $cf = new CodiceFiscale();
+
+        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $cf->parse($codice_fiscale);
+    }
 }

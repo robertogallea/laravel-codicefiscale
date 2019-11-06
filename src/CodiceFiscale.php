@@ -9,6 +9,7 @@ use robertogallea\LaravelCodiceFiscale\Checks\CheckForOmocodiaChars;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForWrongSize;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\ItalianCitiesStaticList;
+use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
 
 class CodiceFiscale
 {
@@ -197,7 +198,11 @@ class CodiceFiscale
 
     public function getBirthdate(): Carbon
     {
-        return Carbon::parse($this->getYear().'-'.$this->getMonth().'-'.$this->getDay());
+        try {
+            return Carbon::parse($this->getYear() . '-' . $this->getMonth() . '-' . $this->getDay());
+        } catch (\Exception $exception) {
+            throw new CodiceFiscaleValidationException('Parsed date is not valid');
+        }
     }
 
     public function getMonth()
