@@ -142,7 +142,7 @@ class CodiceFiscale
         if ($this->gender === 'F') {
             $this->day = $this->day - 40;
             if (strlen($this->day) === 1) {
-                $this->day = '0' . $this->day;
+                $this->day = '0'.$this->day;
             }
         }
 
@@ -190,10 +190,10 @@ class CodiceFiscale
     {
         $current_year = Carbon::today()->year;
         if (2000 + $this->year < $current_year) {
-            return '20' . $this->year;
+            return '20'.$this->year;
         }
 
-        return '19' . $this->year;
+        return '19'.$this->year;
     }
 
     public function getBirthdate(): Carbon
