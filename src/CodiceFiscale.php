@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForBadChars;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForEmptyCode;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForOmocodiaChars;
+use robertogallea\LaravelCodiceFiscale\Checks\CheckForWrongCode;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForWrongSize;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\ItalianCitiesStaticList;
@@ -33,6 +34,7 @@ class CodiceFiscale
         CheckForWrongSize::class,
         CheckForBadChars::class,
         CheckForOmocodiaChars::class,
+        CheckForWrongCode::class
     ];
 
     public function __construct(CityDecoderInterface $cityDecoder = null)
