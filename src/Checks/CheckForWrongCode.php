@@ -139,10 +139,11 @@ class CheckForWrongCode implements Check
 
     /**
      * @param string $code
+     *
      * @return bool
      */
     protected function checkRegex(string $code): bool
     {
-        return (bool)preg_match(self::CF_REGEX, $code);
+        return (bool) preg_match(self::CF_REGEX, $code);
     }
 }
