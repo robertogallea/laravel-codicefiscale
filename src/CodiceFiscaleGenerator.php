@@ -109,6 +109,7 @@ class CodiceFiscaleGenerator
 
     protected function _calcolaNome()
     {
+        $code = '';
         if (!$this->nome) {
             throw new CodiceFiscaleGenerationException('First name not enetered');
         }

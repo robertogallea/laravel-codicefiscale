@@ -44,8 +44,10 @@ class CheckForOmocodiaChars implements Check
         for ($i = 0; $i < count($this->tabReplacementOmocodia); $i++) {
             if ((!is_numeric($cfArray[$this->tabReplacementOmocodia[$i]])) &&
                 ($this->tabDecodeOmocodia[$cfArray[$this->tabReplacementOmocodia[$i]]] === '!')) {
-                throw new CodiceFiscaleValidationException('Invalid codice fiscale',
-                    CodiceFiscaleValidationException::BAD_OMOCODIA_CHAR);
+                throw new CodiceFiscaleValidationException(
+                    'Invalid codice fiscale',
+                    CodiceFiscaleValidationException::BAD_OMOCODIA_CHAR
+                );
             }
         }
 
