@@ -109,6 +109,7 @@ class CodiceFiscale
 
     public function parse($cf)
     {
+        $cf = strtoupper($cf);
         $this->cf = $cf;
         $this->isValid = null;
         $this->gender = null;
