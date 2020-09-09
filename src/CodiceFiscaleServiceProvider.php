@@ -62,8 +62,8 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
                         break;
                 }
 
-                $validator->addReplacer('codice_fiscale', function ($message, $attribute, $rule, $parameters) use ($error_msg) {
-                    return str_replace([':attribute'], [$attribute], str_replace('codice fiscale', ':attribute', $error_msg));
+                $validator->addReplacer('codice_fiscale', function ($message, $attribute, $rule, $parameters, $validator) use ($error_msg) {
+                    return str_replace([':attribute'], [$validator->getDisplayableAttribute($attribute)], str_replace('codice fiscale', ':attribute', $error_msg));
                 });
 
                 return false;
