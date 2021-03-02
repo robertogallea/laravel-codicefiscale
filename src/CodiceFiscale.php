@@ -10,7 +10,6 @@ use robertogallea\LaravelCodiceFiscale\Checks\CheckForWrongCode;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForWrongSize;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList;
-use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\ItalianCitiesStaticList;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
 
 class CodiceFiscale
