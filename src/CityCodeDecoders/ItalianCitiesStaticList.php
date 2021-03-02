@@ -5408,6 +5408,7 @@ class ItalianCitiesStaticList implements CityDecoderInterface
         'G775' => 'POGNO',
         'G777' => 'POIRINO',
         'G776' => 'POJANA MAGGIORE',
+        'G778' => 'POLA',
         'G779' => 'POLAVENO',
         'G780' => 'POLCENIGO',
         'G782' => 'POLESELLA',
