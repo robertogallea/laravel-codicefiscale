@@ -6,7 +6,7 @@ use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationExcepti
 
 class CheckForWrongCode implements Check
 {
-    const CF_REGEX = '/^[a-z]{6}[0-9]{2}[a-z][0-9]{2}[a-z][0-9]{3}[a-z]$/i';
+    const CF_REGEX = '/^[a-z]{6}[0-9]{2}[a-z][0-9]{2}[a-z][0-9]{2}[0-9a-z][a-z]$/i';
 
     protected $tabEvenChars = [
         '0' => 0,
