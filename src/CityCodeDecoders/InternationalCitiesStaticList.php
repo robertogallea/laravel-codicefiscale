@@ -6678,6 +6678,7 @@ class InternationalCitiesStaticList implements CityDecoderInterface
         'I330' => 'SANTERAMO IN COLLE',
         'I332' => "SANT'EUFEMIA A MAIELLA",
         'I333' => "SANT'EUFEMIA D'ASPROMONTE",
+        'I334' => "SANT'EUFEMIA LAMEZIA",
         'I335' => "SANT'EUSANIO DEL SANGRO",
         'I336' => "SANT'EUSANIO FORCONESE",
         'I337' => "SANTHIA'",
