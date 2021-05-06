@@ -4,7 +4,6 @@ namespace robertogallea\LaravelCodiceFiscale;
 
 use Carbon\Carbon;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
-use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\ItalianCitiesStaticList;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 
 class CodiceFiscaleGenerator
