@@ -1,17 +1,18 @@
 <?php
 
+use Orchestra\Testbench\TestCase;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
 
-class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
+class CodiceFiscaleValidationTest extends TestCase
 {
     public function testCodiceFiscaleNull()
     {
         $codice_fiscale = null;
         $cf = new CodiceFiscale();
 
-        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $this->expectException(CodiceFiscaleValidationException::class);
         $res = $cf->parse($codice_fiscale);
     }
 
@@ -20,7 +21,7 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $codice_fiscale = 'ABC';
         $cf = new CodiceFiscale();
 
-        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $this->expectException(CodiceFiscaleValidationException::class);
         $res = $cf->parse($codice_fiscale);
     }
 
@@ -29,7 +30,7 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $codice_fiscale = 'ABCDEF01G23H456IX';
         $cf = new CodiceFiscale();
 
-        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $this->expectException(CodiceFiscaleValidationException::class);
         $res = $cf->parse($codice_fiscale);
     }
 
@@ -47,7 +48,7 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $codice_fiscale = 'RSSMRA95E05F20OU';
         $cf = new CodiceFiscale();
 
-        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $this->expectException(CodiceFiscaleValidationException::class);
         $res = $cf->parse($codice_fiscale);
     }
 
@@ -65,7 +66,7 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $codice_fiscale = '%SSMRA95E05F20RU';
         $cf = new CodiceFiscale();
 
-        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $this->expectException(CodiceFiscaleValidationException::class);
         $res = $cf->parse($codice_fiscale);
     }
 
@@ -79,11 +80,11 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
 
     public function test_international_fiscalcode()
     {
-        $codice_fiscale = 'RSSMRA95E05Z907Z';
+        $codice_fiscale = 'RBRRHR93L09Z357P';
         $cf = new CodiceFiscale(new InternationalCitiesStaticList());
 
         $res = $cf->parse($codice_fiscale);
-        $this->assertEquals($res['birth_place_complete'], 'Sud Sudan');
+        $this->assertEquals($res['birth_place_complete'], 'Tanzania');
     }
 
     public function test_wrong_date()
@@ -91,7 +92,7 @@ class CodiceFiscaleValidationTest extends PHPUnit_Framework_TestCase
         $codice_fiscale = 'LOIMLC71A77F979V';
         $cf = new CodiceFiscale();
 
-        $this->setExpectedException(CodiceFiscaleValidationException::class);
+        $this->expectException(CodiceFiscaleValidationException::class);
         $cf->parse($codice_fiscale);
     }
 }

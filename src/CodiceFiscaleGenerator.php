@@ -65,7 +65,12 @@ class CodiceFiscaleGenerator
 
     public function __construct(CityDecoderInterface $cityDecoder = null)
     {
-        $this->cityDecoder = isset($cityDecoder) ? $cityDecoder : new ItalianCitiesStaticList();
+        if ($cityDecoder) {
+            $this->cityDecoder = $cityDecoder;
+        } else {
+            $cityDecoderClass = config('codicefiscale.city-decoder');
+            $this->cityDecoder = new $cityDecoderClass();
+        }
     }
 
     protected function _scomponi($string, array $haystack)
