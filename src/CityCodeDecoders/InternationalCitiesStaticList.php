@@ -6172,6 +6172,7 @@ class InternationalCitiesStaticList implements CityDecoderInterface
         'H736' => 'SAMARATE',
         'H738' => 'SAMASSI',
         'H739' => 'SAMATZAI',
+        'H742' => 'SAMBIASE',
         'H743' => 'SAMBUCA DI SICILIA',
         'H744' => 'SAMBUCA PISTOIESE',
         'H745' => 'SAMBUCI',
