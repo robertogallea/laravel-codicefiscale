@@ -4,7 +4,16 @@ Laravel-FiscalCode is a package for the management of the Italian <code>CodiceFi
 The package allows easy validation and parsing of the CodiceFiscale. It is also suited for Laravel since it provides a 
 convenient custom validator for request validation.
 
-## 1. Installation
+- [Installation](#installation)
+- [Validation](#validation)
+- [Utility CodiceFiscale class](#utility-codicefiscale-class)
+- [Codice fiscale Generation](#codice-fiscale-generation)
+- [City code parsing](#city-code-parsing)
+- [Integrate your own cities](#integrate-your-own-cities)
+
+
+
+## Installation
 
 Run the following command to install the latest applicable version of the package:
 
@@ -12,7 +21,7 @@ Run the following command to install the latest applicable version of the packag
 composer require robertogallea/laravel-codicefiscale
 ```
 
-### 1.1 Laravel
+### Laravel
 
 In your app config, add the Service Provider to the `$providers` array *(only for Laravel 5.4 or below)*:
 
@@ -35,7 +44,7 @@ In your languages directory, add for each language an extra language entry for t
 ],
 ```
 
-### 1.2 Lumen
+### Lumen
 
 In `bootstrap/app.php`, register the Service Provider
 
@@ -43,7 +52,7 @@ In `bootstrap/app.php`, register the Service Provider
 $app->register(robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider::class);
 ```
 
-## 2. Validation
+## Validation
 
 To validate a codice fiscale, use the `codice_fiscale` keyword in your validation rules array
 
@@ -51,7 +60,7 @@ To validate a codice fiscale, use the `codice_fiscale` keyword in your validatio
 'codice_fiscale_field'       => 'codice_fiscale',
 ```
 
-## 3. Utility CodiceFiscale class
+## Utility CodiceFiscale class
 
 A codice fiscale can be wrapped in the `robertogallea\LaravelCodiceFiscale\CodiceFiscale` class to enhance it with 
 useful utility methods. 
@@ -83,8 +92,8 @@ produces the following result:
 ```
 
 
-in case of error, <code>CodiceFiscale::parse()</code> returns false, and you will find information about the error using 
-<code>CodiceFiscale::getError()</code>, which returns one of the defined constants among the following:<br>
+in case of error, `CodiceFiscale::parse()` returns false, and you will find information about the error using 
+`CodiceFiscale::getError()`, which returns one of the defined constants among the following:
 
 - `CodiceFiscale::NO_ERROR`
 - `CodiceFiscale::NO_CODE`
@@ -115,14 +124,17 @@ $gender = 'M';
 $cf_string = CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
 ```
 
-# City code parsing
+## City code parsing
 There are three strategies for decoding the city code:
 
 - `InternationalCitiesStaticList`: a static list of Italian cities;
 - `ItalianCitiesStaticList`: a static list of International cities;
 - `IstatRemoteCSVList`: a dynamic (loaded from web) list of Italian cities loaded from official ISTAT csv file. 
   Please note that the list is cached (one day by default, see config to change).
-
+- `CompositeCitiesList`: merge the results from two `CityDecoderInterface` classes (for example `IstatRemoteCSVList` and
+  `InternationalCitiesStaticList`) using the base `CityDecoderInterface` in the config key 
+  `codicefiscale.cities-decoder-list`.
+  
 By default, the package uses the class `InternationalCitiesStaticList` to lookup the city from the code and viceversa.
 However you could use your own class to change the strategy used.  
 
@@ -145,3 +157,44 @@ class MyCityList implements CityDecoderInterface
 $cf = new CodiceFiscale(new MyCityList)
 ...
 ```
+
+## Integrate your own cities
+
+_Note_: if you find missing cities, please make a PR!
+
+If you want to integrate the cities list, you can use the `CompositeCitiesList` by merging the results of one of the 
+decoders provided and a custom decoder.
+
+For example:
+
+```
+// conf/codicefiscale.php
+
+return [
+  'city-decoder' => '\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList',
+
+  ...
+  
+  'cities-decoder-list' => [
+        '\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList',
+        'YourNamespace\MyCustomList',
+    ]
+```
+
+where `YourCustomList` is defined as:
+
+```
+...
+
+class MyCustomList implements CityDecoderInterface
+{
+  public function getList()
+  {
+    return [
+      'XYZ1' => 'My city 1',
+      'XYZ2' => 'My city 2',
+    ]
+  }
+}
+```
+  
