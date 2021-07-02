@@ -183,7 +183,7 @@ return [
     ]
 ```
 
-where `YourCustomList` is defined as:
+where `MyCustomList` is defined as:
 
 ```
 ...
