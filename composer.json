@@ -12,7 +12,8 @@
         "php": ">=7.1",
         "illuminate/support": ">=6.0",
         "illuminate/validation": ">=6.0",
-        "nesbot/carbon": "^2.16"
+        "nesbot/carbon": "^2.16",
+        "guzzlehttp/guzzle": "^7.3"
     },
     "require-dev": {
         "phpunit/phpunit": ">=9.0",
@@ -21,6 +22,11 @@
 	"autoload": {
         "psr-4": {
             "robertogallea\\LaravelCodiceFiscale\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
         }
     },
     "extra": {

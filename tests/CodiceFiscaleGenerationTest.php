@@ -1,9 +1,14 @@
 <?php
 
+namespace Tests;
+
 use Carbon\Carbon;
+use InvalidArgumentException;
+use Mockery;
 use Orchestra\Testbench\TestCase;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
+use TypeError;
 
 class CodiceFiscaleGenerationTest extends TestCase
 {

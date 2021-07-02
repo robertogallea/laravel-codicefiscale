@@ -85,14 +85,13 @@ produces the following result:
 
 in case of error, <code>CodiceFiscale::parse()</code> returns false, and you will find information about the error using 
 <code>CodiceFiscale::getError()</code>, which returns one of the defined constants among the following:<br>
-<ul>
-<li>CodiceFiscale::NO_ERROR
-<li>CodiceFiscale::NO_CODE
-<li>CodiceFiscale::WRONG_SIZE
-<li>CodiceFiscale::BAD_CHARACTERS
-<li>CodiceFiscale::BAD_OMOCODIA_CHAR
-<li>CodiceFiscale::WRONG_CODE
-</ul>
+
+- `CodiceFiscale::NO_ERROR`
+- `CodiceFiscale::NO_CODE`
+- `CodiceFiscale::WRONG_SIZE`
+- `CodiceFiscale::BAD_CHARACTERS`
+- `CodiceFiscale::BAD_OMOCODIA_CHAR`
+- `CodiceFiscale::WRONG_CODE`
 
 ```php 
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
@@ -117,7 +116,14 @@ $cf_string = CodiceFiscale::generate($first_name, $last_name, $birth_date, $birt
 ```
 
 # City code parsing
-By default, the package use the class `InternationalCitiesStaticList` to lookup the city from the code and viceversa.
+There are three strategies for decoding the city code:
+
+- `InternationalCitiesStaticList`: a static list of Italian cities;
+- `ItalianCitiesStaticList`: a static list of International cities;
+- `IstatRemoteCSVList`: a dynamic (loaded from web) list of Italian cities loaded from official ISTAT csv file. 
+  Please note that the list is cached (one day by default, see config to change).
+
+By default, the package uses the class `InternationalCitiesStaticList` to lookup the city from the code and viceversa.
 However you could use your own class to change the strategy used.  
 
 You just need to implement the `CityDecoderInterface` and its `getList()` method.
