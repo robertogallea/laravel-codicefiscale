@@ -54,13 +54,26 @@ class CodiceFiscaleValidationTest extends TestCase
         $res = $cf->parse($codice_fiscale);
     }
 
-    public function testOmocodiaCode()
+    /**
+     * @dataProvider omocodiaProvider
+     */
+    public function testOmocodiaCode($codice_fiscale, $city)
     {
-        $codice_fiscale = 'RSSMRA95E05F20RU';
+//        $codice_fiscale = 'RSSMRA95E05F20RU';
         $cf = new CodiceFiscale();
 
         $res = $cf->parse($codice_fiscale);
-        $this->assertEquals($res['birth_place_complete'], 'Milano');
+        $this->assertEquals($res['birth_place_complete'], $city);
+    }
+
+
+
+    public function omocodiaProvider()
+    {
+        return [
+            ['RSSMRA95E05F20RU', 'Milano'],
+            ['MKJRLA80A01L4L7I', 'Treviso']
+        ];
     }
 
     public function testUnregularCode()
