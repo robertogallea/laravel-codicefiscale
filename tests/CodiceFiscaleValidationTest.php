@@ -66,13 +66,11 @@ class CodiceFiscaleValidationTest extends TestCase
         $this->assertEquals($res['birth_place_complete'], $city);
     }
 
-
-
     public function omocodiaProvider()
     {
         return [
             ['RSSMRA95E05F20RU', 'Milano'],
-            ['MKJRLA80A01L4L7I', 'Treviso']
+            ['MKJRLA80A01L4L7I', 'Treviso'],
         ];
     }
 
