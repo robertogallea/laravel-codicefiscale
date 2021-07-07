@@ -86,6 +86,6 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
 
     private function packagePath($path)
     {
-        return __DIR__ . "/../$path";
+        return __DIR__."/../$path";
     }
 }

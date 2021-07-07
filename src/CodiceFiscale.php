@@ -145,18 +145,18 @@ class CodiceFiscale
         if ($this->gender === 'F') {
             $this->day = $this->day - 40;
             if (strlen($this->day) === 1) {
-                $this->day = '0' . $this->day;
+                $this->day = '0'.$this->day;
             }
         }
 
         return [
-            'gender' => $this->getGender(),
-            'birth_place' => $this->getBirthPlace(),
+            'gender'               => $this->getGender(),
+            'birth_place'          => $this->getBirthPlace(),
             'birth_place_complete' => $this->getBirthPlaceComplete(),
-            'day' => $this->getDay(),
-            'month' => $this->getMonth(),
-            'year' => $this->getYear(),
-            'birthdate' => $this->getBirthdate(),
+            'day'                  => $this->getDay(),
+            'month'                => $this->getMonth(),
+            'year'                 => $this->getYear(),
+            'birthdate'            => $this->getBirthdate(),
         ];
     }
 
@@ -193,16 +193,16 @@ class CodiceFiscale
     {
         $current_year = Carbon::today()->year;
         if (2000 + $this->year < $current_year) {
-            return '20' . $this->year;
+            return '20'.$this->year;
         }
 
-        return '19' . $this->year;
+        return '19'.$this->year;
     }
 
     public function getBirthdate(): Carbon
     {
         try {
-            return Carbon::parse($this->getYear() . '-' . $this->getMonth() . '-' . $this->getDay());
+            return Carbon::parse($this->getYear().'-'.$this->getMonth().'-'.$this->getDay());
         } catch (\Exception $exception) {
             throw new CodiceFiscaleValidationException('Parsed date is not valid');
         }

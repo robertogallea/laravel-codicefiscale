@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Tests\CityCodeDecoders;
-
 
 use Orchestra\Testbench\TestCase;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
@@ -52,6 +50,4 @@ class IstatRemoteCSVListTest extends TestCase
 
         $this->assertEquals($list, $list2);
     }
-
-
 }

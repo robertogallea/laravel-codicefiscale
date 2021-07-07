@@ -1,12 +1,9 @@
 <?php
 
-
 namespace robertogallea\LaravelCodiceFiscale\CityCodeDecoders;
-
 
 class CompositeCitiesList implements CityDecoderInterface
 {
-
     public static function getList()
     {
         $result = [];

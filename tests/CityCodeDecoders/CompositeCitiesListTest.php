@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Tests\CityCodeDecoders;
-
 
 use Illuminate\Support\Facades\Config;
 use Orchestra\Testbench\TestCase;
