@@ -1727,6 +1727,7 @@ class InternationalCitiesStaticList implements CityDecoderInterface
         'C167' => 'CASTELLETTO UZZONE',
         'C169' => 'CASTELLI',
         'C079' => 'CASTELLI CALEPIO',
+        'C171' => 'CASTELLI CUSIANI',
         'C172' => 'CASTELLINA IN CHIANTI',
         'C174' => 'CASTELLINA MARITTIMA',
         'C173' => "CASTELLINALDO D'ALBA",
