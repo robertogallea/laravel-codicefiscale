@@ -39,10 +39,8 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
     public function registerValidator(CodiceFiscale $codiceFiscale)
     {
         Validator::extend('codice_fiscale', function ($attribute, $value, $parameters, $validator) use ($codiceFiscale) {
-            $cf = $codiceFiscale;
-
             try {
-                $result = $cf->parse($value);
+                $codiceFiscale->parse($value);
             } catch (CodiceFiscaleValidationException $exception) {
                 switch ($exception->getCode()) {
                     case CodiceFiscaleValidationException::NO_CODE:
