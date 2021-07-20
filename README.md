@@ -6,6 +6,8 @@ Laravel-FiscalCode is a package for the management of the Italian <code>CodiceFi
 The package allows easy validation and parsing of the CodiceFiscale. It is also suited for Laravel since it provides a 
 convenient custom validator for request validation.
 
+> **Important update**: now you can dynamically load city codes from ISTAT using the non-default `IstatRemoteCSVList` city decoder.
+
 - [Installation](#installation)
 - [Validation](#validation)
 - [Utility CodiceFiscale class](#utility-codicefiscale-class)
@@ -173,7 +175,7 @@ For example:
 // conf/codicefiscale.php
 
 return [
-  'city-decoder' => '\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList',
+  'city-decoder' => '\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CompositeCitiesList',
 
   ...
   
