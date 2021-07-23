@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Tests;
-
 
 use Orchestra\Testbench\TestCase;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
@@ -14,11 +12,11 @@ class ValidatorTest extends TestCase
     public function it_validates_good_codice_fiscale()
     {
         $rules = [
-            'cf_field' => 'codice_fiscale'
+            'cf_field' => 'codice_fiscale',
         ];
 
         $data = [
-            'cf_field' => 'RSSMRA95E05F205Z'
+            'cf_field' => 'RSSMRA95E05F205Z',
         ];
 
         $validator = $this->app['validator']->make($data, $rules);
@@ -29,11 +27,11 @@ class ValidatorTest extends TestCase
     public function it_doesnt_validate_wrong_codice_fiscale()
     {
         $rules = [
-            'cf_field' => 'codice_fiscale'
+            'cf_field' => 'codice_fiscale',
         ];
 
         $data = [
-            'cf_field' => 'RSSMRA95E05F205*'
+            'cf_field' => 'RSSMRA95E05F205*',
         ];
 
         $validator = $this->app['validator']->make($data, $rules);
