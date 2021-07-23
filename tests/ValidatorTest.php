@@ -7,7 +7,6 @@ use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
 
 class ValidatorTest extends TestCase
 {
-
     /** @test */
     public function it_validates_good_codice_fiscale()
     {
@@ -44,5 +43,4 @@ class ValidatorTest extends TestCase
             CodiceFiscaleServiceProvider::class,
         ];
     }
-
 }
