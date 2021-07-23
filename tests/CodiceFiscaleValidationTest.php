@@ -59,7 +59,6 @@ class CodiceFiscaleValidationTest extends TestCase
      */
     public function testOmocodiaCode($codice_fiscale, $city)
     {
-//        $codice_fiscale = 'RSSMRA95E05F20RU';
         $cf = new CodiceFiscale();
 
         $res = $cf->parse($codice_fiscale);
