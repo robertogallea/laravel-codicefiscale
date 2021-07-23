@@ -7936,6 +7936,7 @@ class ItalianCitiesStaticList implements CityDecoderInterface
         'L865' => 'VIGANO SAN MARTINO',
         'L868' => 'VIGARANO MAINARDA',
         'L869' => 'VIGASIO',
+        'L870' => 'VIGATTO',
         'L872' => 'VIGEVANO',
         'L873' => 'VIGGIANELLO',
         'L874' => 'VIGGIANO',
