@@ -43,4 +43,5 @@ class ValidatorTest extends TestCase
             CodiceFiscaleServiceProvider::class,
         ];
     }
+
 }
