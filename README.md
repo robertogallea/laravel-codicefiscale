@@ -2,11 +2,11 @@
 
 # laravel-codicefiscale
 
-![Author](https://img.shields.io/static/v1?label=author&message=robgallea&color=50ABF1&logo=twitter&style=flat-square)
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/robertogallea/laravel-codicefiscale)
-![Packagist Downloads](https://img.shields.io/packagist/dt/robertogallea/laravel-codicefiscale)
-![Laravel >=6.0](https://img.shields.io/static/v1?label=laravel&message=%E2%89%A56.0&color=ff2d20&logo=laravel&style=flat-square)
-![Sponsor me!](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/robertogallea)
+[![Author][ico-author]][link-author]
+[![GitHub release (latest SemVer)][ico-release]][link-release]
+[![Packagist Downloads][ico-downloads]][link-downloads]
+[![Laravel >=6.0][ico-laravel]][link-laravel]
+[![Sponsor me!][ico-sponsor]][link-sponsor]
 
 Laravel-FiscalCode is a package for the management of the Italian <code>CodiceFiscale</code> (i.e. tax number). 
 The package allows easy validation and parsing of the CodiceFiscale. It is also suited for Laravel since it provides a 
@@ -218,4 +218,15 @@ class MyCustomList implements CityDecoderInterface
   }
 }
 ```
-  
+
+[ico-author]: https://img.shields.io/static/v1?label=author&message=robgallea&color=50ABF1&logo=twitter&style=flat-square 
+[ico-release]: https://img.shields.io/github/v/release/robertogallea/laravel-codicefiscale
+[ico-downloads]: https://img.shields.io/packagist/dt/robertogallea/laravel-codicefiscale
+[ico-laravel]: https://img.shields.io/static/v1?label=laravel&message=%E2%89%A56.0&color=ff2d20&logo=laravel&style=flat-square
+[ico-sponsor]: https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/robertogallea
+
+[link-author]: https://twitter.com/robgallea
+[link-release]: https://github.com/robertogallea/laravel-codicefiscale
+[link-downloads]: https://packagist.org/packages/robertogallea/laravel-codicefiscale
+[link-laravel]: https://laravel.com
+[link-sponsor]: https://github.com/sponsors/robertogallea
