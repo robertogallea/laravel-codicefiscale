@@ -6,6 +6,7 @@
 [![GitHub release (latest SemVer)][ico-release]][link-release]
 [![Laravel >=6.0][ico-laravel]][link-laravel]
 [![Software License][ico-license]](LICENSE.md)
+[![PSR2 Conformance][ico-styleci]][link-styleci]
 [![Sponsor me!][ico-sponsor]][link-sponsor]
 [![Packagist Downloads][ico-downloads]][link-downloads]
 
@@ -226,9 +227,11 @@ class MyCustomList implements CityDecoderInterface
 [ico-laravel]: https://img.shields.io/static/v1?label=laravel&message=%E2%89%A56.0&color=ff2d20&logo=laravel&style=flat-square
 [ico-sponsor]: https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/robertogallea
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
+[ico-styleci]: https://styleci.io/repos/177130582/shield
 
 [link-author]: https://twitter.com/robgallea
 [link-release]: https://github.com/robertogallea/laravel-codicefiscale
 [link-downloads]: https://packagist.org/packages/robertogallea/laravel-codicefiscale
 [link-laravel]: https://laravel.com
 [link-sponsor]: https://github.com/sponsors/robertogallea
+[link-styleci]: https://styleci.io/repos/17713058s2/
