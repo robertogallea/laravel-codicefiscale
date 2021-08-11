@@ -9,6 +9,7 @@ convenient custom validator for request validation.
 > **Important update**: now you can dynamically load city codes from ISTAT using the non-default `IstatRemoteCSVList` city decoder.
 
 - [Installation](#installation)
+- [Configuration](#configuration)
 - [Validation](#validation)
 - [Utility CodiceFiscale class](#utility-codicefiscale-class)
 - [Codice fiscale Generation](#codice-fiscale-generation)
@@ -23,6 +24,16 @@ Run the following command to install the latest applicable version of the packag
 
 ```bash
 composer require robertogallea/laravel-codicefiscale
+```
+
+## Configuration
+
+To customize the package configuration, you must export the configuration file into `config/codicefiscale.php`.
+
+This can be achieved by launching the following command:
+
+```
+php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider" --tag="config"
 ```
 
 ### Laravel
