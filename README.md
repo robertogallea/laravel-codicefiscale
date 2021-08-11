@@ -2,6 +2,12 @@
 
 # laravel-codicefiscale
 
+![Author](https://img.shields.io/static/v1?label=author&message=robgallea&color=50ABF1&logo=twitter&style=flat-square)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/robertogallea/laravel-codicefiscale)
+![Packagist Downloads](https://img.shields.io/packagist/dt/robertogallea/laravel-codicefiscale)
+![Laravel >=6.0](https://img.shields.io/static/v1?label=laravel&message=%E2%89%A56.0&color=ff2d20&logo=laravel&style=flat-square)
+![Sponsor me!](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/robertogallea)
+
 Laravel-FiscalCode is a package for the management of the Italian <code>CodiceFiscale</code> (i.e. tax number). 
 The package allows easy validation and parsing of the CodiceFiscale. It is also suited for Laravel since it provides a 
 convenient custom validator for request validation.
