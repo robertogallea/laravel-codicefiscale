@@ -26,16 +26,6 @@ Run the following command to install the latest applicable version of the packag
 composer require robertogallea/laravel-codicefiscale
 ```
 
-## Configuration
-
-To customize the package configuration, you must export the configuration file into `config/codicefiscale.php`.
-
-This can be achieved by launching the following command:
-
-```
-php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider" --tag="config"
-```
-
 ### Laravel
 
 In your app config, add the Service Provider to the `$providers` array *(only for Laravel 5.4 or below)*:
@@ -65,6 +55,16 @@ In `bootstrap/app.php`, register the Service Provider
 
 ```php
 $app->register(robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider::class);
+```
+
+## Configuration
+
+To customize the package configuration, you must export the configuration file into `config/codicefiscale.php`.
+
+This can be achieved by launching the following command:
+
+```
+php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider" --tag="config"
 ```
 
 ## Validation
