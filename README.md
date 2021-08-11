@@ -4,9 +4,10 @@
 
 [![Author][ico-author]][link-author]
 [![GitHub release (latest SemVer)][ico-release]][link-release]
-[![Packagist Downloads][ico-downloads]][link-downloads]
 [![Laravel >=6.0][ico-laravel]][link-laravel]
+[![Software License][ico-license]](LICENSE.md)
 [![Sponsor me!][ico-sponsor]][link-sponsor]
+[![Packagist Downloads][ico-downloads]][link-downloads]
 
 laravel-codicefiscale is a package for the management of the Italian <code>CodiceFiscale</code> (i.e. tax number). 
 The package allows easy validation and parsing of the CodiceFiscale. It is also suited for Laravel since it provides a 
@@ -224,6 +225,7 @@ class MyCustomList implements CityDecoderInterface
 [ico-downloads]: https://img.shields.io/packagist/dt/robertogallea/laravel-codicefiscale
 [ico-laravel]: https://img.shields.io/static/v1?label=laravel&message=%E2%89%A56.0&color=ff2d20&logo=laravel&style=flat-square
 [ico-sponsor]: https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/robertogallea
+[ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
 
 [link-author]: https://twitter.com/robgallea
 [link-release]: https://github.com/robertogallea/laravel-codicefiscale
