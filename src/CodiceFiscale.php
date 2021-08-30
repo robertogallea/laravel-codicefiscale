@@ -186,6 +186,13 @@ class CodiceFiscale
             return;
         }
 
+        if (!array_key_exists($this->getBirthPlace(), $this->cityDecoder->getList())) {
+            throw new CodiceFiscaleValidationException(
+                'Invalid codice fiscale',
+                CodiceFiscaleValidationException::MISSING_CITY_CODE
+            );
+        }
+
         return ucwords(strtolower($this->cityDecoder->getList()[$this->getBirthPlace()]));
     }
 

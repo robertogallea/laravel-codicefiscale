@@ -58,6 +58,11 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
                     case CodiceFiscaleValidationException::WRONG_CODE:
                         $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_code'));
                         break;
+                    case CodiceFiscaleValidationException::MISSING_CITY_CODE:
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.missing_city_code'));
+                        break;
+                    default:
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_code'));
                 }
 
                 $validator->addReplacer('codice_fiscale', function ($message, $attribute, $rule, $parameters, $validator) use ($error_msg) {

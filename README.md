@@ -54,6 +54,7 @@ In your languages directory, add for each language an extra language entry for t
     'bad_characters' => 'The :attribute contains bad characters',
     'bad_omocodia_char' => 'The :attribute contains bad omocodia characters',
     'wrong_code' => 'The :attribute is not valid',
+    'missing_city_code' => 'The :attribute contains a non-existing city code',
 ],
 ```
 

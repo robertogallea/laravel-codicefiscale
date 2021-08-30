@@ -37,6 +37,21 @@ class ValidatorTest extends TestCase
         $this->assertEquals(false, $validator->passes());
     }
 
+    /** @test */
+    public function it_doesnt_validate_if_city_code_does_not_exist()
+    {
+        $rules = [
+            'cf_field' => 'codice_fiscale',
+        ];
+
+        $data = [
+            'cf_field' => 'LNEGLI94D20A009X',
+        ];
+
+        $validator = $this->app['validator']->make($data, $rules);
+        $this->assertEquals(false, $validator->passes());
+    }
+
     protected function getPackageProviders($app)
     {
         return [
