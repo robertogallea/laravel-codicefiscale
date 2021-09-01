@@ -119,12 +119,13 @@ produces the following result:
 in case of error, `CodiceFiscale::parse()` returns false, and you will find information about the error using 
 `CodiceFiscale::getError()`, which returns one of the defined constants among the following:
 
-- `CodiceFiscale::NO_ERROR`
-- `CodiceFiscale::NO_CODE`
-- `CodiceFiscale::WRONG_SIZE`
-- `CodiceFiscale::BAD_CHARACTERS`
-- `CodiceFiscale::BAD_OMOCODIA_CHAR`
-- `CodiceFiscale::WRONG_CODE`
+- `CodiceFiscaleException::NO_ERROR`
+- `CodiceFiscaleException::NO_CODE`
+- `CodiceFiscaleException::WRONG_SIZE`
+- `CodiceFiscaleException::BAD_CHARACTERS`
+- `CodiceFiscaleException::BAD_OMOCODIA_CHAR`
+- `CodiceFiscaleException::WRONG_CODE`
+- `CodiceFiscaleException::MISSING_CITY_CODE`
 
 ```php 
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
