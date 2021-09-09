@@ -140,6 +140,81 @@ class CodiceFiscaleGenerationTest extends TestCase
         $res = CodiceFiscale::generate("$first_name", $last_name, $birth_date, $birth_place, $gender);
     }
 
+    /** @test */
+    public function it_returns_valid_as_boolean()
+    {
+        $cf = new CodiceFiscale();
+        $cf->parse('RSSMRA95E05F205Z');
+
+        $this->assertIsBool($cf->isValid());
+    }
+
+    /** @test */
+    public function it_returns_gender_as_char()
+    {
+        $cf = new CodiceFiscale();
+        $cf->parse('RSSMRA95E05F205Z');
+
+        $this->assertIsString($cf->getGender());
+        $this->assertEquals(1, strlen($cf->getGender()));
+
+    }
+
+    /** @test */
+    public function it_returns_birthplace_as_string()
+    {
+        $cf = new CodiceFiscale();
+        $cf->parse('RSSMRA95E05F205Z');
+
+        $this->assertIsString($cf->getBirthPlace());
+    }
+
+    /** @test */
+    public function it_returns_birthdate_as_date()
+    {
+        $cf = new CodiceFiscale();
+        $cf->parse('RSSMRA95E05F205Z');
+
+        $this->assertInstanceOf(Carbon::class, $cf->getBirthDate());
+    }
+
+    /** @test */
+    public function it_returns_year_as_string()
+    {
+        $cf = new CodiceFiscale();
+        $cf->parse('RSSMRA95E05F205Z');
+
+        $this->assertIsString($cf->getYear());
+    }
+
+    /** @test */
+    public function it_returns_month_as_string()
+    {
+        $cf = new CodiceFiscale();
+        $cf->parse('RSSMRA95E05F205Z');
+
+        $this->assertIsString($cf->getMonth());
+    }
+
+    /** @test */
+    public function it_returns_day_as_string()
+    {
+        $cf = new CodiceFiscale();
+        $cf->parse('RSSMRA95E05F205Z');
+
+        $this->assertIsString($cf->getDay());
+    }
+
+    /** @test */
+    public function it_returns_codice_fiscale_as_string()
+    {
+        $cf = new CodiceFiscale();
+        $cf->parse('RSSMRA95E05F205Z');
+
+        $this->assertIsString($cf->getDay());
+        $this->assertEquals('RSSMRA95E05F205Z', $cf->getCodiceFiscale());
+    }
+
     public function getPackageProviders($application)
     {
         return [
