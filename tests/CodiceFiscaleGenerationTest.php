@@ -157,7 +157,6 @@ class CodiceFiscaleGenerationTest extends TestCase
 
         $this->assertIsString($cf->getGender());
         $this->assertEquals(1, strlen($cf->getGender()));
-
     }
 
     /** @test */
