@@ -1,2 +1,4 @@
 /.idea/*
 /vendor/*
+/_coverage/*
+.phpunit.result.cache

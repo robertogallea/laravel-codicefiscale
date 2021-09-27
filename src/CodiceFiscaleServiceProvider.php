@@ -39,10 +39,8 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
     public function registerValidator(CodiceFiscale $codiceFiscale)
     {
         Validator::extend('codice_fiscale', function ($attribute, $value, $parameters, $validator) use ($codiceFiscale) {
-            $cf = $codiceFiscale;
-
             try {
-                $result = $cf->parse($value);
+                $codiceFiscale->parse($value);
             } catch (CodiceFiscaleValidationException $exception) {
                 switch ($exception->getCode()) {
                     case CodiceFiscaleValidationException::NO_CODE:
@@ -52,14 +50,19 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
                         $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_size'));
                         break;
                     case CodiceFiscaleValidationException::BAD_CHARACTERS:
-                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_size'));
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.bad_characters'));
                         break;
                     case CodiceFiscaleValidationException::BAD_OMOCODIA_CHAR:
-                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_size'));
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.bad_omocodia_char'));
                         break;
                     case CodiceFiscaleValidationException::WRONG_CODE:
                         $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_code'));
                         break;
+                    case CodiceFiscaleValidationException::MISSING_CITY_CODE:
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.missing_city_code'));
+                        break;
+                    default:
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_code'));
                 }
 
                 $validator->addReplacer('codice_fiscale', function ($message, $attribute, $rule, $parameters, $validator) use ($error_msg) {

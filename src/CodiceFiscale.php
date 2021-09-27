@@ -186,7 +186,23 @@ class CodiceFiscale
             return;
         }
 
+        if (!array_key_exists($this->getBirthPlace(), $this->cityDecoder->getList())) {
+            throw new CodiceFiscaleValidationException(
+                'Invalid codice fiscale',
+                CodiceFiscaleValidationException::MISSING_CITY_CODE
+            );
+        }
+
         return ucwords(strtolower($this->cityDecoder->getList()[$this->getBirthPlace()]));
+    }
+
+    public function getBirthdate(): Carbon
+    {
+        try {
+            return Carbon::parse($this->getYear().'-'.$this->getMonth().'-'.$this->getDay());
+        } catch (\Exception $exception) {
+            throw new CodiceFiscaleValidationException('Parsed date is not valid');
+        }
     }
 
     public function getYear()
@@ -199,15 +215,6 @@ class CodiceFiscale
         return '19'.$this->year;
     }
 
-    public function getBirthdate(): Carbon
-    {
-        try {
-            return Carbon::parse($this->getYear().'-'.$this->getMonth().'-'.$this->getDay());
-        } catch (\Exception $exception) {
-            throw new CodiceFiscaleValidationException('Parsed date is not valid');
-        }
-    }
-
     public function getMonth()
     {
         return $this->month;
@@ -216,5 +223,10 @@ class CodiceFiscale
     public function getDay()
     {
         return $this->day;
+    }
+
+    public function getCodiceFiscale()
+    {
+        return $this->cf;
     }
 }
