@@ -5887,6 +5887,7 @@ class ItalianCitiesStaticList implements CityDecoderInterface
         'H392' => "ROCCA D'ARAZZO",
         'H395' => "ROCCA DE' BALDI",
         'H396' => "ROCCA DE' GIORGI",
+        'H397' => "ROCCA DEL COLLE",
         'H398' => "ROCCA D'EVANDRO",
         'H399' => 'ROCCA DI BOTTE',
         'H400' => 'ROCCA DI CAMBIO',
