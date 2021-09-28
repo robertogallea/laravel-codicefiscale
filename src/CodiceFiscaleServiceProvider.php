@@ -2,7 +2,6 @@
 
 namespace robertogallea\LaravelCodiceFiscale;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
@@ -49,16 +48,17 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
                 if (sizeof($parameters)) {
                     $pieces = [
                         'first_name' => '',
-                        'last_name' => '',
-                        'birthdate' => '',
-                        'place' => '',
-                        'gender' => '',
+                        'last_name'  => '',
+                        'birthdate'  => '',
+                        'place'      => '',
+                        'gender'     => '',
                     ];
 
                     foreach ($parameters as $parameter) {
                         $pair = explode('=', $parameter);
                         $pieces[$pair[0]] = $data[$pair[1]] ?? '';
                     }
+
                     try {
                         $cf = CodiceFiscale::generate(...array_values($pieces));
                     } catch (CodiceFiscaleGenerationException $exception) {

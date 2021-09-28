@@ -60,12 +60,12 @@ class ValidatorTest extends TestCase
         ];
 
         $data = [
-            'cf_field' => 'RSSMRA80A01F205X',
+            'cf_field'   => 'RSSMRA80A01F205X',
             'first_name' => 'Mario',
-            'last_name' => 'Rossi',
-            'birthdate' => '1980-01-01',
-            'place' => 'Milano',
-            'gender' => 'M',
+            'last_name'  => 'Rossi',
+            'birthdate'  => '1980-01-01',
+            'place'      => 'Milano',
+            'gender'     => 'M',
         ];
 
         $validator = $this->app['validator']->make($data, $rules);
@@ -80,12 +80,12 @@ class ValidatorTest extends TestCase
         ];
 
         $data = [
-            'cf_field' => 'RSSMRA80A01F205X',
+            'cf_field'   => 'RSSMRA80A01F205X',
             'first_name' => 'Mario',
-            'last_name' => 'Rossi',
-            'birthdate' => '1980-01-01',
-            'place' => 'PALERMO',
-            'gender' => 'M',
+            'last_name'  => 'Rossi',
+            'birthdate'  => '1980-01-01',
+            'place'      => 'PALERMO',
+            'gender'     => 'M',
         ];
 
         $validator = $this->app['validator']->make($data, $rules);
@@ -100,11 +100,11 @@ class ValidatorTest extends TestCase
         ];
 
         $data = [
-            'cf_field' => 'RSSMRA80A01F205X',
+            'cf_field'   => 'RSSMRA80A01F205X',
             'first_name' => 'Mario',
-            'last_name' => 'Rossi',
-            'birthdate' => '1980-01-01',
-            'place' => 'Milano',
+            'last_name'  => 'Rossi',
+            'birthdate'  => '1980-01-01',
+            'place'      => 'Milano',
         ];
 
         $validator = $this->app['validator']->make($data, $rules);
@@ -119,11 +119,11 @@ class ValidatorTest extends TestCase
         ];
 
         $data = [
-            'cf_field' => 'RSSMRA80A01F205X',
+            'cf_field'   => 'RSSMRA80A01F205X',
             'first_name' => 'Mario',
-            'last_name' => 'Rossi',
-            'birthdate' => '1980-01-01',
-            'place' => 'Milano',
+            'last_name'  => 'Rossi',
+            'birthdate'  => '1980-01-01',
+            'place'      => 'Milano',
         ];
 
         $validator = $this->app['validator']->make($data, $rules);
