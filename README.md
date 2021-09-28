@@ -82,7 +82,13 @@ php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\Codice
 To validate a codice fiscale, use the `codice_fiscale` keyword in your validation rules array
 
 ```php
-'codice_fiscale_field' => 'codice_fiscale',
+    public function rules()
+    {
+        return [
+            'codicefiscale' => 'codice_fiscale',
+            ...
+        ];
+    }
 ```
 
 From version **1.9.0** you can validate your codice fiscale against other form fields to check whether there is a match 
@@ -110,6 +116,7 @@ For example:
             'birthdate_field' => 'required|date',
             'place_field' => 'required|string',
             'gender_field' => 'required|string|max:1',
+            ...
         ];
     }
 ```
