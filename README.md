@@ -86,7 +86,8 @@ To validate a codice fiscale, use the `codice_fiscale` keyword in your validatio
     {
         return [
             'codicefiscale' => 'codice_fiscale',
-            ...
+            
+            //...
         ];
     }
 ```
@@ -116,7 +117,8 @@ For example:
             'birthdate_field' => 'required|date',
             'place_field' => 'required|string',
             'gender_field' => 'required|string|max:1',
-            ...
+            
+            //...
         ];
     }
 ```
