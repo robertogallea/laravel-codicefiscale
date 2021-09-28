@@ -55,6 +55,7 @@ In your languages directory, add for each language an extra language entry for t
     'bad_omocodia_char' => 'The :attribute contains bad omocodia characters',
     'wrong_code' => 'The :attribute is not valid',
     'missing_city_code' => 'The :attribute contains a non-existing city code',
+    'no_match' => 'The :attribute does not match the given personal information',
 ],
 ```
 
@@ -83,6 +84,37 @@ To validate a codice fiscale, use the `codice_fiscale` keyword in your validatio
 ```php
 'codice_fiscale_field' => 'codice_fiscale',
 ```
+
+From version **1.9.0** you can validate your codice fiscale against other form fields to check whether there is a match 
+or not.
+
+You must specify all of the required fields:
+
+- `first_name`
+- `last_name`
+- `birthdate`
+- `place`
+- `gender`
+
+giving parameters to the `codice_fiscale` rule.
+
+For example:
+
+```php
+    public function rules()
+    {
+        return [
+            'codicefiscale' => 'codice_fiscale:first_name=first_name_field,last_name=last_name_field,birthdate=birthdate_field,place=place_field,gender=gender_field',
+            'first_name_field' => 'required|string',
+            'last_name_field' => 'required|string',
+            'birthdate_field' => 'required|date',
+            'place_field' => 'required|string',
+            'gender_field' => 'required|string|max:1',
+        ];
+    }
+```
+
+Validation fails if the provided codicefiscale and the one generated from the input fields do not match.
 
 ## Utility CodiceFiscale class
 

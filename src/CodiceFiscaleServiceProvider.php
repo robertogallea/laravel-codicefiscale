@@ -2,8 +2,10 @@
 
 namespace robertogallea\LaravelCodiceFiscale;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
+use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
 
 class CodiceFiscaleServiceProvider extends ServiceProvider
@@ -15,7 +17,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
      */
     public function boot(CodiceFiscale $codiceFiscale)
     {
-        $this->registerValidator($codiceFiscale);
+        $this->bootValidator($codiceFiscale);
     }
 
     /**
@@ -36,11 +38,42 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
         });
     }
 
-    public function registerValidator(CodiceFiscale $codiceFiscale)
+    public function bootValidator(CodiceFiscale $codiceFiscale)
     {
         Validator::extend('codice_fiscale', function ($attribute, $value, $parameters, $validator) use ($codiceFiscale) {
             try {
                 $codiceFiscale->parse($value);
+
+                $data = $validator->getData();
+
+                if (sizeof($parameters)) {
+                    $pieces = [
+                        'first_name' => '',
+                        'last_name' => '',
+                        'birthdate' => '',
+                        'place' => '',
+                        'gender' => '',
+                    ];
+
+                    foreach ($parameters as $parameter) {
+                        $pair = explode('=', $parameter);
+                        $pieces[$pair[0]] = $data[$pair[1]] ?? '';
+                    }
+                    try {
+                        $cf = CodiceFiscale::generate(...array_values($pieces));
+                    } catch (CodiceFiscaleGenerationException $exception) {
+                        throw new CodiceFiscaleValidationException(
+                            'Invalid codice fiscale',
+                            CodiceFiscaleValidationException::NO_MATCH
+                        );
+                    }
+                    if ($value != $cf) {
+                        throw new CodiceFiscaleValidationException(
+                            'Invalid codice fiscale',
+                            CodiceFiscaleValidationException::NO_MATCH
+                        );
+                    }
+                }
             } catch (CodiceFiscaleValidationException $exception) {
                 switch ($exception->getCode()) {
                     case CodiceFiscaleValidationException::NO_CODE:
@@ -60,6 +93,9 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
                         break;
                     case CodiceFiscaleValidationException::MISSING_CITY_CODE:
                         $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.missing_city_code'));
+                        break;
+                    case CodiceFiscaleValidationException::NO_MATCH:
+                        $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.no_match'));
                         break;
                     default:
                         $error_msg = str_replace([':attribute'], [$attribute], trans('validation.codice_fiscale.wrong_code'));

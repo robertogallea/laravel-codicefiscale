@@ -11,4 +11,5 @@ class CodiceFiscaleValidationException extends \Exception
     public const BAD_OMOCODIA_CHAR = 4;
     public const WRONG_CODE = 5;
     public const MISSING_CITY_CODE = 6;
+    public const NO_MATCH = 7;
 }
