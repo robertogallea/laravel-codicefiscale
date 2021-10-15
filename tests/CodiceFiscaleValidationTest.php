@@ -111,7 +111,7 @@ class CodiceFiscaleValidationTest extends TestCase
     /** @test */
     public function test_wrong_city_code()
     {
-        $codice_fiscale = 'LNEGLI94D20A009X';
+        $codice_fiscale = 'LNEGLI94D20A000X';
         $cf = new CodiceFiscale();
 
         $this->expectException(CodiceFiscaleValidationException::class);

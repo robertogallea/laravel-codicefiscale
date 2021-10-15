@@ -45,7 +45,7 @@ class ValidatorTest extends TestCase
         ];
 
         $data = [
-            'cf_field' => 'LNEGLI94D20A009X',
+            'cf_field' => 'LNEGLI94D20A000X',
         ];
 
         $validator = $this->app['validator']->make($data, $rules);
