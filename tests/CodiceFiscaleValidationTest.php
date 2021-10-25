@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use Orchestra\Testbench\TestCase;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;

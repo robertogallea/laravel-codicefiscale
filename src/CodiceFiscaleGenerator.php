@@ -10,8 +10,6 @@ class CodiceFiscaleGenerator
 {
     protected $cityDecoder;
 
-    protected $_formatoData = 'd-m-Y';
-
     protected $_parametri = [];
 
     protected $_consonanti = [
@@ -62,14 +60,10 @@ class CodiceFiscaleGenerator
         '24' => 'Y', '25' => 'Z',
     ];
 
-    public function __construct(CityDecoderInterface $cityDecoder = null)
+    public function __construct(CityDecoderInterface $cityDecoder, CodiceFiscaleConfig $config)
     {
-        if ($cityDecoder) {
-            $this->cityDecoder = $cityDecoder;
-        } else {
-            $cityDecoderClass = config('codicefiscale.city-decoder');
-            $this->cityDecoder = new $cityDecoderClass();
-        }
+        $this->cityDecoder = $cityDecoder;
+        $this->config = $config;
     }
 
     protected function _scomponi($string, array $haystack)
@@ -189,7 +183,7 @@ class CodiceFiscaleGenerator
         if ($this->data instanceof Carbon) {
             $data = $this->data;
         } else {
-            $data = Carbon::createFromFormat($this->_formatoData, $this->data);
+            $data = Carbon::createFromFormat($this->config->getDateFormat(), $this->data);
         }
 
         $giorno = $data->format('j');
@@ -200,7 +194,7 @@ class CodiceFiscaleGenerator
 
         $mm = $this->_mesi[$mese];
 
-        $gg = (strtoupper($this->sesso) == 'M') ? $giorno : $giorno + 40;
+        $gg = (strtoupper($this->sesso) == config('codicefiscale.labels.male')) ? $giorno : $giorno + 40;
         $gg = str_pad($gg, 2, '0', STR_PAD_LEFT);
 
         return $aa.$mm.$gg;
@@ -214,7 +208,7 @@ class CodiceFiscaleGenerator
         } else {
             $place_code = array_search($place, $this->cityDecoder->getList());
             if (!$place_code) {
-                throw new \InvalidArgumentException('$birth_place must be a valid city code or name');
+                throw new CodiceFiscaleGenerationException('Birth place must be a valid city code or name');
             }
         }
 
@@ -246,11 +240,6 @@ class CodiceFiscaleGenerator
         }
 
         return $codice;
-    }
-
-    public function formatoData($formato)
-    {
-        $this->_formatoData = $formato;
     }
 
     public function __set($key, $value)

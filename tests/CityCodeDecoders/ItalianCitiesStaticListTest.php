@@ -2,7 +2,7 @@
 
 namespace Tests\CityCodeDecoders;
 
-use Orchestra\Testbench\TestCase;
+use Tests\TestCase;
 
 class ItalianCitiesStaticListTest extends TestCase
 {

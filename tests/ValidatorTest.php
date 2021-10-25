@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use Orchestra\Testbench\TestCase;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
 
 class ValidatorTest extends TestCase

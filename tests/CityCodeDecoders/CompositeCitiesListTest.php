@@ -3,10 +3,10 @@
 namespace Tests\CityCodeDecoders;
 
 use Illuminate\Support\Facades\Config;
-use Orchestra\Testbench\TestCase;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CompositeCitiesList;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
+use Tests\TestCase;
 
 class CompositeCitiesListTest extends TestCase
 {

@@ -4,8 +4,6 @@ namespace Tests;
 
 use Carbon\Carbon;
 use InvalidArgumentException;
-use Mockery;
-use Orchestra\Testbench\TestCase;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 use TypeError;
@@ -123,13 +121,11 @@ class CodiceFiscaleGenerationTest extends TestCase
     /** @test */
     public function it_uses_custom_decoder_for_codice_fiscale_generation()
     {
-        $mock = Mockery::mock(\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface::class, function ($mock) {
+        $this->mock(\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface::class, function ($mock) {
             $mock->shouldReceive('getList')
                 ->once()
                 ->andReturn(['A001' => 'Test']);
         });
-
-        \Illuminate\Support\Facades\Config::set('codicefiscale.city-decoder', get_class($mock));
 
         $first_name = 'Ma';
         $last_name = 'Rossi';

@@ -14,6 +14,8 @@ use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationExcepti
 
 class CodiceFiscale
 {
+    protected $config;
+
     protected $cityDecoder;
 
     private $cf = null;
@@ -39,6 +41,8 @@ class CodiceFiscale
 
     public function __construct(CityDecoderInterface $cityDecoder = null)
     {
+        $this->config = $config ?? resolve(CodiceFiscaleConfig::class);
+
         $this->cityDecoder = isset($cityDecoder) ? $cityDecoder : new InternationalCitiesStaticList();
         $this->tabReplacementOmocodia = [6, 7, 9, 10, 12, 13, 14];
 
@@ -87,20 +91,22 @@ class CodiceFiscale
         ];
     }
 
-    public static function generate(string $first_name, string $last_name, $birth_date, string $place, string $gender): string
+    public static function generate(string $first_name, string $last_name, $birth_date, string $place, string $gender, CodiceFiscaleConfig $config = null): string
     {
-        $cf_gen = new CodiceFiscaleGenerator();
+        $config = $config ?: resolve(CodiceFiscaleConfig::class);
+
+        $cf_gen = resolve(CodiceFiscaleGenerator::class);
 
         $cf_gen->nome = $first_name;
         $cf_gen->cognome = $last_name;
 
         $cf_gen->comune = $place;
         $cf_gen->sesso = $gender;
-        $cf_gen->formatoData('Y-m-d');
+
         if ($birth_date instanceof Carbon) {
             $date = $birth_date;
         } else {
-            $date = Carbon::createFromFormat('Y-m-d', $birth_date);
+            $date = Carbon::createFromFormat($config->getDateFormat(), $birth_date);
         }
         $cf_gen->data = $date;
 
@@ -136,13 +142,15 @@ class CodiceFiscale
 
         $this->isValid = true;
 
-        $this->gender = (substr($adaptedCF, 9, 2) > '40' ? 'F' : 'M');
+        $this->gender = (substr($adaptedCF, 9, 2) > '40' ? $this->config->getFemaleLabel() : $this->config->getMaleLabel());
+
         $this->birthPlace = substr($adaptedCF, 11, 4);
         $this->year = substr($adaptedCF, 6, 2);
         $this->month = $this->tabDecodeMonths[substr($adaptedCF, 8, 1)];
 
         $this->day = substr($adaptedCF, 9, 2);
-        if ($this->gender === 'F') {
+
+        if ($this->gender === $this->config->getFemaleLabel()) {
             $this->day = $this->day - 40;
             if (strlen($this->day) === 1) {
                 $this->day = '0'.$this->day;
