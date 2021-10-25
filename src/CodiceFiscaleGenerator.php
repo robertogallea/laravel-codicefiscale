@@ -194,7 +194,7 @@ class CodiceFiscaleGenerator
 
         $mm = $this->_mesi[$mese];
 
-        $gg = (strtoupper($this->sesso) == config('codicefiscale.labels.male')) ? $giorno : $giorno + 40;
+        $gg = ($this->sesso == config('codicefiscale.labels.male')) ? $giorno : $giorno + 40;
         $gg = str_pad($gg, 2, '0', STR_PAD_LEFT);
 
         return $aa.$mm.$gg;

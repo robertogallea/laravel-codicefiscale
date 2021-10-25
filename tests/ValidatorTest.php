@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Support\Facades\Config;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
 
 class ValidatorTest extends TestCase
@@ -54,6 +55,7 @@ class ValidatorTest extends TestCase
     /** @test */
     public function it_can_require_cf_validation_against_form_fields_and_pass()
     {
+        Config::set('codicefiscale.labels.male', 'maschio');
         $rules = [
             'cf_field' => 'codice_fiscale:first_name=first_name,last_name=last_name,birthdate=birthdate,place=place,gender=gender',
         ];
@@ -64,7 +66,7 @@ class ValidatorTest extends TestCase
             'last_name'  => 'Rossi',
             'birthdate'  => '1980-01-01',
             'place'      => 'Milano',
-            'gender'     => 'M',
+            'gender'     => 'maschio',
         ];
 
         $validator = $this->app['validator']->make($data, $rules);
@@ -127,12 +129,5 @@ class ValidatorTest extends TestCase
 
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertEquals(false, $validator->passes());
-    }
-
-    protected function getPackageProviders($app)
-    {
-        return [
-            CodiceFiscaleServiceProvider::class,
-        ];
     }
 }
