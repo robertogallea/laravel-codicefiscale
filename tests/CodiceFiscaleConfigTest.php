@@ -6,7 +6,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleConfig;
-use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
 
 class CodiceFiscaleConfigTest extends TestCase
 {
@@ -42,5 +41,4 @@ class CodiceFiscaleConfigTest extends TestCase
             ['RSSMRA95E05F205Z', 'codicefiscale.date-format', 'd/m/Y', Carbon::parse('1995-05-05'), 'birthdate'],
         ];
     }
-
 }
