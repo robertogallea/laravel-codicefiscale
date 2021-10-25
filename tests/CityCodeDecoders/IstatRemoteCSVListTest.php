@@ -2,8 +2,8 @@
 
 namespace Tests\CityCodeDecoders;
 
-use Orchestra\Testbench\TestCase;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
+use Tests\TestCase;
 
 class IstatRemoteCSVListTest extends TestCase
 {

@@ -4,6 +4,7 @@ namespace robertogallea\LaravelCodiceFiscale;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
+use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
 
@@ -28,13 +29,19 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
     {
         $this->publishConfig();
 
-        $this->app->singleton(CodiceFiscale::class, function () {
+        $this->app->singleton(CodiceFiscale::class, function ($app) {
             $decoder = config('codicefiscale.city-decoder');
 
             return new CodiceFiscale(
-                new $decoder()
+                new $decoder(),
+                $app->get(CodiceFiscaleConfig::class)
             );
         });
+
+        $this->app->bind(
+            CityDecoderInterface::class,
+            config('codicefiscale.city-decoder')
+        );
     }
 
     public function bootValidator(CodiceFiscale $codiceFiscale)

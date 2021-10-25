@@ -15,4 +15,15 @@ return [
         // '\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\ISTATRemoteCSVList',
         // '\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList',
     ],
+
+    // used date format for parsing
+    'date-format' => 'Y-m-d',
+
+    // used labels for parsing
+    'labels' => [
+        'male' => 'M',
+
+        'female' => 'F',
+    ],
+
 ];

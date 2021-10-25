@@ -77,6 +77,13 @@ This can be achieved by launching the following command:
 php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider" --tag="config"
 ```
 
+You can configure the following parameters:
+
+- `city-decoder`: the class used for decoding city codes (see [City code parsing](#city-code-parsing)), default to 
+  `InternationalCitiesStaticList`.
+- `date-format`: the date format used for parsing birthdates, default to `'Y-m-d'`.
+- `labels`: the labels used for `male` and `female` persons, defaults to `'M'` and `'F'`.
+
 ## Validation
 
 To validate a codice fiscale, use the `codice_fiscale` keyword in your validation rules array

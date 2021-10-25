@@ -10,8 +10,6 @@ class CodiceFiscaleGenerator
 {
     protected $cityDecoder;
 
-    protected $_formatoData = 'd-m-Y';
-
     protected $_parametri = [];
 
     protected $_consonanti = [
@@ -25,8 +23,8 @@ class CodiceFiscaleGenerator
     ];
 
     protected $_mesi = [
-        1  => 'A', 2 => 'B', 3 => 'C', 4 => 'D', 5 => 'E',
-        6  => 'H', 7 => 'L', 8 => 'M', 9 => 'P', 10 => 'R',
+        1 => 'A', 2 => 'B', 3 => 'C', 4 => 'D', 5 => 'E',
+        6 => 'H', 7 => 'L', 8 => 'M', 9 => 'P', 10 => 'R',
         11 => 'S', 12 => 'T',
     ];
 
@@ -53,23 +51,19 @@ class CodiceFiscaleGenerator
     ];
 
     protected $_controllo = [
-        '0'  => 'A', '1' => 'B', '2' => 'C', '3' => 'D',
-        '4'  => 'E', '5' => 'F', '6' => 'G', '7' => 'H',
-        '8'  => 'I', '9' => 'J', '10' => 'K', '11' => 'L',
+        '0' => 'A', '1' => 'B', '2' => 'C', '3' => 'D',
+        '4' => 'E', '5' => 'F', '6' => 'G', '7' => 'H',
+        '8' => 'I', '9' => 'J', '10' => 'K', '11' => 'L',
         '12' => 'M', '13' => 'N', '14' => 'O', '15' => 'P',
         '16' => 'Q', '17' => 'R', '18' => 'S', '19' => 'T',
         '20' => 'U', '21' => 'V', '22' => 'W', '23' => 'X',
         '24' => 'Y', '25' => 'Z',
     ];
 
-    public function __construct(CityDecoderInterface $cityDecoder = null)
+    public function __construct(CityDecoderInterface $cityDecoder, CodiceFiscaleConfig $config)
     {
-        if ($cityDecoder) {
-            $this->cityDecoder = $cityDecoder;
-        } else {
-            $cityDecoderClass = config('codicefiscale.city-decoder');
-            $this->cityDecoder = new $cityDecoderClass();
-        }
+        $this->cityDecoder = $cityDecoder;
+        $this->config = $config;
     }
 
     protected function _scomponi($string, array $haystack)
@@ -189,7 +183,7 @@ class CodiceFiscaleGenerator
         if ($this->data instanceof Carbon) {
             $data = $this->data;
         } else {
-            $data = Carbon::createFromFormat($this->_formatoData, $this->data);
+            $data = Carbon::createFromFormat($this->config->getDateFormat(), $this->data);
         }
 
         $giorno = $data->format('j');
@@ -200,10 +194,10 @@ class CodiceFiscaleGenerator
 
         $mm = $this->_mesi[$mese];
 
-        $gg = (strtoupper($this->sesso) == 'M') ? $giorno : $giorno + 40;
+        $gg = (strtoupper($this->sesso) == config('codicefiscale.labels.male')) ? $giorno : $giorno + 40;
         $gg = str_pad($gg, 2, '0', STR_PAD_LEFT);
 
-        return $aa.$mm.$gg;
+        return $aa . $mm . $gg;
     }
 
     protected function _calcolaCatastale()
@@ -214,7 +208,7 @@ class CodiceFiscaleGenerator
         } else {
             $place_code = array_search($place, $this->cityDecoder->getList());
             if (!$place_code) {
-                throw new \InvalidArgumentException('$birth_place must be a valid city code or name');
+                throw new CodiceFiscaleGenerationException('Birth place must be a valid city code or name');
             }
         }
 
@@ -236,21 +230,16 @@ class CodiceFiscaleGenerator
 
     public function calcola()
     {
-        $codice = $this->_calcolaCognome().
-            $this->_calcolaNome().
-            $this->_calcolaDataNascita().
+        $codice = $this->_calcolaCognome() .
+            $this->_calcolaNome() .
+            $this->_calcolaDataNascita() .
             $this->_calcolaCatastale();
         $codice .= $this->_calcolaCifraControllo($codice);
         if (strlen($codice) != 16) {
-            throw new CodiceFiscaleGenerationException('Generated code has not 16 digits: '.$codice);
+            throw new CodiceFiscaleGenerationException('Generated code has not 16 digits: ' . $codice);
         }
 
         return $codice;
-    }
-
-    public function formatoData($formato)
-    {
-        $this->_formatoData = $formato;
     }
 
     public function __set($key, $value)

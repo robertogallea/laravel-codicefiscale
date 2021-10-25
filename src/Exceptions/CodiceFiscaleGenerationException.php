@@ -2,6 +2,6 @@
 
 namespace robertogallea\LaravelCodiceFiscale\Exceptions;
 
-class CodiceFiscaleGenerationException extends \Exception
+class CodiceFiscaleGenerationException extends \InvalidArgumentException
 {
 }
