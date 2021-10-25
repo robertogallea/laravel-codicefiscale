@@ -41,4 +41,23 @@ class CodiceFiscaleConfigTest extends TestCase
             ['RSSMRA95E05F205Z', 'codicefiscale.date-format', 'd/m/Y', Carbon::parse('1995-05-05'), 'birthdate'],
         ];
     }
+
+    /** @test */
+    public function it_can_require_cf_validation_against_form_fields_with_overridded_gender_labels()
+    {
+        $rules = [
+            'cf_field' => 'codice_fiscale:first_name=first_name,last_name=last_name,birthdate=birthdate,place=place',
+        ];
+
+        $data = [
+            'cf_field'   => 'RSSMRA80A01F205X',
+            'first_name' => 'Mario',
+            'last_name'  => 'Rossi',
+            'birthdate'  => '1980-01-01',
+            'place'      => 'Milano',
+        ];
+
+        $validator = $this->app['validator']->make($data, $rules);
+        $this->assertEquals(false, $validator->passes());
+    }
 }
