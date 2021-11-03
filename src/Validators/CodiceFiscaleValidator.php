@@ -12,7 +12,6 @@ class CodiceFiscaleValidator
 
     public function __construct(CodiceFiscale $codiceFiscale)
     {
-
         $this->codiceFiscale = $codiceFiscale;
     }
 
@@ -26,10 +25,10 @@ class CodiceFiscaleValidator
             if (sizeof($parameters)) {
                 $pieces = [
                     'first_name' => '',
-                    'last_name' => '',
-                    'birthdate' => '',
-                    'place' => '',
-                    'gender' => '',
+                    'last_name'  => '',
+                    'birthdate'  => '',
+                    'place'      => '',
+                    'gender'     => '',
                 ];
 
                 foreach ($parameters as $parameter) {
