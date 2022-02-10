@@ -5,8 +5,6 @@ namespace robertogallea\LaravelCodiceFiscale;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
-use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
-use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
 use robertogallea\LaravelCodiceFiscale\Validators\CodiceFiscaleValidator;
 
 class CodiceFiscaleServiceProvider extends ServiceProvider
