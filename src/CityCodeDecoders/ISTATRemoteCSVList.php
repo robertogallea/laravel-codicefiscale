@@ -17,7 +17,7 @@ class ISTATRemoteCSVList implements CityDecoderInterface
     public static function getList()
     {
         return \Cache::remember('cities-list', config('codicefiscale.cache-duration'), function () {
-            $client = new Client();
+            $client = new Client(['verify' => false]);
             $response = $client->request('GET', config('codicefiscale.istat-csv-url'));
 
             $body = iconv('ISO-8859-1', 'UTF-8', $response->getBody());

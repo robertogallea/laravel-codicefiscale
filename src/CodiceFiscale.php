@@ -39,7 +39,7 @@ class CodiceFiscale
         CheckForWrongCode::class,
     ];
 
-    public function __construct(CityDecoderInterface $cityDecoder = null)
+    public function __construct(CityDecoderInterface $cityDecoder = null, CodiceFiscaleConfig $config = null)
     {
         $this->config = $config ?? resolve(CodiceFiscaleConfig::class);
 
