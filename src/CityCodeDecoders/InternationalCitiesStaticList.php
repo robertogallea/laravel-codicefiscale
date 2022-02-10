@@ -4611,6 +4611,7 @@ class InternationalCitiesStaticList implements CityDecoderInterface
         'F766' => 'MOSO IN PASSIRIA .MOOS IN PASSEIER.',
         'F767' => 'MOSSA',
         'F768' => 'MOSSANO',
+        'F769' => 'MOSSO SANTA MARIA',
         'M304' => 'MOSSO',
         'F771' => 'MOTTA BALUFFI',
         'F772' => 'MOTTA CAMASTRA',
