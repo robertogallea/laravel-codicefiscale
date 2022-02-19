@@ -6,7 +6,10 @@ use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationExcepti
 
 class CheckForWrongSize implements Check
 {
-    public function check($code)
+    /**
+     * @throws CodiceFiscaleValidationException
+     */
+    public function check($code): bool
     {
         if (strlen($code) !== 16) {
             throw new CodiceFiscaleValidationException(
