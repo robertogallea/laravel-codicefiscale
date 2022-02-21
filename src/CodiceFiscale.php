@@ -120,15 +120,18 @@ class CodiceFiscale
     {
         try {
             $this->parse($cf);
+
             return true;
         } catch (\Exception $ex) {
             $this->error = $ex;
+
             return false;
         }
     }
 
     /**
      * @returns array
+     *
      * @throws CodiceFiscaleValidationException
      */
     public function parse($cf): array
@@ -249,19 +252,20 @@ class CodiceFiscale
     }
 
     /**
-     * @return array
      * @throws CodiceFiscaleValidationException
+     *
+     * @return array
      */
     public function asArray(): array
     {
         return [
-            'gender' => $this->getGender(),
-            'birth_place' => $this->getBirthPlace(),
+            'gender'               => $this->getGender(),
+            'birth_place'          => $this->getBirthPlace(),
             'birth_place_complete' => $this->getBirthPlaceComplete(),
-            'day' => $this->getDay(),
-            'month' => $this->getMonth(),
-            'year' => $this->getYear(),
-            'birthdate' => $this->getBirthdate(),
+            'day'                  => $this->getDay(),
+            'month'                => $this->getMonth(),
+            'year'                 => $this->getYear(),
+            'birthdate'            => $this->getBirthdate(),
         ];
     }
 }
