@@ -37,7 +37,10 @@ class CheckForOmocodiaChars implements Check
         'Z' => '!',
     ];
 
-    public function check($code)
+    /**
+     * @throws CodiceFiscaleValidationException
+     */
+    public function check($code): bool
     {
         $cfArray = str_split($code);
 

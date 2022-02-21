@@ -6,7 +6,10 @@ use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationExcepti
 
 class CheckForBadChars implements Check
 {
-    public function check($code)
+    /**
+     * @throws CodiceFiscaleValidationException
+     */
+    public function check($code): bool
     {
         $code = strtoupper($code);
 

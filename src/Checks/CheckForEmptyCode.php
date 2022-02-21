@@ -6,7 +6,10 @@ use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationExcepti
 
 class CheckForEmptyCode implements Check
 {
-    public function check($code)
+    /**
+     * @throws CodiceFiscaleValidationException
+     */
+    public function check($code): bool
     {
         if (($code === null) || ($code === '')) {
             throw new CodiceFiscaleValidationException(

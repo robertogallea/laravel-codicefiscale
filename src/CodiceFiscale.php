@@ -113,7 +113,25 @@ class CodiceFiscale
         return $cf_gen->calcola();
     }
 
-    public function parse($cf)
+    /**
+     * @returns bool
+     */
+    public function tryParse($cf): bool
+    {
+        try {
+            $this->parse($cf);
+            return true;
+        } catch (\Exception $ex) {
+            $this->error = $ex;
+            return false;
+        }
+    }
+
+    /**
+     * @returns array
+     * @throws CodiceFiscaleValidationException
+     */
+    public function parse($cf): array
     {
         $cf = strtoupper($cf);
         $this->cf = $cf;
@@ -157,15 +175,7 @@ class CodiceFiscale
             }
         }
 
-        return [
-            'gender'               => $this->getGender(),
-            'birth_place'          => $this->getBirthPlace(),
-            'birth_place_complete' => $this->getBirthPlaceComplete(),
-            'day'                  => $this->getDay(),
-            'month'                => $this->getMonth(),
-            'year'                 => $this->getYear(),
-            'birthdate'            => $this->getBirthdate(),
-        ];
+        return $this->asArray();
     }
 
     public function isValid()
@@ -236,5 +246,22 @@ class CodiceFiscale
     public function getCodiceFiscale()
     {
         return $this->cf;
+    }
+
+    /**
+     * @return array
+     * @throws CodiceFiscaleValidationException
+     */
+    public function asArray(): array
+    {
+        return [
+            'gender' => $this->getGender(),
+            'birth_place' => $this->getBirthPlace(),
+            'birth_place_complete' => $this->getBirthPlaceComplete(),
+            'day' => $this->getDay(),
+            'month' => $this->getMonth(),
+            'year' => $this->getYear(),
+            'birthdate' => $this->getBirthdate(),
+        ];
     }
 }

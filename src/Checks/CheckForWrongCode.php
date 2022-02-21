@@ -115,7 +115,10 @@ class CheckForWrongCode implements Check
         25 => 'Z',
     ];
 
-    public function check($code)
+    /**
+     * @throws CodiceFiscaleValidationException
+     */
+    public function check($code): bool
     {
         $cfArray = str_split($code);
 

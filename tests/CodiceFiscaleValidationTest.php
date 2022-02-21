@@ -44,6 +44,28 @@ class CodiceFiscaleValidationTest extends TestCase
         $this->assertEquals($res['birth_place_complete'], 'Milano');
     }
 
+    public function testTryParseGoodCode()
+    {
+        $codice_fiscale = 'RSSMRA95E05F205Z';
+        $cf = new CodiceFiscale();
+
+        $res = $cf->tryParse($codice_fiscale);
+        $this->assertEquals(true, $res);
+        $this->assertEquals(true, $cf->isValid());
+        $this->assertEquals(null, $cf->getError());
+    }
+
+    public function testTryParseCodiceFiscaleTooShort()
+    {
+        $codice_fiscale = 'ABC';
+        $cf = new CodiceFiscale();
+
+        $res = $cf->tryParse($codice_fiscale);
+        $this->assertEquals(false, $res);
+        $this->assertEquals(false, $cf->isValid());
+        $this->assertInstanceOf(CodiceFiscaleValidationException::class, $cf->getError());
+    }
+
     public function testWrongOmocodiaCode()
     {
         $codice_fiscale = 'RSSMRA95E05F20OU';

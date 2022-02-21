@@ -2,7 +2,12 @@
 
 namespace robertogallea\LaravelCodiceFiscale\Checks;
 
+use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
+
 interface Check
 {
-    public function check($code);
+    /**
+     * @throws CodiceFiscaleValidationException
+     */
+    public function check($code): bool;
 }

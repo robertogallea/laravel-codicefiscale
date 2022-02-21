@@ -141,13 +141,16 @@ useful utility methods.
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 
 ...
-
-$cf = new CodiceFiscale();
-$result = $cf->parse('RSSMRA95E05F205Z');
-var_dump($result);
+try {
+    $cf = new CodiceFiscale();
+    $result = $cf->parse('RSSMRA95E05F205Z');
+    var_dump($result);
+} catch (Exception $exception) {
+    echo $exception;
+}
 ```
 
-produces the following result:
+In case of a valid codicefiscale it produces the following result:
 
 ```php
 [
@@ -164,8 +167,7 @@ produces the following result:
 ```
 
 
-in case of error, `CodiceFiscale::parse()` returns false, and you will find information about the error using 
-`CodiceFiscale::getError()`, which returns one of the defined constants among the following:
+in case of an error, `CodiceFiscale::parse()` throws an `CodiceFiscaleValidationException`, which returns one of the defined constants with `$exception->getCode()`:
 
 - `CodiceFiscaleException::NO_ERROR`
 - `CodiceFiscaleException::NO_CODE`
@@ -175,14 +177,31 @@ in case of error, `CodiceFiscale::parse()` returns false, and you will find info
 - `CodiceFiscaleException::WRONG_CODE`
 - `CodiceFiscaleException::MISSING_CITY_CODE`
 
-```php 
+
+If you rather not want to catch exceptions, you can use `CodiceFiscale::tryParse()`:
+
+```php
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 
 ...
-
 $cf = new CodiceFiscale();
-$result = $cf->parse('RSSMRA95E0');
-echo $cf->getError();
+$result = $cf->tryParse('RSSMRA95E05F205Z');
+if ($result) {
+    var_dump($cf->asArray());
+} else {
+    echo $cf->getError();
+}
+```
+
+which returns the same values as above, you can use `$cf->isValid()` to check if the codicefiscale is valid and `$cf->getError()` to get the error.
+This is especially useful in a blade template:
+```php
+@php($cf = new robertogallea\LaravelCodiceFiscale\CodiceFiscale())
+@if($cf->tryParse($codicefiscale))
+    <p><i class="fa fa-check" style="color:green"></i>{{$cf->getCodiceFiscale()}}</p>
+@else
+    <p><i class="fa fa-check" style="color:red"></i>{{$cf->getError()->getMessage()}}</p>
+@endif
 ```
 
 ## Codice fiscale Generation
