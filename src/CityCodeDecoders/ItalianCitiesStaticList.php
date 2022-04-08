@@ -3447,6 +3447,7 @@ class ItalianCitiesStaticList implements CityDecoderInterface
         'E336' => 'ISILI',
         'E337' => 'ISNELLO',
         'E338' => "ISOLA D'ASTI",
+        'E355' => "ISOLA D'ISTRIA",
         'E341' => 'ISOLA DEL CANTONE',
         'E348' => 'ISOLA DEL GIGLIO',
         'E343' => "ISOLA DEL GRAN SASSO D'ITALIA",
