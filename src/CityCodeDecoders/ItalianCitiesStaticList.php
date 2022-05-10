@@ -1511,6 +1511,7 @@ class ItalianCitiesStaticList implements CityDecoderInterface
         'B880' => 'CASALECCHIO DI RENO',
         'B882' => 'CASALEGGIO BOIRO',
         'B883' => 'CASALEGGIO NOVARA',
+        'B884' => 'CASALEGGIO CASTELLAZZO',
         'B886' => 'CASALEONE',
         'B889' => 'CASALETTO CEREDANO',
         'B890' => 'CASALETTO DI SOPRA',
