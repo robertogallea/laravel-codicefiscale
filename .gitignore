@@ -3,3 +3,4 @@
 /_coverage/*
 .phpunit.result.cache
 .php-cs-fixer.cache
+composer.lock
