@@ -108,7 +108,7 @@ class CodiceFiscaleGenerator
     protected function _calcolaNome()
     {
         $code = '';
-        if (! $this->nome) {
+        if (!$this->nome) {
             throw new CodiceFiscaleGenerationException('First name not enetered');
         }
         $nome = $this->_pulisci($this->nome);
@@ -125,7 +125,7 @@ class CodiceFiscaleGenerator
                 if ($i == 1) {
                     continue;
                 }
-                if (! empty($nome_cons[$i])) {
+                if (!empty($nome_cons[$i])) {
                     $code .= $nome_cons[$i];
                 }
             }
@@ -143,7 +143,7 @@ class CodiceFiscaleGenerator
 
     protected function _calcolaCognome()
     {
-        if (! $this->cognome) {
+        if (!$this->cognome) {
             throw new CodiceFiscaleGenerationException('Last name not entered');
         }
         $cognome = $this->_pulisci($this->cognome);
@@ -172,11 +172,11 @@ class CodiceFiscaleGenerator
 
     protected function _calcolaDataNascita()
     {
-        if (! $this->data) {
+        if (!$this->data) {
             throw new CodiceFiscaleGenerationException('Birth date not entered');
         }
 
-        if (! $this->sesso) {
+        if (!$this->sesso) {
             throw new CodiceFiscaleGenerationException('Geneder not entered');
         }
 
@@ -207,7 +207,7 @@ class CodiceFiscaleGenerator
             $place_code = $place;
         } else {
             $place_code = array_search($place, $this->cityDecoder->getList());
-            if (! $place_code) {
+            if (!$place_code) {
                 throw new CodiceFiscaleGenerationException('Birth place must be a valid city code or name');
             }
         }
