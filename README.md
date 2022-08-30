@@ -6,7 +6,6 @@
 [![GitHub release (latest SemVer)][ico-release]][link-release]
 [![Laravel >=6.0][ico-laravel]][link-laravel]
 [![Software License][ico-license]](LICENSE.md)
-[![PSR2 Conformance][ico-styleci]][link-styleci]
 [![Sponsor me!][ico-sponsor]][link-sponsor]
 [![Packagist Downloads][ico-downloads]][link-downloads]
 
