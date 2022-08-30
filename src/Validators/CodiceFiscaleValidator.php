@@ -22,7 +22,7 @@ class CodiceFiscaleValidator
 
             $data = $validator->getData();
 
-            if (sizeof($parameters)) {
+            if (count($parameters)) {
                 $pieces = [
                     'first_name' => '',
                     'last_name'  => '',

@@ -5,7 +5,9 @@ namespace robertogallea\LaravelCodiceFiscale;
 class CodiceFiscaleConfig
 {
     protected $dateFormat;
+
     protected $maleLabel;
+
     protected $femaleLabel;
 
     public function __construct()
