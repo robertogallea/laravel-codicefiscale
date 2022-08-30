@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "php": ">=7.1",
+        "php": ">=7.4",
         "illuminate/support": ">=6.0",
         "illuminate/validation": ">=6.0",
         "nesbot/carbon": "^2.16",
