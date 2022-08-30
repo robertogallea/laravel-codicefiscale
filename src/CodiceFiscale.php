@@ -162,7 +162,7 @@ class CodiceFiscale
         $cfArray = str_split($cf);
 
         for ($i = 0; $i < count($this->tabReplacementOmocodia); $i++) {
-            if (!is_numeric($cfArray[$this->tabReplacementOmocodia[$i]])) {
+            if (! is_numeric($cfArray[$this->tabReplacementOmocodia[$i]])) {
                 $cfArray[$this->tabReplacementOmocodia[$i]] =
                     $this->tabDecodeOmocodia[$cfArray[$this->tabReplacementOmocodia[$i]]];
             }
@@ -216,7 +216,7 @@ class CodiceFiscale
             return;
         }
 
-        if (!array_key_exists($this->getBirthPlace(), $this->cityDecoder->getList())) {
+        if (! array_key_exists($this->getBirthPlace(), $this->cityDecoder->getList())) {
             throw new CodiceFiscaleValidationException(
                 'Invalid codice fiscale',
                 CodiceFiscaleValidationException::MISSING_CITY_CODE
