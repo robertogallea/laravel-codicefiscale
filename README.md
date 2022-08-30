@@ -10,7 +10,7 @@
 [![Sponsor me!][ico-sponsor]][link-sponsor]
 [![Packagist Downloads][ico-downloads]][link-downloads]
 
-laravel-codicefiscale is a package for the management of the Italian <code>CodiceFiscale</code> (i.e. tax number). 
+laravel-codicefiscale is a package for the management of the Italian `CodiceFiscale` (i.e. tax code). 
 The package allows easy validation and parsing of the CodiceFiscale. It is also suited for Laravel since it provides a 
 convenient custom validator for request validation.
 
