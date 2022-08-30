@@ -22,7 +22,7 @@ class CodiceFiscaleValidator
 
             $data = $validator->getData();
 
-            if (sizeof($parameters)) {
+            if (count($parameters)) {
                 $pieces = [
                     'first_name' => '',
                     'last_name'  => '',
@@ -54,28 +54,28 @@ class CodiceFiscaleValidator
         } catch (CodiceFiscaleValidationException $exception) {
             switch ($exception->getCode()) {
                 case CodiceFiscaleValidationException::NO_CODE:
-                    $error_msg = trans('validation.codice_fiscale.no_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    $error_msg = trans('codicefiscale::validation.no_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
                     break;
                 case CodiceFiscaleValidationException::WRONG_SIZE:
-                    $error_msg = trans('validation.codice_fiscale.wrong_size', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    $error_msg = trans('codicefiscale::validation.wrong_size', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
                     break;
                 case CodiceFiscaleValidationException::BAD_CHARACTERS:
-                    $error_msg = trans('validation.codice_fiscale.bad_characters', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    $error_msg = trans('codicefiscale::validation.bad_characters', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
                     break;
                 case CodiceFiscaleValidationException::BAD_OMOCODIA_CHAR:
-                    $error_msg = trans('validation.codice_fiscale.bad_omocodia_char', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    $error_msg = trans('codicefiscale::validation.bad_omocodia_char', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
                     break;
                 case CodiceFiscaleValidationException::WRONG_CODE:
-                    $error_msg = trans('validation.codice_fiscale.wrong_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    $error_msg = trans('codicefiscale::validation.wrong_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
                     break;
                 case CodiceFiscaleValidationException::MISSING_CITY_CODE:
-                    $error_msg = trans('validation.codice_fiscale.missing_city_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    $error_msg = trans('codicefiscale::validation.missing_city_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
                     break;
                 case CodiceFiscaleValidationException::NO_MATCH:
-                    $error_msg = trans('validation.codice_fiscale.no_match', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    $error_msg = trans('codicefiscale::validation.no_match', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
                     break;
                 default:
-                    $error_msg = trans('validation.codice_fiscale.wrong_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    $error_msg = trans('codicefiscale::validation.wrong_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
             }
 
             $validator->addReplacer('codice_fiscale', function ($message, $attribute, $rule, $parameters, $validator) use ($error_msg) {

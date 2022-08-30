@@ -46,6 +46,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
     public function bootValidator()
     {
         Validator::extend('codice_fiscale', CodiceFiscaleValidator::class);
+        $this->loadTranslationsFrom(__DIR__.'/../lang', 'codicefiscale');
     }
 
     private function publishConfig()

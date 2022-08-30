@@ -6,11 +6,10 @@
 [![GitHub release (latest SemVer)][ico-release]][link-release]
 [![Laravel >=6.0][ico-laravel]][link-laravel]
 [![Software License][ico-license]](LICENSE.md)
-[![PSR2 Conformance][ico-styleci]][link-styleci]
 [![Sponsor me!][ico-sponsor]][link-sponsor]
 [![Packagist Downloads][ico-downloads]][link-downloads]
 
-laravel-codicefiscale is a package for the management of the Italian <code>CodiceFiscale</code> (i.e. tax number). 
+laravel-codicefiscale is a package for the management of the Italian `CodiceFiscale` (i.e. tax code). 
 The package allows easy validation and parsing of the CodiceFiscale. It is also suited for Laravel since it provides a 
 convenient custom validator for request validation.
 
@@ -45,19 +44,7 @@ In your app config, add the Service Provider to the `$providers` array *(only fo
 ],
 ```
 
-In your languages directory, add for each language an extra language entry for the validator:
-
-```php
-'codice_fiscale' => [
-    'wrong_size' => 'The :attribute has a wrong size',
-    'no_code' => 'The :attribute is empty',
-    'bad_characters' => 'The :attribute contains bad characters',
-    'bad_omocodia_char' => 'The :attribute contains bad omocodia characters',
-    'wrong_code' => 'The :attribute is not valid',
-    'missing_city_code' => 'The :attribute contains a non-existing city code',
-    'no_match' => 'The :attribute does not match the given personal information',
-],
-```
+The validation error messages are translated in `it` and `en` languages, if you want to add new language please send me a PR.
 
 ### Lumen
 
