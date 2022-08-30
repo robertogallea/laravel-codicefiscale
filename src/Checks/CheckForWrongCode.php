@@ -130,7 +130,7 @@ class CheckForWrongCode implements Check
             $even = $even + $this->tabEvenChars[$cfArray[$i + 1]];
         }
 
-        if (! ($this->tabControlCode[($even + $odd) % 26] === $cfArray[15]) || (! $this->checkRegex($code))) {
+        if (!($this->tabControlCode[($even + $odd) % 26] === $cfArray[15]) || (!$this->checkRegex($code))) {
             throw new CodiceFiscaleValidationException(
                 'Invalid codice fiscale',
                 CodiceFiscaleValidationException::WRONG_CODE
