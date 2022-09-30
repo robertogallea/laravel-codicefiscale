@@ -1332,6 +1332,7 @@ class InternationalCitiesStaticList implements CityDecoderInterface
         'B660' => 'CAPIZZI',
         'B661' => 'CAPIZZONE',
         'B664' => 'CAPO DI PONTE',
+        'B665' => 'CAPODISTRIA',
         'B666' => "CAPO D'ORLANDO",
         'B663' => 'CAPODIMONTE',
         'B667' => 'CAPODRISE',
