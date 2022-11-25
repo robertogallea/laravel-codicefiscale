@@ -6993,6 +6993,7 @@ class InternationalCitiesStaticList implements CityDecoderInterface
         'I716' => 'SGURGOLA',
         'I717' => 'SIAMAGGIORE',
         'I718' => 'SIAMANNA',
+        'I719' => 'SIAMANNA SIAPICCIA',
         'I720' => 'SIANO',
         'I721' => 'SIAPICCIA',
         'M253' => 'SICIGNANO DEGLI ALBURNI',
