@@ -3,7 +3,7 @@
 # laravel-codicefiscale
 
 [![Author][ico-author]][link-author]
-[![GitHub release (latest SemVer)][ico-release]][link-release]
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/robertogallea/laravel-codicefiscale.svg?style=flat-square)](https://packagist.org/packages/robertogallea/laravel-codicefiscale)
 [![Laravel >=6.0][ico-laravel]][link-laravel]
 [![Software License][ico-license]](LICENSE.md)
 [![Sponsor me!][ico-sponsor]][link-sponsor]
