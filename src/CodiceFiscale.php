@@ -176,7 +176,8 @@ class CodiceFiscale
 
         $this->birthPlace = substr($adaptedCF, 11, 4);
         $this->year = substr($adaptedCF, 6, 2);
-        $this->month = $this->tabDecodeMonths[substr($adaptedCF, 8, 1)];
+        $this->monthPart = substr($adaptedCF, 8, 1);
+        $this->month = array_key_exists($this->monthPart, $this->tabDecodeMonths) ? $this->tabDecodeMonths[$this->monthPart] : null;
 
         $this->day = substr($adaptedCF, 9, 2);
 
