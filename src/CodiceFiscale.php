@@ -28,6 +28,8 @@ class CodiceFiscale
 
     private $day = null;
 
+    private $monthPart = null;
+    
     private $month = null;
 
     private $year = null;
@@ -151,6 +153,7 @@ class CodiceFiscale
         $this->gender = null;
         $this->birthPlace = null;
         $this->day = null;
+        $this->monthPart = null;
         $this->month = null;
         $this->year = null;
         $this->error = null;
