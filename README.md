@@ -75,7 +75,7 @@ You can configure the following parameters:
 
 You can customize the validation messages publishing the validation translations with this command:
 ```
-php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider" --tag="languages"
+php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider" --tag="lang"
 ```
 
 ## Validation

@@ -48,7 +48,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__.'/../lang' => $this->app->langPath('vendor/codicefiscale'),
-        ], 'languages');
+        ], 'lang');
     }
 
     private function publishConfig()
