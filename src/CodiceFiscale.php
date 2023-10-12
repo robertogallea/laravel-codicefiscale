@@ -52,7 +52,9 @@ class CodiceFiscale
     {
         $this->config = $config ?? resolve(CodiceFiscaleConfig::class);
 
-        $this->cityDecoder = isset($cityDecoder) ? $cityDecoder : new InternationalCitiesStaticList();
+        $defaultDecoder = config('codicefiscale.city-decoder');
+        $this->cityDecoder = $cityDecoder ?? new $defaultDecoder();
+
         $this->tabReplacementOmocodia = [6, 7, 9, 10, 12, 13, 14];
 
         $this->tabDecodeOmocodia = [

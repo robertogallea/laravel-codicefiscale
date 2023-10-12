@@ -9,7 +9,7 @@ class CompositeCitiesList implements CityDecoderInterface
         $result = [];
 
         foreach (config('codicefiscale.cities-decoder-list') as $citiesList) {
-            $list = (new $citiesList())->getList();
+            $list = $citiesList::getList();
             $result = $list + $result;
         }
 
