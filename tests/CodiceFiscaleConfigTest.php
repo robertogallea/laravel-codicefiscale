@@ -2,8 +2,12 @@
 
 namespace Tests;
 
+use DeepCopy\Reflection\ReflectionHelper;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
+use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CompositeCitiesList;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleConfig;
 
@@ -59,5 +63,25 @@ class CodiceFiscaleConfigTest extends TestCase
 
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertEquals(false, $validator->passes());
+    }
+
+    /** @test */
+    public function changing_config_decoder_affect_codicefiscale_constructor()
+    {
+        Config::set('codicefiscale.city-decoder', CompositeCitiesList::class);
+
+        App::bind(
+            CityDecoderInterface::class,
+            config('codicefiscale.city-decoder')
+        );
+
+        $cf = new CodiceFiscale();
+
+        $reflectedClass = new \ReflectionClass($cf);
+        $reflection = $reflectedClass->getProperty('cityDecoder');
+        $reflection->setAccessible(true);
+        $value = $reflection->getValue($cf);
+
+        $this->assertEquals(get_class($value), CompositeCitiesList::class);
     }
 }

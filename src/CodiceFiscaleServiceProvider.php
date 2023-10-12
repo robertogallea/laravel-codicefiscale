@@ -29,10 +29,8 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
         $this->publishConfig();
 
         $this->app->singleton(CodiceFiscale::class, function ($app) {
-            $decoder = config('codicefiscale.city-decoder');
-
             return new CodiceFiscale(
-                new $decoder(),
+                $app->get(CityDecoderInterface::class),
                 $app->get(CodiceFiscaleConfig::class)
             );
         });
@@ -47,6 +45,10 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
     {
         Validator::extend('codice_fiscale', CodiceFiscaleValidator::class);
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'codicefiscale');
+
+        $this->publishes([
+            __DIR__.'/../lang' => $this->app->langPath('vendor/codicefiscale'),
+        ], 'languages');
     }
 
     private function publishConfig()
