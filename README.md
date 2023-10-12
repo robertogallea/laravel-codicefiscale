@@ -71,6 +71,13 @@ You can configure the following parameters:
 - `date-format`: the date format used for parsing birthdates, default to `'Y-m-d'`.
 - `labels`: the labels used for `male` and `female` persons, defaults to `'M'` and `'F'`.
 
+## Language Files
+
+You can customize the validation messages publishing the validation translations with this command:
+```
+php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider" --tag="lang"
+```
+
 ## Validation
 
 To validate a codice fiscale, use the `codice_fiscale` keyword in your validation rules array

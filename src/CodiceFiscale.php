@@ -9,7 +9,6 @@ use robertogallea\LaravelCodiceFiscale\Checks\CheckForOmocodiaChars;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForWrongCode;
 use robertogallea\LaravelCodiceFiscale\Checks\CheckForWrongSize;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
-use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
 
 class CodiceFiscale
@@ -52,7 +51,8 @@ class CodiceFiscale
     {
         $this->config = $config ?? resolve(CodiceFiscaleConfig::class);
 
-        $this->cityDecoder = isset($cityDecoder) ? $cityDecoder : new InternationalCitiesStaticList();
+        $this->cityDecoder = $cityDecoder ?? resolve(CityDecoderInterface::class);
+
         $this->tabReplacementOmocodia = [6, 7, 9, 10, 12, 13, 14];
 
         $this->tabDecodeOmocodia = [
