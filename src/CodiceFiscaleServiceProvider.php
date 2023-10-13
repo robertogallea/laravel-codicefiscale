@@ -26,7 +26,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->publishConfig();
+        $this->config();
 
         $this->translations();
 
@@ -41,7 +41,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
         Validator::extend('codice_fiscale', CodiceFiscaleValidator::class);
     }
 
-    private function publishConfig()
+    private function config()
     {
         $configPath = $this->packagePath('config/codicefiscale.php');
 
