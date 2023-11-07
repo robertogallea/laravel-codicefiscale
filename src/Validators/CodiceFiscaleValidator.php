@@ -43,7 +43,13 @@ class CodiceFiscaleValidator
                         'Invalid codice fiscale',
                         CodiceFiscaleValidationException::NO_MATCH
                     );
+                } catch (\Exception $exception) {
+                    throw new CodiceFiscaleValidationException(
+                        'Invalid codice fiscale',
+                        CodiceFiscaleValidationException::EMPTY_BIRTHDATE
+                    );
                 }
+
                 if ($value != $cf) {
                     throw new CodiceFiscaleValidationException(
                         'Invalid codice fiscale',
@@ -73,6 +79,9 @@ class CodiceFiscaleValidator
                     break;
                 case CodiceFiscaleValidationException::NO_MATCH:
                     $error_msg = trans('codicefiscale::validation.no_match', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    break;
+                case CodiceFiscaleValidationException::EMPTY_BIRTHDATE:
+                    $error_msg = trans('codicefiscale::validation.empty_birthdate', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
                     break;
                 default:
                     $error_msg = trans('codicefiscale::validation.wrong_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);

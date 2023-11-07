@@ -19,4 +19,5 @@ class CodiceFiscaleValidationException extends \Exception
     public const MISSING_CITY_CODE = 6;
 
     public const NO_MATCH = 7;
+    public const EMPTY_BIRTHDATE = 8;
 }

@@ -8,4 +8,5 @@ return [
     'wrong_code'        => 'Il campo :attribute non è valido',
     'missing_city_code' => 'Il campo :attribute ha un codice del comune non corretto o non esistente',
     'no_match'          => 'Il campo :attribute non corrisponde ai dati inseriti',
+    'empty_birthdate'  =>  'Il campo :attribute non può essere validato su una data di nascita vuota',
 ];

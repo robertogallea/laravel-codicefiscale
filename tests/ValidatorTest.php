@@ -72,6 +72,27 @@ class ValidatorTest extends TestCase
     }
 
     /** @test */
+    public function it_can_require_cf_validation_against_form_fields_and_dont_pass_if_field_is_empty()
+    {
+        $rules = [
+            'cf_field' => 'codice_fiscale:first_name=first_name,last_name=last_name,birthdate=birthdate,place=place,gender=gender',
+        ];
+
+        $data = [
+            'cf_field'   => 'RSSMRA80A01F205X',
+            'first_name' => 'Mario',
+            'last_name'  => 'Rossi',
+            'birthdate'  => null,
+            'place'      => 'Milano',
+            'gender'     => 'M',
+        ];
+
+        $validator = $this->app['validator']->make($data, $rules);
+        $this->assertEquals(false, $validator->passes());
+        $this->assertEquals(true, $validator->errors()->has('cf_field'));
+    }
+
+    /** @test */
     public function it_can_require_cf_validation_against_form_fields_and_dont_pass_if_field_doesnt_match()
     {
         $rules = [
@@ -89,6 +110,7 @@ class ValidatorTest extends TestCase
 
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertEquals(false, $validator->passes());
+        $this->assertEquals(true, $validator->errors()->has('cf_field'));
     }
 
     /** @test */
@@ -108,6 +130,7 @@ class ValidatorTest extends TestCase
 
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertEquals(false, $validator->passes());
+        $this->assertEquals(true, $validator->errors()->has('cf_field'));
     }
 
     /** @test */
@@ -127,6 +150,7 @@ class ValidatorTest extends TestCase
 
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertEquals(false, $validator->passes());
+        $this->assertEquals(true, $validator->errors()->has('cf_field'));
     }
 
     protected function getPackageProviders($app)
