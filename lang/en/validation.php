@@ -8,5 +8,5 @@ return [
     'wrong_code'        => 'The :attribute is not valid',
     'missing_city_code' => 'The :attribute contains a non-existing city code',
     'no_match'          => 'The :attribute does not match the given personal information',
-    'empty_birthdate'  =>  'The :attribute cannot be validated against an empty date of birth',
+    'empty_birthdate'  =>  'The :attribute cannot be validated against an invalid date of birth',
 ];
