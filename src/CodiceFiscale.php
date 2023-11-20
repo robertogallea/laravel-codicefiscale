@@ -261,10 +261,20 @@ class CodiceFiscale
         return $this->cf;
     }
 
+    public function getFirstName()
+    {
+        return substr($this->cf, 3, 3);
+    }
+
+    public function getLastName()
+    {
+        return substr($this->cf, 0, 3);
+    }
+
     /**
+     * @return array
      * @throws CodiceFiscaleValidationException
      *
-     * @return array
      */
     public function asArray(): array
     {
@@ -276,6 +286,8 @@ class CodiceFiscale
             'month'                => $this->getMonth(),
             'year'                 => $this->getYear(),
             'birthdate'            => $this->getBirthdate(),
+            'first_name'           => $this->getFirstName(),
+            'last_name'            => $this->getLastName(),
         ];
     }
 }

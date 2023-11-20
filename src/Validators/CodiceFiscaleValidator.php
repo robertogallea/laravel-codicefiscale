@@ -17,18 +17,27 @@ class CodiceFiscaleValidator
 
     public function validate($attribute, $value, $parameters, $validator)
     {
+        $errorCodes = [
+            'first_name' => CodiceFiscaleValidationException::WRONG_FIRST_NAME,
+            'last_name' => CodiceFiscaleValidationException::WRONG_LAST_NAME,
+            'day' => CodiceFiscaleValidationException::WRONG_BIRTH_DAY,
+            'month' => CodiceFiscaleValidationException::WRONG_BIRTH_MONTH,
+            'year' => CodiceFiscaleValidationException::WRONG_BIRTH_YEAR,
+            'place' => CodiceFiscaleValidationException::WRONG_BIRTH_PLACE,
+            'gender' => CodiceFiscaleValidationException::WRONG_GENDER,
+        ];
+
         try {
             $this->codiceFiscale->parse($value);
-
             $data = $validator->getData();
 
             if (count($parameters)) {
                 $pieces = [
                     'first_name' => '',
-                    'last_name'  => '',
-                    'birthdate'  => '',
-                    'place'      => '',
-                    'gender'     => '',
+                    'last_name' => '',
+                    'birthdate' => '',
+                    'place' => '',
+                    'gender' => '',
                 ];
 
                 foreach ($parameters as $parameter) {
@@ -51,6 +60,15 @@ class CodiceFiscaleValidator
                 }
 
                 if ($value != $cf) {
+                    $newCodiceFiscale = new CodiceFiscale();
+                    $newCodiceFiscale->parse($cf);
+                    $this->compareAttribute('First Name', $newCodiceFiscale->getFirstName(), $this->codiceFiscale->getFirstName(), $errorCodes['first_name']);
+                    $this->compareAttribute('Last Name', $newCodiceFiscale->getLastName(), $this->codiceFiscale->getLastName(), $errorCodes['last_name']);
+                    $this->compareAttribute('Day', $newCodiceFiscale->getDay(), $this->codiceFiscale->getDay(), $errorCodes['day']);
+                    $this->compareAttribute('Month', $newCodiceFiscale->getMonth(), $this->codiceFiscale->getMonth(), $errorCodes['month']);
+                    $this->compareAttribute('Year', $newCodiceFiscale->getYear(), $this->codiceFiscale->getYear(), $errorCodes['year']);
+                    $this->compareAttribute('Birth Place', $newCodiceFiscale->getBirthPlace(), $this->codiceFiscale->getBirthPlace(), $errorCodes['place']);
+                    $this->compareAttribute('Gender', $newCodiceFiscale->getGender(), $this->codiceFiscale->getGender(), $errorCodes['gender']);
                     throw new CodiceFiscaleValidationException(
                         'Invalid codice fiscale',
                         CodiceFiscaleValidationException::NO_MATCH
@@ -83,6 +101,27 @@ class CodiceFiscaleValidator
                 case CodiceFiscaleValidationException::EMPTY_BIRTHDATE:
                     $error_msg = trans('codicefiscale::validation.empty_birthdate', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
                     break;
+                case CodiceFiscaleValidationException::WRONG_FIRST_NAME:
+                    $error_msg = trans('codicefiscale::validation.wrong_first_name', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    break;
+                case CodiceFiscaleValidationException::WRONG_LAST_NAME:
+                    $error_msg = trans('codicefiscale::validation.wrong_last_name', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    break;
+                case CodiceFiscaleValidationException::WRONG_BIRTH_DAY:
+                    $error_msg = trans('codicefiscale::validation.wrong_birth_day', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    break;
+                case CodiceFiscaleValidationException::WRONG_BIRTH_MONTH:
+                    $error_msg = trans('codicefiscale::validation.wrong_birth_month', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    break;
+                case CodiceFiscaleValidationException::WRONG_BIRTH_YEAR:
+                    $error_msg = trans('codicefiscale::validation.wrong_birth_year', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    break;
+                case CodiceFiscaleValidationException::WRONG_BIRTH_PLACE:
+                    $error_msg = trans('codicefiscale::validation.wrong_birth_place', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    break;
+                case CodiceFiscaleValidationException::WRONG_GENDER:
+                    $error_msg = trans('codicefiscale::validation.wrong_gender', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
+                    break;
                 default:
                     $error_msg = trans('codicefiscale::validation.wrong_code', ['attribute' => $validator->getDisplayableAttribute($attribute)]);
             }
@@ -95,5 +134,15 @@ class CodiceFiscaleValidator
         }
 
         return true;
+    }
+
+    function compareAttribute($attribute, $new, $old, $error)
+    {
+        if ($new != $old) {
+            throw new CodiceFiscaleValidationException(
+                "Invalid $attribute",
+                $error
+            );
+        }
     }
 }
