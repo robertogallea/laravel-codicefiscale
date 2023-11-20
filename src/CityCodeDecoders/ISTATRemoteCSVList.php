@@ -33,7 +33,7 @@ class ISTATRemoteCSVList implements CityDecoderInterface
 
     private static function str_replace_times($from, $to, $content, $times)
     {
-        $from = '/'.preg_quote($from, '/').'/';
+        $from = '/' . preg_quote($from, '/') . '/';
 
         return preg_replace($from, $to, $content, $times);
     }
