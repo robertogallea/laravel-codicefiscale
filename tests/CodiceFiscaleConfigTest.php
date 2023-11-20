@@ -36,7 +36,7 @@ class CodiceFiscaleConfigTest extends TestCase
         $this->assertEquals($res[$cfPart], $cfValue);
     }
 
-    public function configChange()
+    public static function configChange()
     {
         return [
             ['RSSMRA95E05F205Z', 'codicefiscale.labels.male', 'male', 'male', 'gender'],

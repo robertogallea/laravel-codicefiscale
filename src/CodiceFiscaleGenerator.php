@@ -197,7 +197,7 @@ class CodiceFiscaleGenerator
         $gg = ($this->sesso == config('codicefiscale.labels.male')) ? $giorno : $giorno + 40;
         $gg = str_pad($gg, 2, '0', STR_PAD_LEFT);
 
-        return $aa.$mm.$gg;
+        return $aa . $mm . $gg;
     }
 
     protected function _calcolaCatastale()
@@ -230,13 +230,13 @@ class CodiceFiscaleGenerator
 
     public function calcola()
     {
-        $codice = $this->_calcolaCognome().
-            $this->_calcolaNome().
-            $this->_calcolaDataNascita().
+        $codice = $this->_calcolaCognome() .
+            $this->_calcolaNome() .
+            $this->_calcolaDataNascita() .
             $this->_calcolaCatastale();
         $codice .= $this->_calcolaCifraControllo($codice);
         if (strlen($codice) != 16) {
-            throw new CodiceFiscaleGenerationException('Generated code has not 16 digits: '.$codice);
+            throw new CodiceFiscaleGenerationException('Generated code has not 16 digits: ' . $codice);
         }
 
         return $codice;
