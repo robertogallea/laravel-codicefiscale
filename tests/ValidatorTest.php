@@ -166,7 +166,7 @@ class ValidatorTest extends TestCase
             'place' => 'Milano',
             'gender' => 'M',
         ];
-        $expectedErrorMessage  = trans('codicefiscale::validation.wrong_first_name', ['attribute' => "cf field"]);
+        $expectedErrorMessage = trans('codicefiscale::validation.wrong_first_name', ['attribute' => 'cf field']);
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertFalse($validator->passes());
         $errorMessages = $validator->errors()->get('cf_field');
@@ -186,13 +186,12 @@ class ValidatorTest extends TestCase
             'place' => 'Milano',
             'gender' => 'M',
         ];
-        $expectedErrorMessage  = trans('codicefiscale::validation.wrong_last_name', ['attribute' => "cf field"]);
+        $expectedErrorMessage = trans('codicefiscale::validation.wrong_last_name', ['attribute' => 'cf field']);
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertFalse($validator->passes());
         $errorMessages = $validator->errors()->get('cf_field');
         $this->assertSame($expectedErrorMessage, $errorMessages[0]);
     }
-
 
     public function testValidationRequiresCorrectCfAgainstFormFieldsAndFailsOnWrongBirthDay()
     {
@@ -207,7 +206,7 @@ class ValidatorTest extends TestCase
             'place' => 'Milano',
             'gender' => 'M',
         ];
-        $expectedErrorMessage  = trans('codicefiscale::validation.wrong_birth_day', ['attribute' => "cf field"]);
+        $expectedErrorMessage = trans('codicefiscale::validation.wrong_birth_day', ['attribute' => 'cf field']);
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertFalse($validator->passes());
         $errorMessages = $validator->errors()->get('cf_field');
@@ -227,7 +226,7 @@ class ValidatorTest extends TestCase
             'place' => 'Milano',
             'gender' => 'M',
         ];
-        $expectedErrorMessage  = trans('codicefiscale::validation.wrong_birth_month', ['attribute' => "cf field"]);
+        $expectedErrorMessage = trans('codicefiscale::validation.wrong_birth_month', ['attribute' => 'cf field']);
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertFalse($validator->passes());
         $errorMessages = $validator->errors()->get('cf_field');
@@ -247,7 +246,7 @@ class ValidatorTest extends TestCase
             'place' => 'Milano',
             'gender' => 'M',
         ];
-        $expectedErrorMessage  = trans('codicefiscale::validation.wrong_birth_year', ['attribute' => "cf field"]);
+        $expectedErrorMessage = trans('codicefiscale::validation.wrong_birth_year', ['attribute' => 'cf field']);
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertFalse($validator->passes());
         $errorMessages = $validator->errors()->get('cf_field');
@@ -264,10 +263,10 @@ class ValidatorTest extends TestCase
             'first_name' => 'Mario',
             'last_name' => 'Rossi',
             'birthdate' => '1980-01-01',
-            'place' => 'Palermo',//wrong place
+            'place' => 'Palermo', //wrong place
             'gender' => 'M',
         ];
-        $expectedErrorMessage  = trans('codicefiscale::validation.wrong_birth_place', ['attribute' => "cf field"]);
+        $expectedErrorMessage = trans('codicefiscale::validation.wrong_birth_place', ['attribute' => 'cf field']);
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertFalse($validator->passes());
         $errorMessages = $validator->errors()->get('cf_field');
@@ -287,14 +286,12 @@ class ValidatorTest extends TestCase
             'place' => 'Milano',
             'gender' => 'wrong_gender', //wrong gender
         ];
-        $expectedErrorMessage  = trans('codicefiscale::validation.wrong_gender', ['attribute' => "cf field"]);
+        $expectedErrorMessage = trans('codicefiscale::validation.wrong_gender', ['attribute' => 'cf field']);
         $validator = $this->app['validator']->make($data, $rules);
         $this->assertFalse($validator->passes());
         $errorMessages = $validator->errors()->get('cf_field');
         $this->assertSame($expectedErrorMessage, $errorMessages[0]);
     }
-
-
 
     protected function getPackageProviders($app)
     {

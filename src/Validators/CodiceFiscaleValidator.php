@@ -136,7 +136,7 @@ class CodiceFiscaleValidator
         return true;
     }
 
-    function compareAttribute($attribute, $new, $old, $error)
+    public function compareAttribute($attribute, $new, $old, $error)
     {
         if ($new != $old) {
             throw new CodiceFiscaleValidationException(
