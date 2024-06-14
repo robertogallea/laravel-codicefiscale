@@ -4,11 +4,11 @@ namespace robertogallea\LaravelCodiceFiscale;
 
 class CodiceFiscaleConfig
 {
-    protected $dateFormat;
+    protected string $dateFormat;
 
-    protected $maleLabel;
+    protected string $maleLabel;
 
-    protected $femaleLabel;
+    protected string $femaleLabel;
 
     public function __construct()
     {
@@ -17,17 +17,17 @@ class CodiceFiscaleConfig
         $this->femaleLabel = config('codicefiscale.labels.female');
     }
 
-    public function getDateFormat()
+    public function getDateFormat(): ?string
     {
         return $this->dateFormat;
     }
 
-    public function getMaleLabel()
+    public function getMaleLabel(): ?string
     {
         return $this->maleLabel;
     }
 
-    public function getFemaleLabel()
+    public function getFemaleLabel(): ?string
     {
         return $this->femaleLabel;
     }

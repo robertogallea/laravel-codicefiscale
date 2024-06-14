@@ -3,6 +3,7 @@
 namespace Tests\CityCodeDecoders;
 
 use Illuminate\Support\Facades\Config;
+use PHPUnit\Framework\Attributes\Test;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CompositeCitiesList;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
@@ -10,7 +11,7 @@ use Tests\TestCase;
 
 class CompositeCitiesListTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function if_empty_returns_empty_array()
     {
         Config::set('codicefiscale.cities-lists', []);
@@ -21,7 +22,7 @@ class CompositeCitiesListTest extends TestCase
         $this->assertEquals([], $list);
     }
 
-    /** @test */
+    #[Test]
     public function it_merges_two_cities_list_results()
     {
         $citiesList = $this->getMockedComposedList(['A001' => 'AAA'], ['B001' => 'BBB']);
@@ -34,7 +35,7 @@ class CompositeCitiesListTest extends TestCase
         ], $list);
     }
 
-    /** @test */
+    #[Test]
     public function when_merging_last_decoder_has_precedence()
     {
         $citiesList = $this->getMockedComposedList(['A001' => 'AAA'], ['A001' => 'BBB']);
@@ -77,7 +78,7 @@ class CompositeCitiesListTest extends TestCase
         return $citiesList;
     }
 
-    public function getPackageProviders($application)
+    public function getPackageProviders($application): array
     {
         return [
             CodiceFiscaleServiceProvider::class,

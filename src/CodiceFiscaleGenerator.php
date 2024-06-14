@@ -8,27 +8,27 @@ use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationExcepti
 
 class CodiceFiscaleGenerator
 {
-    protected $cityDecoder;
+    protected CityDecoderInterface $cityDecoder;
 
-    protected $_parametri = [];
+    protected array $_parametri = [];
 
-    protected $_consonanti = [
+    protected array $_consonanti = [
         'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K',
         'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T',
         'V', 'W', 'X', 'Y', 'Z',
     ];
 
-    protected $_vocali = [
+    protected array $_vocali = [
         'A', 'E', 'I', 'O', 'U',
     ];
 
-    protected $_mesi = [
+    protected array $_mesi = [
         1  => 'A', 2 => 'B', 3 => 'C', 4 => 'D', 5 => 'E',
         6  => 'H', 7 => 'L', 8 => 'M', 9 => 'P', 10 => 'R',
         11 => 'S', 12 => 'T',
     ];
 
-    protected $_pari = [
+    protected array $_pari = [
         '0' => 0, '1' => 1, '2' => 2, '3' => 3, '4' => 4,
         '5' => 5, '6' => 6, '7' => 7, '8' => 8, '9' => 9,
         'A' => 0, 'B' => 1, 'C' => 2, 'D' => 3, 'E' => 4,
@@ -39,7 +39,7 @@ class CodiceFiscaleGenerator
         'Z' => 25,
     ];
 
-    protected $_dispari = [
+    protected array $_dispari = [
         '0' => 1, '1' => 0, '2' => 5, '3' => 7, '4' => 9,
         '5' => 13, '6' => 15, '7' => 17, '8' => 19, '9' => 21,
         'A' => 1, 'B' => 0, 'C' => 5, 'D' => 7, 'E' => 9,
@@ -50,7 +50,7 @@ class CodiceFiscaleGenerator
         'Z' => 23,
     ];
 
-    protected $_controllo = [
+    protected array $_controllo = [
         '0'  => 'A', '1' => 'B', '2' => 'C', '3' => 'D',
         '4'  => 'E', '5' => 'F', '6' => 'G', '7' => 'H',
         '8'  => 'I', '9' => 'J', '10' => 'K', '11' => 'L',

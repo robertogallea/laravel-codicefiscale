@@ -5,6 +5,8 @@ namespace Tests;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Config;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CompositeCitiesList;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
@@ -21,10 +23,8 @@ class CodiceFiscaleConfigTest extends TestCase
         $this->assertEquals('F', $config->getFemaleLabel());
     }
 
-    /**
-     * @test
-     * @dataProvider configChange
-     */
+    #[Test]
+    #[DataProvider('configChange')]
     public function changing_config_params_does_not_affect_parsing($cf, $configKey, $configValue, $cfValue, $cfPart)
     {
         Config::set($configKey, $configValue);
@@ -45,7 +45,7 @@ class CodiceFiscaleConfigTest extends TestCase
         ];
     }
 
-    /** @test */
+    #[Test]
     public function it_can_require_cf_validation_against_form_fields_with_overridded_gender_labels()
     {
         $rules = [
@@ -64,7 +64,7 @@ class CodiceFiscaleConfigTest extends TestCase
         $this->assertEquals(false, $validator->passes());
     }
 
-    /** @test */
+    #[Test]
     public function changing_config_decoder_affect_codicefiscale_constructor()
     {
         Config::set('codicefiscale.city-decoder', CompositeCitiesList::class);

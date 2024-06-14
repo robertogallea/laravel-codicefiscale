@@ -2,9 +2,12 @@
 
 namespace robertogallea\LaravelCodiceFiscale;
 
+use Faker\Factory;
+use Faker\Generator;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface;
+use robertogallea\LaravelCodiceFiscale\Faker\CodiceFiscaleFakerProvider;
 use robertogallea\LaravelCodiceFiscale\Validators\CodiceFiscaleValidator;
 
 class CodiceFiscaleServiceProvider extends ServiceProvider
@@ -34,6 +37,12 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
             CityDecoderInterface::class,
             config('codicefiscale.city-decoder')
         );
+
+        $this->app->singleton(Generator::class, function () {
+            $faker = Factory::create();
+            $faker->addProvider(new CodiceFiscaleFakerProvider($faker));
+            return $faker;
+        });
     }
 
     public function bootValidator()

@@ -100,7 +100,7 @@ class CodiceFiscale
         ];
     }
 
-    public static function generate(string $first_name, string $last_name, $birth_date, string $place, string $gender, CodiceFiscaleConfig $config = null): string
+    public static function generate(string $first_name, string $last_name, Carbon|string $birth_date, string $place, string $gender, CodiceFiscaleConfig $config = null): string
     {
         $config = $config ?: resolve(CodiceFiscaleConfig::class);
 
@@ -125,7 +125,7 @@ class CodiceFiscale
     /**
      * @returns bool
      */
-    public function tryParse($cf): bool
+    public function tryParse(string $cf): bool
     {
         try {
             $this->parse($cf);
@@ -143,7 +143,7 @@ class CodiceFiscale
      *
      * @throws CodiceFiscaleValidationException
      */
-    public function parse($cf): array
+    public function parse(?string $cf): array
     {
         $cf = strtoupper($cf);
         $this->cf = $cf;
@@ -191,30 +191,30 @@ class CodiceFiscale
         return $this->asArray();
     }
 
-    public function isValid()
+    public function isValid(): bool
     {
-        return $this->isValid;
+        return $this->isValid ?? false;
     }
 
-    public function getError()
+    public function getError(): ?\Exception
     {
         return $this->error;
     }
 
-    public function getGender()
+    public function getGender(): ?string
     {
         return $this->gender;
     }
 
-    public function getBirthPlace()
+    public function getBirthPlace(): ?string
     {
         return $this->birthPlace;
     }
 
-    public function getBirthPlaceComplete()
+    public function getBirthPlaceComplete(): ?string
     {
         if ($this->getBirthPlace() === null) {
-            return;
+            return null;
         }
 
         if (! array_key_exists($this->getBirthPlace(), $this->cityDecoder->getList())) {
@@ -236,7 +236,7 @@ class CodiceFiscale
         }
     }
 
-    public function getYear()
+    public function getYear(): ?string
     {
         $current_year = Carbon::today()->year;
         if (2000 + $this->year < $current_year) {
@@ -246,27 +246,27 @@ class CodiceFiscale
         return '19'.$this->year;
     }
 
-    public function getMonth()
+    public function getMonth(): ?string
     {
         return $this->month;
     }
 
-    public function getDay()
+    public function getDay(): ?string
     {
         return $this->day;
     }
 
-    public function getCodiceFiscale()
+    public function getCodiceFiscale(): ?string
     {
         return $this->cf;
     }
 
-    public function getFirstName()
+    public function getFirstName(): ?string
     {
         return substr($this->cf, 3, 3);
     }
 
-    public function getLastName()
+    public function getLastName(): ?string
     {
         return substr($this->cf, 0, 3);
     }

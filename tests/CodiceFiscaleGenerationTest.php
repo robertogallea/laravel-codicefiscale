@@ -4,12 +4,14 @@ namespace Tests;
 
 use Carbon\Carbon;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\Test;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 use TypeError;
 
 class CodiceFiscaleGenerationTest extends TestCase
 {
+    #[Test]
     public function testNullFirstName()
     {
         $first_name = null;
@@ -22,6 +24,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
     }
 
+    #[Test]
     public function testEmptyFirstName()
     {
         $first_name = '';
@@ -34,6 +37,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
     }
 
+    #[Test]
     public function testNullLastName()
     {
         $first_name = 'Mario';
@@ -46,6 +50,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
     }
 
+    #[Test]
     public function testEmptyLastName()
     {
         $first_name = 'Mario';
@@ -58,6 +63,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
     }
 
+    #[Test]
     public function testNullBirthDate()
     {
         $first_name = 'Mario';
@@ -66,10 +72,11 @@ class CodiceFiscaleGenerationTest extends TestCase
         $birth_place = 'F205';
         $gender = 'M';
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(TypeError::class);
         CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
     }
 
+    #[Test]
     public function testInvalidCityCode()
     {
         $first_name = 'Mario';
@@ -82,6 +89,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
     }
 
+    #[Test]
     public function testValidCityCode()
     {
         $first_name = 'Mario';
@@ -94,6 +102,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertEquals('RSSMRA95E05F205Z', $res);
     }
 
+    #[Test]
     public function testValidCityName()
     {
         $first_name = 'Mario';
@@ -106,6 +115,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertEquals('RSSMRA95E05F205Z', $res);
     }
 
+    #[Test]
     public function testShortFirstName()
     {
         $first_name = 'Ma';
@@ -118,7 +128,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertEquals('RSSMAX95E05F205P', $res);
     }
 
-    /** @test */
+    #[Test]
     public function it_uses_custom_decoder_for_codice_fiscale_generation()
     {
         $this->mock(\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CityDecoderInterface::class, function ($mock) {
@@ -133,10 +143,10 @@ class CodiceFiscaleGenerationTest extends TestCase
         $birth_place = 'A001';
         $gender = 'M';
 
-        $res = CodiceFiscale::generate("$first_name", $last_name, $birth_date, $birth_place, $gender);
+        CodiceFiscale::generate("$first_name", $last_name, $birth_date, $birth_place, $gender);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_valid_as_boolean()
     {
         $cf = new CodiceFiscale();
@@ -145,7 +155,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertIsBool($cf->isValid());
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_gender_as_char()
     {
         $cf = new CodiceFiscale();
@@ -155,7 +165,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertEquals(1, strlen($cf->getGender()));
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_birthplace_as_string()
     {
         $cf = new CodiceFiscale();
@@ -164,7 +174,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertIsString($cf->getBirthPlace());
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_birthdate_as_date()
     {
         $cf = new CodiceFiscale();
@@ -173,8 +183,8 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertInstanceOf(Carbon::class, $cf->getBirthDate());
     }
 
-    /** @test */
-    public function it_returns_year_as_string()
+    #[Test
+    ] public function it_returns_year_as_string()
     {
         $cf = new CodiceFiscale();
         $cf->parse('RSSMRA95E05F205Z');
@@ -182,7 +192,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertIsString($cf->getYear());
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_month_as_string()
     {
         $cf = new CodiceFiscale();
@@ -191,7 +201,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertIsString($cf->getMonth());
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_day_as_string()
     {
         $cf = new CodiceFiscale();
@@ -200,8 +210,8 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertIsString($cf->getDay());
     }
 
-    /** @test */
-    public function it_returns_codice_fiscale_as_string()
+    #[Test
+    ] public function it_returns_codice_fiscale_as_string()
     {
         $cf = new CodiceFiscale();
         $cf->parse('RSSMRA95E05F205Z');
@@ -210,7 +220,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $this->assertEquals('RSSMRA95E05F205Z', $cf->getCodiceFiscale());
     }
 
-    public function getPackageProviders($application)
+    public function getPackageProviders($application): array
     {
         return [
             \robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider::class,

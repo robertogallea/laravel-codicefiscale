@@ -2,11 +2,12 @@
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider;
 
 class ValidatorTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_validates_good_codice_fiscale()
     {
         $rules = [
@@ -21,7 +22,7 @@ class ValidatorTest extends TestCase
         $this->assertEquals(true, $validator->passes());
     }
 
-    /** @test */
+    #[Test]
     public function it_doesnt_validate_wrong_codice_fiscale()
     {
         $rules = [
@@ -36,7 +37,7 @@ class ValidatorTest extends TestCase
         $this->assertEquals(false, $validator->passes());
     }
 
-    /** @test */
+    #[Test]
     public function it_doesnt_validate_if_city_code_does_not_exist()
     {
         $rules = [
@@ -51,7 +52,7 @@ class ValidatorTest extends TestCase
         $this->assertEquals(false, $validator->passes());
     }
 
-    /** @test */
+    #[Test]
     public function it_can_require_cf_validation_against_form_fields_and_pass()
     {
         $rules = [
@@ -71,7 +72,7 @@ class ValidatorTest extends TestCase
         $this->assertEquals(true, $validator->passes());
     }
 
-    /** @test */
+    #[Test]
     public function it_can_require_cf_validation_against_form_fields_and_dont_pass_if_field_is_empty()
     {
         $rules = [
@@ -92,7 +93,7 @@ class ValidatorTest extends TestCase
         $this->assertEquals(true, $validator->errors()->has('cf_field'));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_require_cf_validation_against_form_fields_and_dont_pass_if_field_doesnt_match()
     {
         $rules = [
@@ -113,7 +114,7 @@ class ValidatorTest extends TestCase
         $this->assertEquals(true, $validator->errors()->has('cf_field'));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_require_cf_validation_against_form_fields_and_dont_pass_if_field_doesnt_exist()
     {
         $rules = [
@@ -133,7 +134,7 @@ class ValidatorTest extends TestCase
         $this->assertEquals(true, $validator->errors()->has('cf_field'));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_require_cf_validation_against_form_fields_and_dont_pass_if_some_parameters_are_missing()
     {
         $rules = [
@@ -153,6 +154,7 @@ class ValidatorTest extends TestCase
         $this->assertEquals(true, $validator->errors()->has('cf_field'));
     }
 
+    #[Test]
     public function testValidationRequiresCorrectCfAgainstFormFieldsAndFailsOnWrongFirstName()
     {
         $rules = [
@@ -173,6 +175,7 @@ class ValidatorTest extends TestCase
         $this->assertSame($expectedErrorMessage, $errorMessages[0]);
     }
 
+    #[Test]
     public function testValidationRequiresCorrectCfAgainstFormFieldsAndFailsOnWrongLastName()
     {
         $rules = [
@@ -193,6 +196,7 @@ class ValidatorTest extends TestCase
         $this->assertSame($expectedErrorMessage, $errorMessages[0]);
     }
 
+    #[Test]
     public function testValidationRequiresCorrectCfAgainstFormFieldsAndFailsOnWrongBirthDay()
     {
         $rules = [
@@ -213,6 +217,7 @@ class ValidatorTest extends TestCase
         $this->assertSame($expectedErrorMessage, $errorMessages[0]);
     }
 
+    #[Test]
     public function testValidationRequiresCorrectCfAgainstFormFieldsAndFailsOnWrongBirthMonth()
     {
         $rules = [
@@ -233,6 +238,7 @@ class ValidatorTest extends TestCase
         $this->assertSame($expectedErrorMessage, $errorMessages[0]);
     }
 
+    #[Test]
     public function testValidationRequiresCorrectCfAgainstFormFieldsAndFailsOnWrongBirthYear()
     {
         $rules = [
@@ -253,6 +259,7 @@ class ValidatorTest extends TestCase
         $this->assertSame($expectedErrorMessage, $errorMessages[0]);
     }
 
+    #[Test]
     public function testValidationRequiresCorrectCfAgainstFormFieldsAndFailsOnWrongPlace()
     {
         $rules = [
@@ -273,6 +280,7 @@ class ValidatorTest extends TestCase
         $this->assertSame($expectedErrorMessage, $errorMessages[0]);
     }
 
+    #[Test]
     public function testValidationRequiresCorrectCfAgainstFormFieldsAndFailsOnWrongGender()
     {
         $rules = [
@@ -293,7 +301,7 @@ class ValidatorTest extends TestCase
         $this->assertSame($expectedErrorMessage, $errorMessages[0]);
     }
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
         return [
             CodiceFiscaleServiceProvider::class,

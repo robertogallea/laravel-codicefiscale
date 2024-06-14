@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleValidationException;
@@ -14,7 +16,7 @@ class CodiceFiscaleValidationTest extends TestCase
         $cf = new CodiceFiscale();
 
         $this->expectException(CodiceFiscaleValidationException::class);
-        $res = $cf->parse($codice_fiscale);
+        $cf->parse($codice_fiscale);
     }
 
     public function testCodiceFiscaleTooShort()
@@ -75,10 +77,7 @@ class CodiceFiscaleValidationTest extends TestCase
         $res = $cf->parse($codice_fiscale);
     }
 
-    /**
-     * @dataProvider omocodiaProvider
-     */
-    public function testOmocodiaCode($codice_fiscale, $city)
+    #[DataProvider('omocodiaProvider')] public function testOmocodiaCode($codice_fiscale, $city)
     {
         $cf = new CodiceFiscale();
 
@@ -129,7 +128,7 @@ class CodiceFiscaleValidationTest extends TestCase
         $cf->parse($codice_fiscale);
     }
 
-    /** @test */
+    #[Test]
     public function test_wrong_city_code()
     {
         $codice_fiscale = 'LNEGLI94D20A000X';

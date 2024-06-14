@@ -15,7 +15,8 @@ class CodiceFiscaleValidator
         $this->codiceFiscale = $codiceFiscale;
     }
 
-    public function validate($attribute, $value, $parameters, $validator)
+
+    public function validate($attribute, $value, $parameters, $validator): bool
     {
         $errorCodes = [
             'first_name' => CodiceFiscaleValidationException::WRONG_FIRST_NAME,
@@ -136,7 +137,7 @@ class CodiceFiscaleValidator
         return true;
     }
 
-    public function compareAttribute($attribute, $new, $old, $error)
+    public function compareAttribute($attribute, $new, $old, $error): void
     {
         if ($new != $old) {
             throw new CodiceFiscaleValidationException(
