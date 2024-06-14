@@ -4,7 +4,6 @@ namespace Tests\Faker;
 
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
@@ -13,7 +12,6 @@ use Tests\TestCase;
 class CodiceFiscaleFakerTest extends TestCase
 {
     use WithFaker;
-
 
     #[Test]
     public function it_can_generate_fake_fiscal_numbers()
@@ -69,7 +67,6 @@ class CodiceFiscaleFakerTest extends TestCase
             'M' => '01',
             'F' => '41',
         }, substr($codiceFiscale, 9, 2));
-
     }
 
     #[Test]
@@ -104,6 +101,5 @@ class CodiceFiscaleFakerTest extends TestCase
         );
 
         $this->assertEquals('RSSMRA95E05F205Z', $codiceFiscale);
-
     }
 }

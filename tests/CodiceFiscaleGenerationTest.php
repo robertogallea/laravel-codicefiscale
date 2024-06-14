@@ -184,7 +184,8 @@ class CodiceFiscaleGenerationTest extends TestCase
     }
 
     #[Test
-    ] public function it_returns_year_as_string()
+    ]
+    public function it_returns_year_as_string()
     {
         $cf = new CodiceFiscale();
         $cf->parse('RSSMRA95E05F205Z');
@@ -211,7 +212,8 @@ class CodiceFiscaleGenerationTest extends TestCase
     }
 
     #[Test
-    ] public function it_returns_codice_fiscale_as_string()
+    ]
+    public function it_returns_codice_fiscale_as_string()
     {
         $cf = new CodiceFiscale();
         $cf->parse('RSSMRA95E05F205Z');

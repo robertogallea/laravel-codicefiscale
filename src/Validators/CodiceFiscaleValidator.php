@@ -15,7 +15,6 @@ class CodiceFiscaleValidator
         $this->codiceFiscale = $codiceFiscale;
     }
 
-
     public function validate($attribute, $value, $parameters, $validator): bool
     {
         $errorCodes = [

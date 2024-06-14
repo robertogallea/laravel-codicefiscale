@@ -77,7 +77,8 @@ class CodiceFiscaleValidationTest extends TestCase
         $res = $cf->parse($codice_fiscale);
     }
 
-    #[DataProvider('omocodiaProvider')] public function testOmocodiaCode($codice_fiscale, $city)
+    #[DataProvider('omocodiaProvider')]
+    public function testOmocodiaCode($codice_fiscale, $city)
     {
         $cf = new CodiceFiscale();
 

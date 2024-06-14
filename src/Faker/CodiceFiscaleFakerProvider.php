@@ -4,14 +4,12 @@ namespace robertogallea\LaravelCodiceFiscale\Faker;
 
 use Carbon\Carbon;
 use Faker\Provider\Base;
-use Illuminate\Foundation\Testing\WithFaker;
 use robertogallea\LaravelCodiceFiscale\CityCodeDecoders\ItalianCitiesStaticList;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscaleConfig;
 
 class CodiceFiscaleFakerProvider extends Base
 {
-
     public function codiceFiscale(?string $firstName = null, ?string $lastName = null, Carbon|string $birthDate = null, ?string $gender = null, ?string $birthPlace = null): string
     {
         $cfConfig = resolve(CodiceFiscaleConfig::class);
