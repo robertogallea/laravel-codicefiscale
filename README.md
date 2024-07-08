@@ -239,7 +239,7 @@ class PersonFactory extends Factory
         return [
             'first_name' => $firstName = fake()->firstName(),
             'last_name' => $lastName = fake()->lastName(),
-            'fiscal_number' => fake()->fiscalNumber(firstName: $firstName, lastName: $lastName),
+            'fiscal_number' => fake()->codiceFiscale(firstName: $firstName, lastName: $lastName),
         ];
     }
 ```
@@ -260,10 +260,10 @@ There are three strategies for decoding the city code:
   `codicefiscale.cities-decoder-list`.
 
 By default, the package uses the class `InternationalCitiesStaticList` to lookup the city from the code and viceversa.
-However you could use your own class to change the strategy used.
+However, you could use your own class to change the strategy used.
 
 You just need to implement the `CityDecoderInterface` and its `getList()` method.
-Then, to use it, just pass an istance to the `CodiceFiscale` class.
+Then, to use it, just pass an instance to the `CodiceFiscale` class.
 
 For example:
 
