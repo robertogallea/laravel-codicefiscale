@@ -112,5 +112,4 @@ class CodiceFiscaleFakerTest extends TestCase
         $cf->parse($codiceFiscale);
         $this->assertTrue($cf->isValid());
     }
-
 }
