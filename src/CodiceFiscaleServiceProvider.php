@@ -38,12 +38,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
             config('codicefiscale.city-decoder')
         );
 
-        $this->app->singleton(Generator::class, function () {
-            $faker = Factory::create();
-            $faker->addProvider(new CodiceFiscaleFakerProvider($faker));
-
-            return $faker;
-        });
+        $this->registerFakerProvider();
     }
 
     public function bootValidator()
@@ -76,5 +71,16 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
     private function packagePath($path)
     {
         return __DIR__."/../$path";
+    }
+
+    public function registerFakerProvider(): void
+    {
+        $this->app->singleton(Generator::class, function () {
+            $faker = Factory::create();
+            $faker->addProvider(new CodiceFiscaleFakerProvider($faker));
+            return $faker;
+        });
+
+        fake()->addProvider(app(CodiceFiscaleFakerProvider::class));
     }
 }

@@ -102,4 +102,15 @@ class CodiceFiscaleFakerTest extends TestCase
 
         $this->assertEquals('RSSMRA95E05F205Z', $codiceFiscale);
     }
+
+    #[Test]
+    public function it_can_use_fake_helper()
+    {
+        $codiceFiscale = fake()->codiceFiscale;
+
+        $cf = (new CodiceFiscale());
+        $cf->parse($codiceFiscale);
+        $this->assertTrue($cf->isValid());
+    }
+
 }
