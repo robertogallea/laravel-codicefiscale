@@ -85,7 +85,9 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
 
             return $faker;
         });
-        
-        fake()->addProvider(app(CodiceFiscaleFakerProvider::class));
+
+        if(function_exists('fake')){
+            fake()->addProvider(app(CodiceFiscaleFakerProvider::class));
+        }
     }
 }
