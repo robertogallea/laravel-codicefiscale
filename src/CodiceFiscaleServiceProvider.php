@@ -75,6 +75,10 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
 
     public function registerFakerProvider(): void
     {
+        if(!class_exists(Factory::class)){
+            return;
+        }
+        
         $this->app->singleton(Generator::class, function () {
             $faker = Factory::create();
             $faker->addProvider(new CodiceFiscaleFakerProvider($faker));
@@ -82,6 +86,8 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
             return $faker;
         });
 
-        fake()->addProvider(app(CodiceFiscaleFakerProvider::class));
+        if(function_exists('fake')){
+            fake()->addProvider(app(CodiceFiscaleFakerProvider::class));
+        }
     }
 }
