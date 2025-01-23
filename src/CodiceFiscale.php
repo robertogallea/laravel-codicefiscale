@@ -47,7 +47,7 @@ class CodiceFiscale
         CheckForWrongCode::class,
     ];
 
-    public function __construct(CityDecoderInterface $cityDecoder = null, CodiceFiscaleConfig $config = null)
+    public function __construct(?CityDecoderInterface $cityDecoder = null, ?CodiceFiscaleConfig $config = null)
     {
         $this->config = $config ?? resolve(CodiceFiscaleConfig::class);
 
@@ -100,7 +100,7 @@ class CodiceFiscale
         ];
     }
 
-    public static function generate(string $first_name, string $last_name, Carbon|string $birth_date, string $place, string $gender, CodiceFiscaleConfig $config = null): string
+    public static function generate(string $first_name, string $last_name, Carbon|string $birth_date, string $place, string $gender, ?CodiceFiscaleConfig $config = null): string
     {
         $config = $config ?: resolve(CodiceFiscaleConfig::class);
 
