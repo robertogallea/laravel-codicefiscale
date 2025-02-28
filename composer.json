@@ -12,7 +12,6 @@
         "php": "^8.2",
         "illuminate/support": ">11.0",
         "illuminate/validation": ">11.0",
-        "nesbot/carbon": "^3.5",
         "guzzlehttp/guzzle": "^7.3"
     },
     "require-dev": {
