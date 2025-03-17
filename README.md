@@ -17,7 +17,7 @@ convenient custom validator for request validation.
 
 | Laravel | Package |
 |---------|---------|
-| 12.x    | 2.x     |
+| 12.x    | ^2.2    |
 | 11.x    | 2.x     |
 | 10.x    | 1.x     |
 | 9.x     | 1.x     |
