@@ -10,7 +10,7 @@ use robertogallea\LaravelCodiceFiscale\CodiceFiscaleConfig;
 
 class CodiceFiscaleFakerProvider extends Base
 {
-    public function codiceFiscale(?string $firstName = null, ?string $lastName = null, Carbon|string $birthDate = null, ?string $gender = null, ?string $birthPlace = null): string
+    public function codiceFiscale(?string $firstName = null, ?string $lastName = null, Carbon|string|null $birthDate = null, ?string $gender = null, ?string $birthPlace = null): string
     {
         $cfConfig = resolve(CodiceFiscaleConfig::class);
 
