@@ -1,6 +1,7 @@
 <?php
 
 namespace Tests;
+
 use PHPUnit\Framework\Attributes\Test;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 
