@@ -211,6 +211,29 @@ class CodiceFiscale
         return $this->birthPlace;
     }
 
+    /**
+     * Determines if the codice fiscale refers to a foreign birthplace.
+     * Rule: rely solely on getBirthPlace(): if it starts with 'Z' then it's international.
+     */
+    public function isInternational(): bool
+    {
+        $place = $this->getBirthPlace();
+        if (! is_string($place) || $place === '') {
+            return false;
+        }
+
+        return strtoupper($place[0]) === 'Z';
+    }
+
+    /**
+     * Determines if the codice fiscale refers to an Italian birthplace.
+     * This is the logical negation of isInternational().
+     */
+    public function isItalian(): bool
+    {
+        return ! $this->isInternational();
+    }
+
     public function getBirthPlaceComplete(): ?string
     {
         if ($this->getBirthPlace() === null) {
@@ -287,6 +310,8 @@ class CodiceFiscale
             'birthdate'            => $this->getBirthdate(),
             'first_name'           => $this->getFirstName(),
             'last_name'            => $this->getLastName(),
+            'is_international'     => $this->isInternational(),
+            'is_italian'           => $this->isItalian(),
         ];
     }
 }
