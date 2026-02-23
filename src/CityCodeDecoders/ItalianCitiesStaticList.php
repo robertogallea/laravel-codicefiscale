@@ -3797,6 +3797,7 @@ class ItalianCitiesStaticList implements CityDecoderInterface
         'E760' => 'LUSEVERA',
         'E761' => 'LUSIA',
         'E762' => 'LUSIANA',
+        'M427' => 'LUSIANA CONCO',
         'E763' => "LUSIGLIE'",
         'E764' => 'LUSON .LUESEN.',
         'E767' => 'LUSTRA',
