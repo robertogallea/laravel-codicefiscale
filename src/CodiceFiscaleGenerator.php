@@ -113,9 +113,6 @@ class CodiceFiscaleGenerator
         }
         $nome = $this->_pulisci($this->nome);
 
-        if (strlen($nome) < 3) {
-            return $this->_aggiungiX($nome);
-        }
         $nome_cons = $this->_trovaConsonanti($nome);
 
         if (count($nome_cons) <= 3) {
@@ -133,9 +130,13 @@ class CodiceFiscaleGenerator
 
         if (strlen($code) < 3) {
             $nome_voc = $this->_trovaVocali($nome);
-            while (strlen($code) < 3) {
+            while (strlen($code) < 3 && count($nome_voc) > 0) {
                 $code .= array_shift($nome_voc);
             }
+        }
+
+        if (strlen($code) < 3) {
+            $code = $this->_aggiungiX($code);
         }
 
         return $code;
@@ -148,9 +149,6 @@ class CodiceFiscaleGenerator
         }
         $cognome = $this->_pulisci($this->cognome);
 
-        if (strlen($cognome) < 3) {
-            return $this->_aggiungiX($cognome);
-        }
         $cognome_cons = $this->_trovaConsonanti($cognome);
 
         $code = '';
@@ -162,9 +160,13 @@ class CodiceFiscaleGenerator
 
         if (strlen($code) < 3) {
             $cognome_voc = $this->_trovaVocali($cognome);
-            while (strlen($code) < 3) {
+            while (strlen($code) < 3 && count($cognome_voc) > 0) {
                 $code .= array_shift($cognome_voc);
             }
+        }
+
+        if (strlen($code) < 3) {
+            $code = $this->_aggiungiX($code);
         }
 
         return $code;

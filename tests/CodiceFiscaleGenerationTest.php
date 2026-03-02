@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 use TypeError;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class CodiceFiscaleGenerationTest extends TestCase
 {
@@ -108,7 +109,7 @@ class CodiceFiscaleGenerationTest extends TestCase
         $first_name = 'Mario';
         $last_name = 'Rossi';
         $birth_date = '1995-05-05';
-        $birth_place = 'F205';
+        $birth_place = 'Milano';
         $gender = 'M';
 
         $res = CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
@@ -226,6 +227,32 @@ class CodiceFiscaleGenerationTest extends TestCase
     {
         return [
             \robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider::class,
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('nameSurnameBlocksProvider')]
+    public function it_generates_correct_name_and_surname_blocks(string $firstName, string $lastName, Carbon $birthDate, string $expectedCf): void
+    {
+        $birth_place = 'F205'; // Milano
+        $gender = 'M';
+
+        $res = CodiceFiscale::generate($firstName, $lastName, $birthDate, $birth_place, $gender);
+
+        $this->assertEquals($expectedCf, $res);
+    }
+
+    public static function nameSurnameBlocksProvider(): array
+    {
+        return [
+            // ASH -> SHA, OS -> SOX
+            ['ASH', 'OS', Carbon::parse('1990-01-01'), 'SOXSHA90A01F205B'],
+            // MARIO -> MRA, OM -> MOX
+            ['MARIO', 'OM', Carbon::parse('1990-01-01'), 'MOXMRA90A01F205S'],
+            // IO -> IOX, ROSSI -> RSS
+            ['IO', 'ROSSI', Carbon::parse('1990-01-01'), 'RSSIOX90A01F205V'],
+            // nome corto: MA -> MAX
+            ['Ma', 'Rossi', Carbon::parse('1995-05-05'), 'RSSMAX95E05F205P'],
         ];
     }
 }
