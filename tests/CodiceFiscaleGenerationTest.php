@@ -4,11 +4,11 @@ namespace Tests;
 
 use Carbon\Carbon;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
 use robertogallea\LaravelCodiceFiscale\Exceptions\CodiceFiscaleGenerationException;
 use TypeError;
-use PHPUnit\Framework\Attributes\DataProvider;
 
 class CodiceFiscaleGenerationTest extends TestCase
 {
