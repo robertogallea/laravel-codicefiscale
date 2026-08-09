@@ -3,6 +3,7 @@
 namespace Robertogallea\CodiceFiscale\Laravel;
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 use Illuminate\Database\Migrations\Migrator;
@@ -14,6 +15,7 @@ use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\EloquentBirthPlaceRepository
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
 use Robertogallea\CodiceFiscale\Laravel\Commands\UpdatePlacesCommand;
+use Robertogallea\CodiceFiscale\Validation\Validator as CodiceFiscaleValidator;
 
 class CodiceFiscaleServiceProvider extends ServiceProvider
 {
@@ -39,6 +41,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
         // since they're resolved lazily, well after boot() completes.
         $this->registerDatabaseConnection();
         $this->migrate();
+        $this->registerValidationRule();
 
         $this->publishes([
             $this->packagePath('config/codicefiscale.php') => config_path('codicefiscale.php'),
@@ -120,6 +123,21 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
         } finally {
             $db->setDefaultConnection($originalDefaultConnection);
         }
+    }
+
+    /**
+     * The 2.x-retained convenience alias: format/checksum/semantics
+     * only, exactly what CodiceFiscaleRule::make() alone does, for
+     * callers who just need a plain pipe-delimited rule string.
+     */
+    private function registerValidationRule(): void
+    {
+        $this->app->make(ValidationFactory::class)->extend(
+            'codice_fiscale',
+            fn ($attribute, $value) => is_string($value)
+                && $this->app->make(CodiceFiscaleValidator::class)->validate($value)->valid(),
+            'The :attribute is not a valid codice fiscale.',
+        );
     }
 
     private function packagePath(string $path): string
