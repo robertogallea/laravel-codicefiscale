@@ -23,6 +23,7 @@ laravel-codicefiscale is a package for parsing, generating, and validating the I
 - [Core domain](#core-domain)
   - [`CodiceFiscale`](#codicefiscale)
   - [Generation](#generation)
+  - [Customizing generation and parsing](#customizing-generation-and-parsing)
   - [Parsing](#parsing)
   - [Validation](#validation)
   - [Matching against a person](#matching-against-a-person)
@@ -128,6 +129,35 @@ $cf->value(); // 'RSSMRA85D15H501T'
 ```
 
 Name normalization (accents, apostrophes, mixed case, extra whitespace) happens automatically inside `Generator` — pass names exactly as the person typed them.
+
+### Customizing generation and parsing
+
+`Generator` composes four internal, independently-tested services — `NameEncoder`, `DateEncoder`, `BirthPlaceEncoder`, `Checksum` — plus a swappable `Contracts\NameNormalizer` (default `ItalianNameNormalizer`, handling Latin-script accents/apostrophes/whitespace), all as constructor parameters with defaults. Supply your own `NameNormalizer` if you need different text-cleanup behavior (e.g. broader multi-script transliteration):
+
+```php
+use Robertogallea\CodiceFiscale\Contracts\NameNormalizer;
+
+final class MyNormalizer implements NameNormalizer
+{
+    public function normalize(string $name): string { /* ... */ }
+}
+
+$cf = (new Generator(nameNormalizer: new MyNormalizer()))->generate($person);
+```
+
+Similarly, `Parser` resolves a codice fiscale's ambiguous two-digit birth year via a swappable `Contracts\CenturyResolver` (default `AgeBasedCenturyResolver(maxAge: 120)`, preferring the youngest plausible reading). Supply your own when you have domain-specific knowledge the default can't have:
+
+```php
+use Robertogallea\CodiceFiscale\Contracts\CenturyResolver;
+
+final class Post1970Resolver implements CenturyResolver
+{
+    // e.g. "this system only ever has customers born after 1970"
+    public function resolve(array $possibleYears): int { /* ... */ }
+}
+
+$parser = new Parser(app(BirthPlaceRepository::class), centuryResolver: new Post1970Resolver());
+```
 
 ### Parsing
 
@@ -239,7 +269,9 @@ $place = $repository->find(BirthPlaceCode::from('H501'), new DateTimeImmutable('
 $repository->existedEver(BirthPlaceCode::from('A999')); // false — distinguishes "never valid" from "valid, wrong date"
 ```
 
-`BirthPlaceCode::isForeign(): bool` tells domestic (Italian) codes apart from `Z`-prefixed foreign ones. The default `BirthPlaceRepository` binding is `Laravel\BirthPlaces\CompositeBirthPlaceRepository`, which routes to an Eloquent-backed repository per kind — populated by [`codice-fiscale:update-places`](#codice-fiscaleupdate-places).
+`BirthPlaceCode::isForeign(): bool` tells domestic (Italian) codes apart from `Z`-prefixed foreign ones; `BirthPlaceCode::equals(BirthPlaceCode $other): bool` compares two codes by value. `CountryCode` (an ISO 3166-1 alpha-3 string, e.g. `'USA'`) works the same way — `CountryCode::from()`/`tryFrom()` construct it, `equals()` compares it; it's a value object rather than a PHP enum since ~200 countries would make an enum unmaintainable.
+
+The default `BirthPlaceRepository` binding is `Laravel\BirthPlaces\CompositeBirthPlaceRepository`, which routes to an Eloquent-backed repository per kind — populated by [`codice-fiscale:update-places`](#codice-fiscaleupdate-places).
 
 ## Laravel integration
 
