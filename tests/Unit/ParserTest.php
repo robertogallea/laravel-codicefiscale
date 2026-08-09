@@ -120,23 +120,29 @@ test('birthPlace() resolves the era-record valid on the parsed birth date', func
         ->and($parser->parse($bornUnderLodi)->birthPlace()->province())->toBe('LO');
 });
 
-test('never throws for structurally-fine-but-nonsense data - only CodiceFiscale::from() rejects malformed input', function (string $code) {
+test('never throws for a nonsense birthplace code - birthPlace() returns null, birthDate() is still valid', function () {
     $parser = new Parser(new InMemoryBirthPlaceRepository());
 
-    $parsed = null;
-    expect(function () use ($parser, $code, &$parsed) {
-        $parsed = $parser->parse(CodiceFiscale::from($code));
-    })->not->toThrow(Throwable::class);
+    // Every call below runs to completion and returns a real value;
+    // if any of them threw, this test would fail with an uncaught
+    // exception rather than silently pass.
+    $parsed = $parser->parse(CodiceFiscale::from('LNEGLI94D20A000X'));
 
-    // Fully exercise every method, including the ones that touch the
-    // repository or build a DateTimeImmutable, not just parse() itself.
-    expect(fn () => [
-        $parsed->birthPlaceCode(),
-        $parsed->birthPlace(),
-        $parsed->birthDate(),
-        $parsed->birthYear(),
-    ])->not->toThrow(Throwable::class);
-})->with([
-    'nonsense birthplace code' => ['LNEGLI94D20A000X'],
-    'nonexistent calendar date (day 77)' => ['LOIMLC71A77F979V'],
-]);
+    expect($parsed->birthPlaceCode()->value())->toBe('A000')
+        ->and($parsed->birthPlace())->toBeNull()
+        ->and($parsed->birthDate())->toEqual(new DateTimeImmutable('1994-04-20'));
+});
+
+test('never throws for a nonexistent calendar date - birthDate() and birthPlace() return null instead', function () {
+    $parser = new Parser(new InMemoryBirthPlaceRepository());
+
+    // Raw day 77 -> female (>40), day 77-40 = 37, not a real day of
+    // any month. Every call below runs to completion; if parse() or
+    // any accessor threw, this test would fail with an uncaught
+    // exception, not silently pass.
+    $parsed = $parser->parse(CodiceFiscale::from('LOIMLC71A77F979V'));
+
+    expect($parsed->birthDay())->toBe(37)
+        ->and($parsed->birthDate())->toBeNull()
+        ->and($parsed->birthPlace())->toBeNull();
+});

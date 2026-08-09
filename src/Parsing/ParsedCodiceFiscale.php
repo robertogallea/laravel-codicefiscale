@@ -70,18 +70,28 @@ final readonly class ParsedCodiceFiscale
         return $this->centuryResolver->resolve($this->possibleBirthYears());
     }
 
-    public function birthDate(): \DateTimeImmutable
+    /**
+     * Null when the decoded month/day don't form a real calendar date
+     * (e.g. a checksum-invalid or otherwise nonsense code) - decoding
+     * never throws for data it doesn't recognize as sensible, the
+     * same way birthPlace() returns null rather than throwing for an
+     * unrecognized code.
+     */
+    public function birthDate(): ?\DateTimeImmutable
     {
-        return new \DateTimeImmutable(sprintf(
-            '%04d-%02d-%02d',
-            $this->birthYear(),
-            $this->birthMonthNumber,
-            $this->birthDay,
-        ));
+        $year = $this->birthYear();
+
+        if (! checkdate($this->birthMonthNumber, $this->birthDay, $year)) {
+            return null;
+        }
+
+        return new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $this->birthMonthNumber, $this->birthDay));
     }
 
     public function birthPlace(): ?BirthPlace
     {
-        return $this->birthPlaceRepository->find($this->birthPlaceCode, $this->birthDate());
+        $birthDate = $this->birthDate();
+
+        return $birthDate === null ? null : $this->birthPlaceRepository->find($this->birthPlaceCode, $birthDate);
     }
 }

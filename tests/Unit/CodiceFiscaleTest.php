@@ -47,10 +47,12 @@ test('tryFrom() returns null for the same malformed input instead of throwing', 
 ]);
 
 test('has no dependency on checksum validity', function () {
-    // RSSMRA95E05F205A has an incorrect check character (the real one is Z),
-    // yet construction succeeds — checksum correctness is exclusively the
-    // Validator's concern, not the value object's.
-    expect(fn () => CodiceFiscale::from('RSSMRA95E05F205A'))->not->toThrow(Throwable::class);
+    // RSSMRA95E05F205A has an incorrect check character (the real one is Z).
+    // Calling from() directly (rather than via toThrow()) means this test
+    // fails loudly with an uncaught exception if construction ever starts
+    // rejecting it — checksum correctness is exclusively the Validator's
+    // concern, not the value object's.
+    expect(CodiceFiscale::from('RSSMRA95E05F205A')->value())->toBe('RSSMRA95E05F205A');
 });
 
 test('casts to string as its value', function () {
