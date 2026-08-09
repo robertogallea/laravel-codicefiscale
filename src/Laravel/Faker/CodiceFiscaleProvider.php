@@ -15,10 +15,11 @@ use Robertogallea\CodiceFiscale\Generation\Generator;
  * Generates a random, structurally/checksum-valid CodiceFiscale via
  * the real Person/Generator API - never a hand-rolled string. Draws
  * its birthplace from knownBirthPlaces(): a small, fixed set of major
- * Italian municipalities' *current* cadastral-code eras, sourced from
- * ANPR's own comuni archive but deliberately not a copy of the full
- * downloadable dataset (ADR-0003 forbids bundling that). Works with
- * no database access at all, so it never depends on
+ * Italian municipalities' *current* cadastral-code eras - ten
+ * independently-known facts, not a copy of the full downloadable
+ * ANPR/MAECI dataset ADR-0003 forbids bundling; see ADR-0007 for why
+ * this narrow, hand-picked list is a different case. Works with no
+ * database access at all, so it never depends on
  * codice-fiscale:update-places having been run first.
  */
 final class CodiceFiscaleProvider extends Base
@@ -45,20 +46,10 @@ final class CodiceFiscaleProvider extends Base
         return (new Generator())->generate($this->randomPerson())->value();
     }
 
-    /**
-     * Not Base::randomElement(): its untyped mixed return can't be
-     * narrowed back to DomesticBirthPlace/Gender, so array_rand() is
-     * used directly on these already-typed arrays instead. Still
-     * deterministic under Faker's own seed() - it calls the global
-     * mt_srand(), which array_rand() also draws from.
-     */
     private function randomPerson(): CodiceFiscalePerson
     {
-        $birthPlaces = self::knownBirthPlaces();
-        $birthPlace = $birthPlaces[array_rand($birthPlaces)];
-
-        $genders = Gender::cases();
-        $gender = $genders[array_rand($genders)];
+        $birthPlace = $this->pickRandom(self::knownBirthPlaces());
+        $gender = $this->pickRandom(Gender::cases());
 
         return new CodiceFiscalePerson(
             firstName: $this->generator->firstName($gender === Gender::Male ? Person::GENDER_MALE : Person::GENDER_FEMALE),
@@ -67,6 +58,22 @@ final class CodiceFiscaleProvider extends Base
             birthPlace: $birthPlace->code(),
             gender: $gender,
         );
+    }
+
+    /**
+     * Not Base::randomElement(): its untyped mixed return can't be
+     * narrowed back to the caller's real element type, so array_rand()
+     * is used directly on the already-typed array instead. Still
+     * deterministic under Faker's own seed() - it calls the global
+     * mt_srand(), which array_rand() also draws from.
+     *
+     * @template T
+     * @param  list<T>  $items
+     * @return T
+     */
+    private function pickRandom(array $items): mixed
+    {
+        return $items[array_rand($items)];
     }
 
     /**
