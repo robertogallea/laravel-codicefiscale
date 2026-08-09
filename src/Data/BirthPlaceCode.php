@@ -9,50 +9,25 @@ use Robertogallea\CodiceFiscale\Exceptions\InvalidBirthPlaceCodeException;
  * positions 12-15 (e.g. "H501" for Roma, "Z404" for the USA).
  * Distinct from, and never equal to, an ISTAT code.
  */
-final class BirthPlaceCode implements \Stringable
+final class BirthPlaceCode extends AbstractValidatedCode
 {
-    private const PATTERN = '/^[A-Z][0-9]{3}$/';
-
-    private function __construct(
-        private readonly string $value,
-    ) {
+    protected static function pattern(): string
+    {
+        return '/^[A-Z][0-9]{3}$/';
     }
 
-    public static function from(string $value): self
+    protected static function exceptionClass(): string
     {
-        return self::tryFrom($value) ?? throw new InvalidBirthPlaceCodeException(
-            sprintf('"%s" is not a structurally valid birthplace code.', $value)
-        );
-    }
-
-    public static function tryFrom(string $value): ?self
-    {
-        $normalized = strtoupper(trim($value));
-
-        if (preg_match(self::PATTERN, $normalized) !== 1) {
-            return null;
-        }
-
-        return new self($normalized);
-    }
-
-    public function value(): string
-    {
-        return $this->value;
+        return InvalidBirthPlaceCodeException::class;
     }
 
     public function isForeign(): bool
     {
-        return $this->value[0] === 'Z';
+        return $this->value()[0] === 'Z';
     }
 
     public function equals(self $other): bool
     {
-        return $this->value === $other->value;
-    }
-
-    public function __toString(): string
-    {
-        return $this->value;
+        return $this->value() === $other->value();
     }
 }

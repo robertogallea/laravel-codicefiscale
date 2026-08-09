@@ -9,45 +9,20 @@ use Robertogallea\CodiceFiscale\Exceptions\InvalidCountryCodeException;
  * stati-esteri table. Distinct from the Z-prefixed BirthPlaceCode
  * a foreign birthplace is looked up by.
  */
-final class CountryCode implements \Stringable
+final class CountryCode extends AbstractValidatedCode
 {
-    private const PATTERN = '/^[A-Z]{3}$/';
-
-    private function __construct(
-        private readonly string $value,
-    ) {
+    protected static function pattern(): string
+    {
+        return '/^[A-Z]{3}$/';
     }
 
-    public static function from(string $value): self
+    protected static function exceptionClass(): string
     {
-        return self::tryFrom($value) ?? throw new InvalidCountryCodeException(
-            sprintf('"%s" is not a structurally valid ISO 3166-1 alpha-3 country code.', $value)
-        );
-    }
-
-    public static function tryFrom(string $value): ?self
-    {
-        $normalized = strtoupper(trim($value));
-
-        if (preg_match(self::PATTERN, $normalized) !== 1) {
-            return null;
-        }
-
-        return new self($normalized);
-    }
-
-    public function value(): string
-    {
-        return $this->value;
+        return InvalidCountryCodeException::class;
     }
 
     public function equals(self $other): bool
     {
-        return $this->value === $other->value;
-    }
-
-    public function __toString(): string
-    {
-        return $this->value;
+        return $this->value() === $other->value();
     }
 }
