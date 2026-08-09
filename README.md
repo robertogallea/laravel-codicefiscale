@@ -15,7 +15,7 @@ laravel-codicefiscale is a package for parsing, generating, and validating the I
 ## Requirements
 
 - PHP ^8.2
-- Laravel (`illuminate/database`, `illuminate/support`) ^11.0 or ^12.0
+- Laravel (`illuminate/database`, `illuminate/support`) ^12.0 or ^13.0
 
 ## Table of contents
 
