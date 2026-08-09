@@ -9,7 +9,9 @@
         }
     ],
     "require": {
-        "php": "^8.2"
+        "php": "^8.2",
+        "illuminate/database": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0"
     },
     "require-dev": {
         "phpunit/phpunit": ">=9.0",
@@ -35,6 +37,13 @@
     "config": {
         "allow-plugins": {
             "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Robertogallea\\CodiceFiscale\\Laravel\\CodiceFiscaleServiceProvider"
+            ]
         }
     }
 }

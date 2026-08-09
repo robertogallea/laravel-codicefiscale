@@ -160,6 +160,8 @@ $finder = Finder::create()
     ->in([
         __DIR__.'/src',
         __DIR__.'/tests',
+        __DIR__.'/config',
+        __DIR__.'/database',
     ])
     ->name('*.php')
     ->notName('*.blade.php')
