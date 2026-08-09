@@ -13,6 +13,7 @@ use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\CompositeBirthPlaceRepositor
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\EloquentBirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
+use Robertogallea\CodiceFiscale\Laravel\Commands\UpdatePlacesCommand;
 
 class CodiceFiscaleServiceProvider extends ServiceProvider
 {
@@ -42,6 +43,12 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
         $this->publishes([
             $this->packagePath('config/codicefiscale.php') => config_path('codicefiscale.php'),
         ], 'config');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                UpdatePlacesCommand::class,
+            ]);
+        }
     }
 
     private function registerDatabaseConnection(): void
