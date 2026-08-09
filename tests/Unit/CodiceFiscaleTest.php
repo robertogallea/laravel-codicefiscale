@@ -2,6 +2,7 @@
 
 use Robertogallea\CodiceFiscale\CodiceFiscale;
 use Robertogallea\CodiceFiscale\Exceptions\InvalidCodiceFiscaleException;
+use Robertogallea\CodiceFiscale\Omocodia\Omocodia;
 
 test('from() constructs a value object exposing the given code', function () {
     $cf = CodiceFiscale::from('RSSMRA95E05F205Z');
@@ -56,4 +57,38 @@ test('casts to string as its value', function () {
     $cf = CodiceFiscale::from('RSSMRA95E05F205Z');
 
     expect((string) $cf)->toBe('RSSMRA95E05F205Z');
+});
+
+test('isEquivalentTo() is true for a canonical code and its own omocodia variant', function () {
+    $canonical = CodiceFiscale::from('RSSMRA95E05F205Z');
+    $variant = CodiceFiscale::from('RSSMRA95E05F20RU');
+
+    expect($canonical->isEquivalentTo($variant))->toBeTrue()
+        ->and($variant->isEquivalentTo($canonical))->toBeTrue();
+});
+
+test('isEquivalentTo() is true between a canonical code and every one of its 128 variants', function () {
+    $canonical = CodiceFiscale::from('RSSMRA95E05F205Z');
+    $omocodia = new Omocodia();
+
+    $variants = iterator_to_array($omocodia->variants($canonical));
+    expect($variants)->toHaveCount(128);
+
+    foreach ($variants as $variant) {
+        expect($canonical->isEquivalentTo($variant))->toBeTrue()
+            ->and($variant->isEquivalentTo($canonical))->toBeTrue();
+    }
+});
+
+test('isEquivalentTo() is true for a code compared to itself', function () {
+    $cf = CodiceFiscale::from('RSSMRA95E05F205Z');
+
+    expect($cf->isEquivalentTo($cf))->toBeTrue();
+});
+
+test('isEquivalentTo() is false for an unrelated code', function () {
+    $mario = CodiceFiscale::from('RSSMRA95E05F205Z');
+    $unrelated = CodiceFiscale::from('RBRRHR93L09Z357P');
+
+    expect($mario->isEquivalentTo($unrelated))->toBeFalse();
 });
