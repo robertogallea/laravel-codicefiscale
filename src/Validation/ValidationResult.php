@@ -12,6 +12,16 @@ final readonly class ValidationResult
     ) {
     }
 
+    public static function ok(): self
+    {
+        return new self([]);
+    }
+
+    public static function withError(ValidationError $error): self
+    {
+        return new self([$error]);
+    }
+
     public function valid(): bool
     {
         return $this->errors === [];

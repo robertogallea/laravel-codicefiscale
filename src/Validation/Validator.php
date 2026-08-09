@@ -8,6 +8,17 @@ use Robertogallea\CodiceFiscale\Enums\ValidationError;
 use Robertogallea\CodiceFiscale\Generation\Checksum;
 use Robertogallea\CodiceFiscale\Parsing\Parser;
 
+/**
+ * validateFormat()/validate() take a raw string rather than a
+ * CodiceFiscale: a CodiceFiscale instance can only ever be
+ * constructed already structurally valid (via from()/tryFrom()), so
+ * there is no way to observe a genuine format failure once one
+ * exists. validateChecksum()/validateSemantics() stay
+ * CodiceFiscale-typed - they need guaranteed structure to safely read
+ * fixed positions, and by the time either is called (from validate(),
+ * or directly by a caller who already has a CodiceFiscale) that's
+ * exactly what's available.
+ */
 final class Validator
 {
     private readonly Parser $parser;
@@ -29,15 +40,15 @@ final class Validator
     public function validateFormat(string $value): ValidationResult
     {
         return CodiceFiscale::tryFrom($value) === null
-            ? new ValidationResult([ValidationError::InvalidFormat])
-            : new ValidationResult([]);
+            ? ValidationResult::withError(ValidationError::InvalidFormat)
+            : ValidationResult::ok();
     }
 
     public function validateChecksum(CodiceFiscale $cf): ValidationResult
     {
         return $this->checksum->verify($cf->value())
-            ? new ValidationResult([])
-            : new ValidationResult([ValidationError::InvalidChecksum]);
+            ? ValidationResult::ok()
+            : ValidationResult::withError(ValidationError::InvalidChecksum);
     }
 
     public function validateSemantics(CodiceFiscale $cf): ValidationResult
