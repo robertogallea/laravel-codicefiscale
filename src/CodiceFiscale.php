@@ -3,6 +3,7 @@
 namespace Robertogallea\CodiceFiscale;
 
 use Robertogallea\CodiceFiscale\Exceptions\InvalidCodiceFiscaleException;
+use Robertogallea\CodiceFiscale\Omocodia\Omocodia;
 
 final class CodiceFiscale implements \Stringable
 {
@@ -51,5 +52,17 @@ final class CodiceFiscale implements \Stringable
     public function __toString(): string
     {
         return $this->value;
+    }
+
+    /**
+     * True when both codes decode to the same person-derived data,
+     * regardless of omocodia substitution - i.e. they share a
+     * canonical form.
+     */
+    public function isEquivalentTo(self $other): bool
+    {
+        $omocodia = new Omocodia();
+
+        return $omocodia->canonical($this)->value() === $omocodia->canonical($other)->value();
     }
 }

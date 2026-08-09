@@ -57,3 +57,24 @@ test('casts to string as its value', function () {
 
     expect((string) $cf)->toBe('RSSMRA95E05F205Z');
 });
+
+test('isEquivalentTo() is true for a canonical code and its own omocodia variant', function () {
+    $canonical = CodiceFiscale::from('RSSMRA95E05F205Z');
+    $variant = CodiceFiscale::from('RSSMRA95E05F20RU');
+
+    expect($canonical->isEquivalentTo($variant))->toBeTrue()
+        ->and($variant->isEquivalentTo($canonical))->toBeTrue();
+});
+
+test('isEquivalentTo() is true for a code compared to itself', function () {
+    $cf = CodiceFiscale::from('RSSMRA95E05F205Z');
+
+    expect($cf->isEquivalentTo($cf))->toBeTrue();
+});
+
+test('isEquivalentTo() is false for an unrelated code', function () {
+    $mario = CodiceFiscale::from('RSSMRA95E05F205Z');
+    $unrelated = CodiceFiscale::from('RBRRHR93L09Z357P');
+
+    expect($mario->isEquivalentTo($unrelated))->toBeFalse();
+});
