@@ -16,7 +16,7 @@ trait UpsertsInChunks
      * @param  list<array<string, string>>  $rows
      * @param  callable(array<string, string>): array<string, string|null>  $toRecord
      * @param  class-string<Model>  $modelClass
-     * @param  list<string>  $uniqueBy
+     * @param  non-empty-list<non-empty-string>  $uniqueBy
      * @param  list<string>  $update
      * @param  positive-int  $chunkSize
      */

@@ -4,348 +4,372 @@
 
 [![Author][ico-author]][link-author]
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/robertogallea/laravel-codicefiscale.svg?style=flat-square)](https://packagist.org/packages/robertogallea/laravel-codicefiscale)
-[![Laravel >=6.0][ico-laravel]][link-laravel]
 [![Software License][ico-license]](LICENSE.md)
 [![Sponsor me!][ico-sponsor]][link-sponsor]
 [![Packagist Downloads][ico-downloads]][link-downloads]
 
-laravel-codicefiscale is a package for the management of the Italian `CodiceFiscale` (i.e. tax code).
-The package allows easy validation and parsing of the CodiceFiscale. It is also suited for Laravel since it provides a
-convenient custom validator for request validation.
+laravel-codicefiscale is a package for parsing, generating, and validating the Italian `CodiceFiscale` (tax code). 3.0 is a ground-up rewrite: a small, framework-agnostic domain core (`Robertogallea\CodiceFiscale`) with immutable value objects and single-purpose services, plus a Laravel integration layer (`Robertogallea\CodiceFiscale\Laravel`) - a validation rule, an Eloquent cast, a Faker provider, and an artisan command backed by real Italian government data.
 
-## Laravel Version Compatibility
+> **Upgrading from 2.x?** 3.0 is an intentional, clean break with no compatibility shims. See [UPGRADE.md](UPGRADE.md) for a complete call-by-call migration table.
 
-| Laravel | Package |
-|---------|---------|
-| 12.x    | ^2.2    |
-| 11.x    | 2.x     |
-| 10.x    | 1.x     |
-| 9.x     | 1.x     |
-| 8.x     | 1.x     |
-| 7.x     | 1.x     |
-| 6.x     | 1.x     |
+## Requirements
 
-> **Important update**: now you can dynamically load city codes from ISTAT using the non-default `IstatRemoteCSVList`
-> city decoder.
+- PHP ^8.2
+- Laravel (`illuminate/database`, `illuminate/support`) ^12.0 or ^13.0
 
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Validation](#validation)
-- [Utility CodiceFiscale class](#utility-codicefiscale-class)
-- [Codice fiscale Generation](#codice-fiscale-generation)
-- [Faker integration](#faker-integration)
-- [City code parsing](#city-code-parsing)
-- [Integrate your own cities](#integrate-your-own-cities)
+## Table of contents
 
-## Installation
+- [Setup](#setup)
+- [Core domain](#core-domain)
+  - [`CodiceFiscale`](#codicefiscale)
+  - [Generation](#generation)
+  - [Customizing generation and parsing](#customizing-generation-and-parsing)
+  - [Parsing](#parsing)
+  - [Validation](#validation)
+  - [Matching against a person](#matching-against-a-person)
+  - [Omocodia](#omocodia)
+- [Birthplace domain](#birthplace-domain)
+- [Laravel integration](#laravel-integration)
+  - [Validation rule](#validation-rule)
+  - [Eloquent cast](#eloquent-cast)
+  - [Faker provider](#faker-provider)
+  - [`codice-fiscale:update-places`](#codice-fiscaleupdate-places)
 
-Run the following command to install the latest applicable version of the package:
+## Setup
 
 ```bash
-composer require robertogallea/laravel-codicefiscale:^2
+composer require robertogallea/laravel-codicefiscale:^3.0
 ```
 
-### Laravel
+The service provider is auto-discovered - no manual registration needed.
 
-In your app config, add the Service Provider to the `$providers` array *(only for Laravel 5.4 or below)*:
+Publish the config file if you want to customize it:
 
- ```php
-'providers' => [
-    ...
-    robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider::class,
-],
+```bash
+php artisan vendor:publish --provider="Robertogallea\CodiceFiscale\Laravel\CodiceFiscaleServiceProvider" --tag="config"
 ```
-
-The validation error messages are translated in `it` and `en` languages, if you want to add new language please send me
-a PR.
-
-### Lumen
-
-In `bootstrap/app.php`, register the Service Provider
 
 ```php
-$app->register(robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider::class);
+// config/codicefiscale.php
+
+return [
+    'database' => [
+        // Path to the dedicated SQLite database backing the
+        // birthplace repository. Never your application's own
+        // database - installing/using this package doesn't touch it.
+        'path' => storage_path('app/codicefiscale/places.sqlite'),
+    ],
+
+    // Sources for `codice-fiscale:update-places`. Only ever fetched
+    // when that command runs, never during normal validation.
+    'sources' => [
+        'municipalities' => 'https://www.anagrafenazionale.interno.it/wp-content/uploads/ANPR_archivio_comuni.csv',
+        'countries' => 'https://www.anagrafenazionale.interno.it/wp-content/uploads/tabella_2_statiesteri.xlsx',
+    ],
+];
 ```
 
-## Configuration
+Birthplace reference data (Italian municipalities and foreign countries) is never bundled with the package - nobody has verified the redistribution terms of the government datasets it comes from, so bundling a converted copy would mean redistributing it under this package's own unverified authority. Instead, each installation downloads its own copy:
 
-To customize the package configuration, you must export the configuration file into `config/codicefiscale.php`.
-
-This can be achieved by launching the following command:
-
-```
-php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider" --tag="config"
+```bash
+php artisan codice-fiscale:update-places
 ```
 
-You can configure the following parameters:
+This populates the dedicated SQLite database configured above via a service-provider-managed migration and connection - it never touches your application's own database or migration bookkeeping. Run it once after installing, and again whenever you want fresher data. **Semantic validation and birthplace lookups return "unknown" until this has been run at least once.**
 
-- `city-decoder`: the class used for decoding city codes (see [City code parsing](#city-code-parsing)), default to
-  `InternationalCitiesStaticList`.
-- `date-format`: the date format used for parsing birthdates, default to `'Y-m-d'`.
-- `labels`: the labels used for `male` and `female` persons, defaults to `'M'` and `'F'`.
+Update just one dataset at a time if you don't need both refreshed:
 
-## Language Files
-
-You can customize the validation messages publishing the validation translations with this command:
-
-```
-php artisan vendor:publish --provider="robertogallea\LaravelCodiceFiscale\CodiceFiscaleServiceProvider" --tag="lang"
+```bash
+php artisan codice-fiscale:update-places --municipalities-only
+php artisan codice-fiscale:update-places --countries-only
 ```
 
-## Validation
+## Core domain
 
-To validate a codice fiscale, use the `codice_fiscale` keyword in your validation rules array
+Everything in this section lives under `Robertogallea\CodiceFiscale` and has no Laravel dependency - it works identically outside a Laravel application.
+
+### `CodiceFiscale`
+
+An immutable value object. It can only ever be constructed already structurally valid - there's no way to hold a malformed one:
 
 ```php
-    public function rules()
-    {
-        return [
-            'codicefiscale' => 'codice_fiscale',
-            
-            //...
-        ];
-    }
+use Robertogallea\CodiceFiscale\CodiceFiscale;
+use Robertogallea\CodiceFiscale\Exceptions\InvalidCodiceFiscaleException;
+
+$cf = CodiceFiscale::from('RSSMRA85D15H501T'); // throws InvalidCodiceFiscaleException if malformed
+$cf = CodiceFiscale::tryFrom('RSSMRA85D15H501T'); // returns null instead of throwing
+
+$cf->value(); // 'RSSMRA85D15H501T'
+(string) $cf; // same - CodiceFiscale implements Stringable
 ```
 
-From version **1.9.0** you can validate your codice fiscale against other form fields to check whether there is a match
-or not.
+`from()`/`tryFrom()` only check *structure* (length, character classes, valid-shaped fields) - not checksum or semantic correctness. See [Validation](#validation) for the rest.
 
-You must specify all of the required fields:
+### Generation
 
-- `first_name`
-- `last_name`
-- `birthdate`
-- `place`
-- `gender`
-
-giving parameters to the `codice_fiscale` rule.
-
-For example:
+`Generator` takes a `Person` and produces a `CodiceFiscale`:
 
 ```php
-    public function rules()
-    {
-        return [
-            'codicefiscale' => 'codice_fiscale:first_name=first_name_field,last_name=last_name_field,birthdate=birthdate_field,place=place_field,gender=gender_field',
-            'first_name_field' => 'required|string',
-            'last_name_field' => 'required|string',
-            'birthdate_field' => 'required|date',
-            'place_field' => 'required|string',
-            'gender_field' => 'required|string|max:1',
-            
-            //...
-        ];
-    }
+use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
+use Robertogallea\CodiceFiscale\Data\Person;
+use Robertogallea\CodiceFiscale\Enums\Gender;
+use Robertogallea\CodiceFiscale\Generation\Generator;
+
+$person = new Person(
+    firstName: 'Mario',
+    lastName: 'Rossi',
+    birthDate: new DateTimeImmutable('1985-04-15'),
+    birthPlace: BirthPlaceCode::from('H501'), // Roma
+    gender: Gender::Male,
+);
+
+$cf = (new Generator())->generate($person);
+
+$cf->value(); // 'RSSMRA85D15H501T'
 ```
 
-Validation fails if the provided codicefiscale and the one generated from the input fields do not match.
+Name normalization (accents, apostrophes, mixed case, extra whitespace) happens automatically inside `Generator` - pass names exactly as the person typed them.
 
-## Utility CodiceFiscale class
+### Customizing generation and parsing
 
-A codice fiscale can be wrapped in the `robertogallea\LaravelCodiceFiscale\CodiceFiscale` class to enhance it with
-useful utility methods.
+`Generator` composes four internal, independently-tested services - `NameEncoder`, `DateEncoder`, `BirthPlaceEncoder`, `Checksum` - plus a swappable `Contracts\NameNormalizer` (default `ItalianNameNormalizer`, handling Latin-script accents/apostrophes/whitespace), all as constructor parameters with defaults. Supply your own `NameNormalizer` if you need different text-cleanup behavior (e.g. broader multi-script transliteration):
 
 ```php
-use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
+use Robertogallea\CodiceFiscale\Contracts\NameNormalizer;
 
-...
-try {
-    $cf = new CodiceFiscale();
-    $result = $cf->parse('RSSMRA95E05F205Z');
-    var_dump($result);
-} catch (Exception $exception) {
-    echo $exception;
+final class MyNormalizer implements NameNormalizer
+{
+    public function normalize(string $name): string { /* ... */ }
+}
+
+$cf = (new Generator(nameNormalizer: new MyNormalizer()))->generate($person);
+```
+
+Similarly, `Parser` resolves a codice fiscale's ambiguous two-digit birth year via a swappable `Contracts\CenturyResolver` (default `AgeBasedCenturyResolver(maxAge: 120)`, preferring the youngest plausible reading). Supply your own when you have domain-specific knowledge the default can't have:
+
+```php
+use Robertogallea\CodiceFiscale\Contracts\CenturyResolver;
+
+final class Post1970Resolver implements CenturyResolver
+{
+    // e.g. "this system only ever has customers born after 1970"
+    public function resolve(array $possibleYears): int { /* ... */ }
+}
+
+$parser = new Parser(app(BirthPlaceRepository::class), centuryResolver: new Post1970Resolver());
+```
+
+### Parsing
+
+`Parser` decodes a `CodiceFiscale` back into its constituent parts. It needs a `Contracts\BirthPlaceRepository` to resolve birthplace codes to real records - in a Laravel app, resolve the one the service provider already binds:
+
+```php
+use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
+use Robertogallea\CodiceFiscale\Parsing\Parser;
+
+$parser = new Parser(app(BirthPlaceRepository::class));
+$parsed = $parser->parse($cf);
+
+$parsed->surnameCode();    // 'RSS' - a 3-character encoded fragment, NOT the real surname
+$parsed->nameCode();       // 'MRA' - same caveat
+$parsed->gender();         // Gender::Male
+$parsed->birthDate();      // DateTimeImmutable('1985-04-15'), or null if undecodable
+$parsed->birthYear();      // 1985
+$parsed->birthMonth();     // 4
+$parsed->birthDay();       // 15
+$parsed->birthPlaceCode(); // BirthPlaceCode('H501')
+$parsed->birthPlace();     // ?BirthPlace - null if the code isn't recognized, or update-places hasn't run
+$parsed->isOmocodia();     // false
+```
+
+There is no way to recover a person's real first/last name from a codice fiscale - `surnameCode()`/`nameCode()` are the same 3-character encoded fragments the algorithm itself works with, just honestly named (2.x's `getFirstName()`/`getLastName()` implied otherwise).
+
+Two-digit birth years are inherently ambiguous (`85` could mean 1885 or 1985); `Parser` resolves this automatically via `AgeBasedCenturyResolver` (preferring the youngest plausible reading, under a configurable `maxAge`), while still exposing `$parsed->possibleBirthYears(): array{int, int}` for callers who need to see or control the ambiguity themselves.
+
+### Validation
+
+`Validator` checks a raw string in independently-callable tiers, and never accepts a `Person` - "is this a valid codice fiscale" and "does this codice fiscale belong to this person" are deliberately separate concerns (see [Matching](#matching-against-a-person)):
+
+```php
+use Robertogallea\CodiceFiscale\Validation\Validator;
+
+$validator = new Validator(app(BirthPlaceRepository::class));
+
+$result = $validator->validate('RSSMRA85D15H501T');
+$result->valid();  // true
+$result->errors(); // []
+
+$result = $validator->validate('not-a-real-code');
+$result->valid();  // false
+$result->errors(); // [ValidationError::InvalidFormat]
+```
+
+`validate()` runs format as a gate (a malformed string can't safely be sliced further); once format passes, checksum and semantics run independently and both contribute to the same result, so a caller sees everything wrong with the input in one pass:
+
+```php
+$validator->validateFormat('RSSMRA85D15H501T');   // structural only
+$validator->validateChecksum($cf);                // needs a real CodiceFiscale, not a raw string
+$validator->validateSemantics($cf);                // valid calendar date + recognized birthplace + valid on that date
+```
+
+`ValidationError` is a backed enum: `InvalidFormat`, `InvalidChecksum`, `InvalidDate`, `UnknownBirthPlace`, `BirthPlaceNotValidOnDate` - not exceptions. Exceptions are reserved for genuine API misuse (e.g. `CodiceFiscale::from()` on malformed input), not expected validation failures.
+
+### Matching against a person
+
+`Matcher` cross-checks a `CodiceFiscale` against a `Person` (all fields required) or a `PartialPerson` (any subset):
+
+```php
+use Robertogallea\CodiceFiscale\Data\PartialPerson;
+use Robertogallea\CodiceFiscale\Matching\Matcher;
+
+$matcher = new Matcher(new Parser(app(BirthPlaceRepository::class)));
+
+$result = $matcher->match($cf, $person); // the same Person the code was generated from
+$result->matches();  // true
+$result->skipped();  // [] - every field was checked
+
+$result = $matcher->match($cf, new PartialPerson(firstName: 'Mario', gender: Gender::Female));
+$result->matches();    // false
+$result->matched();    // [PersonField::FirstName]
+$result->mismatched(); // [PersonField::Gender]
+$result->skipped();    // [PersonField::LastName, PersonField::BirthDate, PersonField::BirthPlace]
+```
+
+`MatchResult` distinguishes three explicit states, important when a match result feeds a compliance decision: **matched**, **mismatched**, and **skipped** (a field the `PartialPerson` simply didn't provide - never silently treated as a pass).
+
+### Omocodia
+
+When a computed codice fiscale collides with one already assigned, the Agenzia delle Entrate resolves it by substituting a subset of 7 fixed digit positions with letters. Any of the 2⁷ = 128 combinations may apply independently:
+
+```php
+use Robertogallea\CodiceFiscale\Omocodia\Omocodia;
+
+$omocodia = new Omocodia();
+
+$omocodia->canonical($cf);   // reverses all substitutions back to digits - pure, no repository needed
+$omocodia->level($cf);       // 0 - a count of substituted positions (0-7), not an ordinal/unique identifier
+$omocodia->variants($cf);    // iterable<CodiceFiscale> - all 128 combinations sharing $cf's underlying data
+
+$variant = CodiceFiscale::from('RSSMRA85D15H50ML'); // one substituted position vs. the canonical form
+$variant->isEquivalentTo($cf); // true - same canonical form, so the same person-derived data
+```
+
+## Birthplace domain
+
+`Contracts\BirthPlace` is a single time-bounded record: `code()`, `name()`, `validFrom()`, `validTo()` (null if still current), `wasValidOn(DateTimeImmutable)`. `DomesticBirthPlace` (Italian municipality) adds `province()`/`istatCode()`; `ForeignBirthPlace` (country) adds `country(): CountryCode`. A municipality that renamed or changed province produces multiple `BirthPlace` records sharing the same `BirthPlaceCode`, one per era - so a birth date tied to an old municipality identity still resolves correctly.
+
+```php
+use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
+
+$repository = app(BirthPlaceRepository::class);
+
+$place = $repository->find(BirthPlaceCode::from('H501')); // valid today, or null
+$place = $repository->find(BirthPlaceCode::from('H501'), new DateTimeImmutable('1900-01-01')); // valid on that date
+
+$repository->existedEver(BirthPlaceCode::from('A999')); // false - distinguishes "never valid" from "valid, wrong date"
+```
+
+`BirthPlaceCode::isForeign(): bool` tells domestic (Italian) codes apart from `Z`-prefixed foreign ones; `BirthPlaceCode::equals(BirthPlaceCode $other): bool` compares two codes by value. `CountryCode` (an ISO 3166-1 alpha-3 string, e.g. `'USA'`) works the same way - `CountryCode::from()`/`tryFrom()` construct it, `equals()` compares it; it's a value object rather than a PHP enum since ~200 countries would make an enum unmaintainable.
+
+The default `BirthPlaceRepository` binding is `Laravel\BirthPlaces\CompositeBirthPlaceRepository`, which routes to an Eloquent-backed repository per kind - populated by [`codice-fiscale:update-places`](#codice-fiscaleupdate-places).
+
+## Laravel integration
+
+Everything in this section lives under `Robertogallea\CodiceFiscale\Laravel`.
+
+### Validation rule
+
+The `codice_fiscale` string rule checks format/checksum/semantics only:
+
+```php
+public function rules(): array
+{
+    return [
+        'fiscal_code' => 'codice_fiscale',
+    ];
 }
 ```
 
-In case of a valid codicefiscale it produces the following result:
+For cross-checking against other request fields, use the fluent `CodiceFiscaleRule`, naming the *other fields* to check against - not the values themselves:
 
 ```php
-[
-  "gender" => "M"
-  "birth_place" => "F205"
-  "birth_place_complete" => "Milano",
-  "day" => "05"
-  "month" => "05"
-  "year" => "1995"
-  "birthdate" => Carbon @799632000 {
-    date: 1995-05-05 00:00:00.0 UTC (+00:00)
-  }
-]
-```
+use Robertogallea\CodiceFiscale\Laravel\Rules\CodiceFiscaleRule;
 
-in case of an error, `CodiceFiscale::parse()` throws an `CodiceFiscaleValidationException`, which returns one of the
-defined constants with `$exception->getCode()`:
-
-- `CodiceFiscaleException::NO_ERROR`
-- `CodiceFiscaleException::NO_CODE`
-- `CodiceFiscaleException::WRONG_SIZE`
-- `CodiceFiscaleException::BAD_CHARACTERS`
-- `CodiceFiscaleException::BAD_OMOCODIA_CHAR`
-- `CodiceFiscaleException::WRONG_CODE`
-- `CodiceFiscaleException::MISSING_CITY_CODE`
-
-If you rather not want to catch exceptions, you can use `CodiceFiscale::tryParse()`:
-
-```php
-use robertogallea\LaravelCodiceFiscale\CodiceFiscale;
-
-...
-$cf = new CodiceFiscale();
-$result = $cf->tryParse('RSSMRA95E05F205Z');
-if ($result) {
-    var_dump($cf->asArray());
-} else {
-    echo $cf->getError();
+public function rules(): array
+{
+    return [
+        'fiscal_code' => [CodiceFiscaleRule::make()->matching(
+            firstName: 'first_name',
+            lastName: 'last_name',
+            birthDate: 'birth_date',
+            birthPlace: 'birth_place_code',
+            gender: 'gender',
+        )],
+    ];
 }
 ```
 
-which returns the same values as above, you can use `$cf->isValid()` to check if the codicefiscale is valid and
-`$cf->getError()` to get the error.
-This is especially useful in a blade template:
+Any argument can be omitted - an omitted field, or one absent from the request data, is skipped rather than forced into a mismatch. Validation fails with a message naming every mismatched field, not just the first.
+
+### Eloquent cast
+
+`CodiceFiscaleCast` rounds a `fiscal_code`-style attribute to a `CodiceFiscale` value object instead of a raw string:
 
 ```php
-@php($cf = new robertogallea\LaravelCodiceFiscale\CodiceFiscale())
-@if($cf->tryParse($codicefiscale))
-    <p><i class="fa fa-check" style="color:green"></i>{{$cf->getCodiceFiscale()}}</p>
-@else
-    <p><i class="fa fa-check" style="color:red"></i>{{$cf->getError()->getMessage()}}</p>
-@endif
+use Robertogallea\CodiceFiscale\Laravel\Casts\CodiceFiscaleCast;
+
+class Person extends Model
+{
+    protected function casts(): array
+    {
+        return [
+            'fiscal_code' => CodiceFiscaleCast::class,
+        ];
+    }
+}
+
+$person->fiscal_code; // CodiceFiscale|null
+
+$person->fiscal_code = 'RSSMRA85D15H501T'; // or a CodiceFiscale instance
+$person->fiscal_code = 'not-a-real-code'; // throws InvalidCodiceFiscaleException immediately
 ```
 
-## Codice fiscale Generation
+Setting a structurally-invalid value throws immediately (fail-fast at the ORM boundary) - bad data can't silently enter your database through the model layer. Reading a row whose stored value is invalid (legacy data, a seeder, a direct write outside the cast) returns `null` instead of throwing, so pre-existing bad data never makes the model unusable for inspection or cleanup.
 
-Class <code>CodiceFiscale</code> could be used to generate codice fiscale strings from input values:
+### Faker provider
 
-```php
-$first_name = 'Mario';
-$last_name = 'Rossi';
-$birth_date = '1995-05-05'; // or Carbon::parse('1995-05-05')
-$birth_place = 'F205';      // or 'Milano'
-$gender = 'M';
-
-$cf_string = CodiceFiscale::generate($first_name, $last_name, $birth_date, $birth_place, $gender);
-```
-
-## Faker integration
-
-You can generate fake codice fiscale in your factories using the provided faker extension:
+Auto-registered onto Laravel's `Faker\Generator` - no setup needed beyond installing the package:
 
 ```php
 class PersonFactory extends Factory
 {
-    
     public function definition(): array
     {
         return [
-            'first_name' => $firstName = fake()->firstName(),
-            'last_name' => $lastName = fake()->lastName(),
-            'fiscal_number' => fake()->codiceFiscale(firstName: $firstName, lastName: $lastName),
+            'fiscal_code' => fake()->codiceFiscale(),
         ];
     }
-```
-
-**Note**: you can provide some, all or none of the information required for the generation of codice fiscale
-(`firstName`, `lastName`, `birthDate`, `birthPlace`, `gender`)
-
-## City code parsing
-
-There are three strategies for decoding the city code:
-
-- `InternationalCitiesStaticList`: a static list of Italian cities;
-- `ItalianCitiesStaticList`: a static list of International cities;
-- `IstatRemoteCSVList`: a dynamic (loaded from web) list of Italian cities loaded from official ISTAT csv file.
-  Please note that the list is cached (one day by default, see config to change).
-- `CompositeCitiesList`: merge the results from two `CityDecoderInterface` classes (for example `IstatRemoteCSVList` and
-  `InternationalCitiesStaticList`) using the base `CityDecoderInterface` in the config key
-  `codicefiscale.cities-decoder-list`.
-
-By default, the package uses the class `InternationalCitiesStaticList` to lookup the city from the code and viceversa.
-However, you could use your own class to change the strategy used.
-
-You just need to implement the `CityDecoderInterface` and its `getList()` method.
-Then, to use it, just pass an instance to the `CodiceFiscale` class.
-
-For example:
-
-```php
-class MyCityList implements CityDecoderInterface
-{
-  public function getList()
-  {
-    // Implementation
-  }
 }
 ```
 
-```php
-...
-$cf = new CodiceFiscale(new MyCityList)
-...
-```
+`codiceFiscale()` takes no parameters - it always generates a fully random, valid `CodiceFiscale` via the real `Person`/`Generator` API, drawing its birthplace from a small, fixed set of ten well-known Italian municipalities bundled directly with the provider (not the full ANPR/MAECI dataset - see `docs/adr/0007-faker-provider-bundles-a-small-fixed-fact-list-not-birthplace-data.md`). It works in a fresh application that has never run `codice-fiscale:update-places`, since generation never touches a database at all.
 
-## Integrate your own cities
+If you need a code for a *specific* person rather than a random one, don't use the Faker provider - call `Generator` directly, as shown in [Generation](#generation).
 
-_Note_: if you find missing cities, please make a PR!
+### `codice-fiscale:update-places`
 
-If you want to integrate the cities list, you can use the `CompositeCitiesList` by merging the results of one of the
-decoders provided and a custom decoder.
-
-For example:
-
-```
-// conf/codicefiscale.php
-
-return [
-  'city-decoder' => '\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\CompositeCitiesList',
-
-  ...
-  
-  'cities-decoder-list' => [
-        '\robertogallea\LaravelCodiceFiscale\CityCodeDecoders\InternationalCitiesStaticList',
-        'YourNamespace\MyCustomList',
-    ]
-```
-
-where `MyCustomList` is defined as:
-
-```
-...
-
-class MyCustomList implements CityDecoderInterface
-{
-  public function getList()
-  {
-    return [
-      'XYZ1' => 'My city 1',
-      'XYZ2' => 'My city 2',
-    ]
-  }
-}
-```
+Covered in [Setup](#setup). Downloads the ANPR comuni archive and MAECI stati-esteri table via Laravel's `Http` facade and upserts them into the dedicated SQLite database - safe to re-run at any time; existing rows are updated in place rather than duplicated.
 
 [ico-author]: https://img.shields.io/static/v1?label=author&message=robgallea&color=50ABF1&logo=twitter&style=flat-square
 
-[ico-release]: https://img.shields.io/github/v/release/robertogallea/laravel-codicefiscale
-
 [ico-downloads]: https://img.shields.io/packagist/dt/robertogallea/laravel-codicefiscale
-
-[ico-laravel]: https://img.shields.io/static/v1?label=laravel&message=%E2%89%A56.0&color=ff2d20&logo=laravel&style=flat-square
 
 [ico-sponsor]: https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&link=https://github.com/sponsors/robertogallea
 
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
 
-[ico-styleci]: https://styleci.io/repos/177130582/shield
-
 [link-author]: https://twitter.com/robgallea
-
-[link-release]: https://github.com/robertogallea/laravel-codicefiscale
 
 [link-downloads]: https://packagist.org/packages/robertogallea/laravel-codicefiscale
 
-[link-laravel]: https://laravel.com
-
 [link-sponsor]: https://github.com/sponsors/robertogallea
-
-[link-styleci]: https://styleci.io/repos/17713058s2/
