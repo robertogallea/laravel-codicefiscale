@@ -18,7 +18,11 @@
         "pestphp/pest": "^3.0",
         "orchestra/testbench": "^10.1",
         "friendsofphp/php-cs-fixer": "^3.0",
-        "phpstan/phpstan": "^2.0"
+        "phpstan/phpstan": "^2.0",
+        "fakerphp/faker": "^1.20"
+    },
+    "suggest": {
+        "fakerphp/faker": "Required to use CodiceFiscaleProvider (^1.20)."
     },
 	"autoload": {
         "psr-4": {
