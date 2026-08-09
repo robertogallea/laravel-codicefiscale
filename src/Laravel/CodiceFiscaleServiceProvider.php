@@ -2,6 +2,7 @@
 
 namespace Robertogallea\CodiceFiscale\Laravel;
 
+use Faker\Generator as FakerGenerator;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\DatabaseManager;
@@ -15,6 +16,7 @@ use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\EloquentBirthPlaceRepository
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
 use Robertogallea\CodiceFiscale\Laravel\Commands\UpdatePlacesCommand;
+use Robertogallea\CodiceFiscale\Laravel\Faker\CodiceFiscaleProvider;
 use Robertogallea\CodiceFiscale\Validation\Validator as CodiceFiscaleValidator;
 
 class CodiceFiscaleServiceProvider extends ServiceProvider
@@ -42,6 +44,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
         $this->registerDatabaseConnection();
         $this->migrate();
         $this->registerValidationRule();
+        $this->registerFakerProvider();
 
         $this->publishes([
             $this->packagePath('config/codicefiscale.php') => config_path('codicefiscale.php'),
@@ -138,6 +141,26 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
                 && $this->app->make(CodiceFiscaleValidator::class)->validate($value)->valid(),
             'The :attribute is not a valid codice fiscale.',
         );
+    }
+
+    /**
+     * fakerphp/faker is usually a dev-only dependency of the consuming
+     * application (sometimes absent entirely in production), so this
+     * integration is entirely optional rather than a hard runtime
+     * requirement - guarded by class_exists(), and wired via
+     * afterResolving() so it reaches every per-locale Faker\Generator
+     * instance Laravel's own DatabaseServiceProvider lazily creates,
+     * not just whichever one happens to exist at boot() time.
+     */
+    private function registerFakerProvider(): void
+    {
+        if (! class_exists(FakerGenerator::class)) {
+            return;
+        }
+
+        $this->app->afterResolving(FakerGenerator::class, function (FakerGenerator $faker): void {
+            $faker->addProvider(new CodiceFiscaleProvider($faker));
+        });
     }
 
     private function packagePath(string $path): string
