@@ -176,3 +176,19 @@ test('the codice_fiscale string-rule alias fails a semantically-invalid value (u
 
     expect($result->fails())->toBeTrue();
 });
+
+test('->matching() treats an unparseable gender/birthplace value as skipped, not a mismatch', function () {
+    seedPalermo();
+    $cf = (new Generator())->generate(marioRossi());
+
+    $result = LaravelValidator::make(
+        [
+            'fiscal_code' => $cf->value(),
+            'sesso' => 'not-a-gender',
+            'luogo_nascita' => 'not-a-code',
+        ],
+        ['fiscal_code' => [CodiceFiscaleRule::make()->matching(gender: 'sesso', birthPlace: 'luogo_nascita')]],
+    );
+
+    expect($result->passes())->toBeTrue();
+});

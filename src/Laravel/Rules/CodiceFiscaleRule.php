@@ -21,21 +21,21 @@ use Robertogallea\CodiceFiscale\Validation\Validator;
  * (by field name, via DataAwareRule::setData()) through Matcher, so
  * a caller never has to encode multiple field names into one
  * pipe-delimited rule string.
+ *
+ * A field named via matching() that is either absent from the request
+ * data or holds a value that can't be parsed into what Matcher
+ * expects (an unparseable date, an unrecognized gender/birthplace
+ * code) is treated as not provided - PartialPerson's "skipped" bucket
+ * - rather than forced into a spurious mismatch on a value that never
+ * reached a comparable form.
  */
 final class CodiceFiscaleRule implements DataAwareRule, ValidationRule
 {
     /** @var array<string, mixed> */
     private array $data = [];
 
-    private ?string $firstNameField = null;
-
-    private ?string $lastNameField = null;
-
-    private ?string $birthDateField = null;
-
-    private ?string $birthPlaceField = null;
-
-    private ?string $genderField = null;
+    /** @var array<string, string> request field name, keyed by PersonField::name */
+    private array $fieldNames = [];
 
     public function __construct(
         private readonly Validator $validator,
@@ -55,11 +55,13 @@ final class CodiceFiscaleRule implements DataAwareRule, ValidationRule
         ?string $birthPlace = null,
         ?string $gender = null,
     ): self {
-        $this->firstNameField = $firstName;
-        $this->lastNameField = $lastName;
-        $this->birthDateField = $birthDate;
-        $this->birthPlaceField = $birthPlace;
-        $this->genderField = $gender;
+        $this->fieldNames = array_filter([
+            PersonField::FirstName->name => $firstName,
+            PersonField::LastName->name => $lastName,
+            PersonField::BirthDate->name => $birthDate,
+            PersonField::BirthPlace->name => $birthPlace,
+            PersonField::Gender->name => $gender,
+        ], static fn (?string $value): bool => $value !== null);
 
         return $this;
     }
@@ -80,7 +82,7 @@ final class CodiceFiscaleRule implements DataAwareRule, ValidationRule
             return;
         }
 
-        if (! $this->hasMatchingFields()) {
+        if ($this->fieldNames === []) {
             return;
         }
 
@@ -94,40 +96,33 @@ final class CodiceFiscaleRule implements DataAwareRule, ValidationRule
         }
     }
 
-    private function hasMatchingFields(): bool
-    {
-        return $this->firstNameField !== null
-            || $this->lastNameField !== null
-            || $this->birthDateField !== null
-            || $this->birthPlaceField !== null
-            || $this->genderField !== null;
-    }
-
     private function partialPersonFromData(): PartialPerson
     {
         return new PartialPerson(
-            firstName: $this->stringFromData($this->firstNameField),
-            lastName: $this->stringFromData($this->lastNameField),
+            firstName: $this->stringFromData(PersonField::FirstName),
+            lastName: $this->stringFromData(PersonField::LastName),
             birthDate: $this->birthDateFromData(),
             birthPlace: $this->birthPlaceFromData(),
             gender: $this->genderFromData(),
         );
     }
 
-    private function stringFromData(?string $field): ?string
+    private function stringFromData(PersonField $field): ?string
     {
-        if ($field === null) {
+        $fieldName = $this->fieldNames[$field->name] ?? null;
+
+        if ($fieldName === null) {
             return null;
         }
 
-        $raw = $this->data[$field] ?? null;
+        $raw = $this->data[$fieldName] ?? null;
 
         return is_string($raw) ? $raw : null;
     }
 
     private function birthDateFromData(): ?DateTimeImmutable
     {
-        $raw = $this->stringFromData($this->birthDateField);
+        $raw = $this->stringFromData(PersonField::BirthDate);
 
         if ($raw === null) {
             return null;
@@ -136,36 +131,26 @@ final class CodiceFiscaleRule implements DataAwareRule, ValidationRule
         try {
             return new DateTimeImmutable($raw);
         } catch (\Exception) {
-            // An unparseable date can't be compared to anything -
-            // treated the same as "not provided" (skipped by Matcher)
-            // rather than forcing a spurious mismatch on a value
-            // that never reached a comparable form.
             return null;
         }
     }
 
     private function birthPlaceFromData(): ?BirthPlaceCode
     {
-        $raw = $this->stringFromData($this->birthPlaceField);
+        $raw = $this->stringFromData(PersonField::BirthPlace);
 
         return $raw === null ? null : BirthPlaceCode::tryFrom($raw);
     }
 
     private function genderFromData(): ?Gender
     {
-        $raw = $this->stringFromData($this->genderField);
+        $raw = $this->stringFromData(PersonField::Gender);
 
         return $raw === null ? null : Gender::tryFrom(strtoupper($raw));
     }
 
     private function fieldName(PersonField $field): string
     {
-        return match ($field) {
-            PersonField::FirstName => $this->firstNameField,
-            PersonField::LastName => $this->lastNameField,
-            PersonField::BirthDate => $this->birthDateField,
-            PersonField::BirthPlace => $this->birthPlaceField,
-            PersonField::Gender => $this->genderField,
-        } ?? $field->name;
+        return $this->fieldNames[$field->name] ?? $field->name;
     }
 }
