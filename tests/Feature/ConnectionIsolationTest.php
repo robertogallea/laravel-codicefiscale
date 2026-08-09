@@ -36,3 +36,23 @@ test("installing this package never touches the host application's own connectio
         expect($leakedIntoDefault)->toBe(0);
     }
 });
+
+test('a bare "php artisan migrate" - exactly what a real host app runs for its own migrations - never touches our tables or bookkeeping', function () {
+    $defaultConnection = config('database.default');
+
+    // No --database flag: this is precisely the host's own ordinary
+    // workflow, run *in addition to* our provider's own automatic
+    // migration in boot(). Our migrations are deliberately never
+    // registered via loadMigrationsFrom(), so the host's shared
+    // migrate command has no way to know about - or touch - them.
+    $this->artisan('migrate')->run();
+
+    $leaked = Schema::connection($defaultConnection)->hasTable('migrations')
+        ? DB::connection($defaultConnection)->table('migrations')
+            ->where('migration', 'like', '%municipalities%')
+            ->orWhere('migration', 'like', '%foreign_countries%')
+            ->count()
+        : 0;
+
+    expect($leaked)->toBe(0);
+});
