@@ -30,51 +30,44 @@ final class Matcher
 
         if ($person->lastName === null) {
             $skipped[] = PersonField::LastName;
+        } elseif ($this->nameEncoder->surnameCode($this->nameNormalizer->normalize($person->lastName)) === $parsed->surnameCode()) {
+            $matched[] = PersonField::LastName;
         } else {
-            $expected = $this->nameEncoder->surnameCode($this->nameNormalizer->normalize($person->lastName));
-            $this->record($expected === $parsed->surnameCode(), PersonField::LastName, $matched, $mismatched);
+            $mismatched[] = PersonField::LastName;
         }
 
         if ($person->firstName === null) {
             $skipped[] = PersonField::FirstName;
+        } elseif ($this->nameEncoder->nameCode($this->nameNormalizer->normalize($person->firstName)) === $parsed->nameCode()) {
+            $matched[] = PersonField::FirstName;
         } else {
-            $expected = $this->nameEncoder->nameCode($this->nameNormalizer->normalize($person->firstName));
-            $this->record($expected === $parsed->nameCode(), PersonField::FirstName, $matched, $mismatched);
+            $mismatched[] = PersonField::FirstName;
         }
 
         if ($person->birthDate === null) {
             $skipped[] = PersonField::BirthDate;
+        } elseif ($parsed->birthDate()?->format('Y-m-d') === $person->birthDate->format('Y-m-d')) {
+            $matched[] = PersonField::BirthDate;
         } else {
-            $parsedDate = $parsed->birthDate();
-            $isMatch = $parsedDate !== null && $parsedDate->format('Y-m-d') === $person->birthDate->format('Y-m-d');
-            $this->record($isMatch, PersonField::BirthDate, $matched, $mismatched);
+            $mismatched[] = PersonField::BirthDate;
         }
 
         if ($person->birthPlace === null) {
             $skipped[] = PersonField::BirthPlace;
+        } elseif ($person->birthPlace->equals($parsed->birthPlaceCode())) {
+            $matched[] = PersonField::BirthPlace;
         } else {
-            $this->record($person->birthPlace->equals($parsed->birthPlaceCode()), PersonField::BirthPlace, $matched, $mismatched);
+            $mismatched[] = PersonField::BirthPlace;
         }
 
         if ($person->gender === null) {
             $skipped[] = PersonField::Gender;
+        } elseif ($person->gender === $parsed->gender()) {
+            $matched[] = PersonField::Gender;
         } else {
-            $this->record($person->gender === $parsed->gender(), PersonField::Gender, $matched, $mismatched);
+            $mismatched[] = PersonField::Gender;
         }
 
         return new MatchResult($matched, $mismatched, $skipped);
-    }
-
-    /**
-     * @param  list<PersonField>  $matched
-     * @param  list<PersonField>  $mismatched
-     */
-    private function record(bool $isMatch, PersonField $field, array &$matched, array &$mismatched): void
-    {
-        if ($isMatch) {
-            $matched[] = $field;
-        } else {
-            $mismatched[] = $field;
-        }
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use Robertogallea\CodiceFiscale\CodiceFiscale;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Data\PartialPerson;
 use Robertogallea\CodiceFiscale\Data\Person;
@@ -113,4 +114,17 @@ test('changing a single field before matching reports exactly that field as mism
             PersonField::BirthPlace,
         ])
         ->and($result->skipped())->toBe([]);
+});
+
+test('birthDate mismatches (not skips or crashes) when the code encodes an undecodable date', function () {
+    // Day 77 -> female (>40), day 37: not a real day of any month, so
+    // ParsedCodiceFiscale::birthDate() is null. A caller-provided
+    // birthDate can never be a real match against "no date at all".
+    $cf = CodiceFiscale::from('LOIMLC71A77F979V');
+
+    $matcher = new Matcher(new Parser(new InMemoryBirthPlaceRepository()));
+    $result = $matcher->match($cf, new PartialPerson(birthDate: new DateTimeImmutable('1971-01-01')));
+
+    expect($result->matches())->toBeFalse()
+        ->and($result->mismatched())->toBe([PersonField::BirthDate]);
 });
