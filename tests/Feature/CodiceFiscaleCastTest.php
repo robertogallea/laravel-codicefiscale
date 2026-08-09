@@ -38,6 +38,15 @@ test('setting a structurally-invalid value throws immediately on assignment', fu
     expect(CastTestModel::count())->toBe(0);
 });
 
+test('setting a non-string, non-CodiceFiscale value throws rather than leaking a raw TypeError', function () {
+    // CastsAttributes::set()'s $value is untyped (mixed) at the real
+    // interface level - PHP never enforces a docblock generic at
+    // runtime, so a caller can still assign something else entirely
+    // (e.g. via mass assignment from untrusted array/request data).
+    expect(fn () => CastTestModel::create(['fiscal_code' => ['not', 'a', 'string']]))
+        ->toThrow(InvalidCodiceFiscaleException::class);
+});
+
 test('a null value round-trips to null without invoking validation', function () {
     $model = CastTestModel::create(['fiscal_code' => null]);
     $fresh = CastTestModel::find($model->id);
