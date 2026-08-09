@@ -34,7 +34,11 @@ final class XlsxReader
     private function readFile(string $path): array
     {
         $zip = new \ZipArchive();
-        $zip->open($path);
+        $openResult = $zip->open($path);
+
+        if ($openResult !== true) {
+            throw new \RuntimeException("Unable to open the xlsx file as a zip archive (error code {$openResult}).");
+        }
 
         $sharedStrings = $this->readSharedStrings($zip);
         $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');

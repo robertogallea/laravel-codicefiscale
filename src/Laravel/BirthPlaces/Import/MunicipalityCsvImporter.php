@@ -13,32 +13,22 @@ use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
  */
 final class MunicipalityCsvImporter
 {
+    use UpsertsInChunks;
+
     private const CHUNK_SIZE = 500;
 
     private const STILL_ACTIVE_SENTINEL = '9999-12-31';
 
     public function import(string $csvContents): int
     {
-        $rows = $this->parseCsv($csvContents);
-        $count = 0;
-
-        foreach (array_chunk($rows, self::CHUNK_SIZE) as $chunk) {
-            $records = array_map($this->toRecord(...), $chunk);
-
-            // toBase() rather than the Eloquent-magic-forwarded
-            // upsert(): plain PHPStan (no Larastan) can't resolve
-            // __callStatic-forwarded methods, and toBase() gives the
-            // real, directly-typed query builder method instead.
-            Municipality::query()->toBase()->upsert(
-                $records,
-                ['code', 'valid_from'],
-                ['name', 'province', 'istat_code', 'valid_to'],
-            );
-
-            $count += count($records);
-        }
-
-        return $count;
+        return $this->upsertInChunks(
+            $this->parseCsv($csvContents),
+            $this->toRecord(...),
+            Municipality::class,
+            ['code', 'valid_from'],
+            ['name', 'province', 'istat_code', 'valid_to'],
+            self::CHUNK_SIZE,
+        );
     }
 
     /** @return list<array<string, string>> */
@@ -63,9 +53,20 @@ final class MunicipalityCsvImporter
 
         /** @var list<string> $header */
         $rows = [];
+        $lineNumber = 1;
 
         while (($row = fgetcsv($stream)) !== false) {
             /** @var list<string> $row */
+            $lineNumber++;
+
+            if (count($row) !== count($header)) {
+                fclose($stream);
+
+                throw new \RuntimeException(
+                    "Comuni CSV line {$lineNumber} has ".count($row).' columns, expected '.count($header).'.'
+                );
+            }
+
             $rows[] = array_combine($header, $row);
         }
 

@@ -31,3 +31,38 @@ test('re-running the import upserts existing rows instead of duplicating them', 
 
     expect(ForeignCountry::count())->toBe($countFirstRun);
 });
+
+test('re-running the import against genuinely updated data updates the existing row rather than duplicating it', function () {
+    $importer = new ForeignCountryXlsxImporter();
+    $importer->import(file_get_contents(__DIR__.'/../Fixtures/tabella_2_statiesteri_sample.xlsx'));
+    $countFirstRun = ForeignCountry::count();
+
+    // Real edits to the shared-string text a real update would carry -
+    // not a fabricated file format, just a modified copy of the real one.
+    $updatedXlsx = xlsxWithReplacedSharedString(
+        __DIR__.'/../Fixtures/tabella_2_statiesteri_sample.xlsx',
+        "STATI UNITI D'AMERICA",
+        'STATI UNITI (RINOMINATO)',
+    );
+    $importer->import($updatedXlsx);
+
+    expect(ForeignCountry::count())->toBe($countFirstRun)
+        ->and(ForeignCountry::where('code', 'Z404')->first()->name)->toBe('STATI UNITI (RINOMINATO)');
+});
+
+function xlsxWithReplacedSharedString(string $originalPath, string $search, string $replace): string
+{
+    $tempFile = tempnam(sys_get_temp_dir(), 'xlsx');
+    copy($originalPath, $tempFile);
+
+    $zip = new ZipArchive();
+    $zip->open($tempFile);
+    $sharedStrings = $zip->getFromName('xl/sharedStrings.xml');
+    $zip->addFromString('xl/sharedStrings.xml', str_replace($search, $replace, $sharedStrings));
+    $zip->close();
+
+    $contents = file_get_contents($tempFile);
+    unlink($tempFile);
+
+    return $contents;
+}

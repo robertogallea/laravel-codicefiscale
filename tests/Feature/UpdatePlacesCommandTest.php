@@ -74,3 +74,20 @@ test('re-running the command upserts existing rows instead of duplicating them',
     expect(Municipality::count())->toBe(3)
         ->and(ForeignCountry::count())->toBe(209);
 });
+
+test('re-running the command against genuinely updated fixtures updates the existing row rather than duplicating it', function () {
+    $originalCsv = file_get_contents(__DIR__.'/../Fixtures/anpr_comuni_sample.csv');
+    $updatedCsv = str_replace('"ROMA","ROMA"', '"ROMA CAPITALE","ROMA CAPITALE"', $originalCsv);
+
+    Http::fake([
+        'anagrafenazionale.interno.it/*ANPR_archivio_comuni.csv' => Http::sequence()
+            ->push($originalCsv)
+            ->push($updatedCsv),
+    ]);
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    expect(Municipality::count())->toBe(3)
+        ->and(Municipality::where('code', 'H501')->first()->name)->toBe('ROMA CAPITALE');
+});

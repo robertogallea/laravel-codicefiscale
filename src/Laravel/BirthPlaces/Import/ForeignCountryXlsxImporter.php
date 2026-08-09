@@ -14,6 +14,8 @@ use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Xlsx\XlsxReader;
  */
 final class ForeignCountryXlsxImporter
 {
+    use UpsertsInChunks;
+
     private const CHUNK_SIZE = 100;
 
     private const STILL_ACTIVE_SENTINEL_PREFIX = '31/12/9999';
@@ -48,24 +50,14 @@ final class ForeignCountryXlsxImporter
             static fn (array $row): bool => $row['CODAT'] !== ''
         ));
 
-        $count = 0;
-        foreach (array_chunk($withACode, self::CHUNK_SIZE) as $chunk) {
-            $records = array_map($this->toRecord(...), $chunk);
-
-            // toBase() rather than the Eloquent-magic-forwarded
-            // upsert(): plain PHPStan (no Larastan) can't resolve
-            // __callStatic-forwarded methods, and toBase() gives the
-            // real, directly-typed query builder method instead.
-            ForeignCountry::query()->toBase()->upsert(
-                $records,
-                ['code', 'valid_from'],
-                ['name', 'country_code', 'valid_to'],
-            );
-
-            $count += count($records);
-        }
-
-        return $count;
+        return $this->upsertInChunks(
+            $withACode,
+            $this->toRecord(...),
+            ForeignCountry::class,
+            ['code', 'valid_from'],
+            ['name', 'country_code', 'valid_to'],
+            self::CHUNK_SIZE,
+        );
     }
 
     /**
