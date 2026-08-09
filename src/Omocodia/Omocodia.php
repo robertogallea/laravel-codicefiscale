@@ -42,7 +42,9 @@ final class Omocodia
         $characters = str_split($cf->value());
 
         foreach (self::ELIGIBLE_POSITIONS as $position) {
-            $characters[$position] = self::LETTER_TO_DIGIT[$characters[$position]] ?? $characters[$position];
+            if ($this->isSubstituted($characters, $position)) {
+                $characters[$position] = self::LETTER_TO_DIGIT[$characters[$position]];
+            }
         }
 
         return $this->rebuild($characters);
@@ -98,16 +100,31 @@ final class Omocodia
         yield from $combinations;
     }
 
+    /**
+     * How many of the 7 eligible positions are currently letter-
+     * substituted, from 0 (canonical) to 7 (every position
+     * substituted). This is a count, not an ordinal or cumulative
+     * "level" in any hierarchical sense - distinct combinations of
+     * substituted positions can share the same count (there are
+     * C(7,k) combinations for count k), so this number alone never
+     * identifies which variant a code is.
+     */
     public function level(CodiceFiscale $cf): int
     {
         $characters = str_split($cf->value());
 
         $substituted = array_filter(
             self::ELIGIBLE_POSITIONS,
-            static fn (int $position): bool => isset(self::LETTER_TO_DIGIT[$characters[$position]])
+            fn (int $position): bool => $this->isSubstituted($characters, $position)
         );
 
         return count($substituted);
+    }
+
+    /** @param array<int, string> $characters */
+    private function isSubstituted(array $characters, int $position): bool
+    {
+        return isset(self::LETTER_TO_DIGIT[$characters[$position]]);
     }
 
     /** @param array<int, string> $characters */
