@@ -12,7 +12,10 @@ final class CodiceFiscale implements \Stringable
      * letter, 2 day digits (or omocodia letters), 1 birthplace-code
      * prefix letter, 3 birthplace-code digits (or omocodia letters),
      * 1 check-character letter. Omocodia substitution only ever
-     * replaces a digit with one of L,M,N,P,Q,R,S,T,U,V.
+     * replaces a digit with one of L,M,N,P,Q,R,S,T,U,V. The month
+     * letter is restricted to A,B,C,D,E,H,L,M,P,R,S,T (January
+     * through December, in that order) — no other letter is valid
+     * in that position.
      */
     private const STRUCTURE_PATTERN =
         '/^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$/';

@@ -39,8 +39,10 @@ test('tryFrom() returns null for the same malformed input instead of throwing', 
     expect(CodiceFiscale::tryFrom($code))->toBeNull();
 })->with([
     'too short' => ['ABC'],
+    'too long' => ['ABCDEF01G23H456IX'],
     'contains a non-alphanumeric character' => ['%SSMRA95E05F20RU'],
     'invalid omocodia character' => ['RSSMRA95E05F20OU'],
+    'invalid month letter' => ['RSSMRA95Z05F205Z'],
 ]);
 
 test('has no dependency on checksum validity', function () {
