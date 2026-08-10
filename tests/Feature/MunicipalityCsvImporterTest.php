@@ -27,7 +27,31 @@ test('imports the real Abbadia Cerreto and Roma fixture rows correctly', functio
 
     $roma = Municipality::where('code', 'H501')->first();
     expect($roma->name)->toBe('ROMA')
-        ->and($roma->valid_to)->toBeNull();
+        ->and($roma->valid_to)->toBeNull()
+        ->and($roma->name_normalized)->toBe('ROMA');
+});
+
+test('imports name_normalized alongside name, for search matching', function () {
+    $csv = file_get_contents(__DIR__.'/../Fixtures/anpr_comuni_sample.csv');
+
+    (new MunicipalityCsvImporter())->import($csv);
+
+    expect(Municipality::where('code', 'A004')->where('province', 'MI')->first()->name_normalized)
+        ->toBe('ABBADIA CERRETO');
+});
+
+test('re-running the import backfills name_normalized on pre-existing rows', function () {
+    $csv = file_get_contents(__DIR__.'/../Fixtures/anpr_comuni_sample.csv');
+    $importer = new MunicipalityCsvImporter();
+
+    // Simulate an installation that populated municipalities before
+    // name_normalized existed: the column starts out null.
+    $importer->import($csv);
+    Municipality::query()->update(['name_normalized' => null]);
+
+    $importer->import($csv);
+
+    expect(Municipality::where('code', 'H501')->first()->name_normalized)->toBe('ROMA');
 });
 
 test('re-running the import upserts existing rows instead of duplicating them', function () {

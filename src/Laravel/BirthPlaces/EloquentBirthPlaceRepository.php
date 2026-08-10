@@ -7,6 +7,7 @@ use Robertogallea\CodiceFiscale\Contracts\BirthPlace;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\AbstractBirthPlaceModel;
+use Robertogallea\CodiceFiscale\Support\PlaceNameNormalizer;
 
 /**
  * Generic BirthPlaceRepository backed by a single Eloquent model -
@@ -32,12 +33,7 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         // by the constructor's @param, so this is narrowing a type
         // PHPStan can't derive on its own, not overriding a correct one.
         /** @var AbstractBirthPlaceModel|null $row */
-        $row = $this->modelClass::query()
-            ->where('code', $code->value())
-            ->whereDate('valid_from', '<=', $on)
-            ->where(function (Builder $query) use ($on) {
-                $query->whereNull('valid_to')->orWhereDate('valid_to', '>', $on);
-            })
+        $row = $this->validOn($this->modelClass::query()->where('code', $code->value()), $on)
             ->first();
 
         return $row?->toBirthPlace();
@@ -46,5 +42,44 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
     public function existedEver(BirthPlaceCode $code): bool
     {
         return $this->modelClass::query()->where('code', $code->value())->exists();
+    }
+
+    public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array
+    {
+        $needle = (new PlaceNameNormalizer())->normalize($name);
+
+        $query = $this->modelClass::query()
+            ->where('name_normalized', 'like', '%'.$needle.'%');
+
+        if ($on !== null) {
+            $this->validOn($query, $on);
+        }
+
+        $query->orderByRaw('(valid_to IS NULL) DESC')
+            ->orderBy('valid_to', 'desc')
+            ->orderBy('valid_from', 'desc');
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        /** @var list<AbstractBirthPlaceModel> $rows */
+        $rows = $query->get()->all();
+
+        return array_map(static fn (AbstractBirthPlaceModel $row): BirthPlace => $row->toBirthPlace(), $rows);
+    }
+
+    /**
+     * @param  Builder<AbstractBirthPlaceModel>  $query
+     * @return Builder<AbstractBirthPlaceModel>
+     */
+    private function validOn(Builder $query, \DateTimeImmutable $on): Builder
+    {
+        $query->whereDate('valid_from', '<=', $on)
+            ->where(function (Builder $query) use ($on) {
+                $query->whereNull('valid_to')->orWhereDate('valid_to', '>', $on);
+            });
+
+        return $query;
     }
 }

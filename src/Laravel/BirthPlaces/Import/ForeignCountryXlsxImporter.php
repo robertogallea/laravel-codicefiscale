@@ -4,6 +4,7 @@ namespace Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import;
 
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Xlsx\XlsxReader;
+use Robertogallea\CodiceFiscale\Support\PlaceNameNormalizer;
 
 /**
  * Imports MAECI's stati-esteri xlsx table into the foreign_countries
@@ -22,6 +23,7 @@ final class ForeignCountryXlsxImporter
 
     public function __construct(
         private readonly XlsxReader $reader = new XlsxReader(),
+        private readonly PlaceNameNormalizer $normalizer = new PlaceNameNormalizer(),
     ) {
     }
 
@@ -55,7 +57,7 @@ final class ForeignCountryXlsxImporter
             $this->toRecord(...),
             ForeignCountry::class,
             ['code', 'valid_from'],
-            ['name', 'country_code', 'valid_to'],
+            ['name', 'country_code', 'valid_to', 'name_normalized'],
             self::CHUNK_SIZE,
         );
     }
@@ -81,6 +83,7 @@ final class ForeignCountryXlsxImporter
             'country_code' => $row['CODISO3166_1_ALPHA3'],
             'valid_from' => $this->parseDate($row['DATAINIZIOVALIDITA']),
             'valid_to' => $this->parseValidTo($row['DATAFINEVALIDITA']),
+            'name_normalized' => $this->normalizer->normalize($row['DENOMINAZIONE']),
         ];
     }
 

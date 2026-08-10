@@ -18,4 +18,14 @@ interface BirthPlaceRepository
      * distinguishes "never a valid code" from "valid code, wrong date".
      */
     public function existedEver(BirthPlaceCode $code): bool;
+
+    /**
+     * Era-records whose name contains $name (case/accent-insensitive
+     * substring match). Unfiltered by validity unless $on is given -
+     * a name search surfaces historical names on purpose. Results are
+     * ordered most-recent-era-first; $limit caps the count returned.
+     *
+     * @return list<BirthPlace>
+     */
+    public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array;
 }

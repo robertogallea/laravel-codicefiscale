@@ -3,6 +3,7 @@
 namespace Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import;
 
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
+use Robertogallea\CodiceFiscale\Support\PlaceNameNormalizer;
 
 /**
  * Imports ANPR's comuni archive CSV into the municipalities table.
@@ -19,6 +20,11 @@ final class MunicipalityCsvImporter
 
     private const STILL_ACTIVE_SENTINEL = '9999-12-31';
 
+    public function __construct(
+        private readonly PlaceNameNormalizer $normalizer = new PlaceNameNormalizer(),
+    ) {
+    }
+
     public function import(string $csvContents): int
     {
         return $this->upsertInChunks(
@@ -26,7 +32,7 @@ final class MunicipalityCsvImporter
             $this->toRecord(...),
             Municipality::class,
             ['code', 'valid_from'],
-            ['name', 'province', 'istat_code', 'valid_to'],
+            ['name', 'province', 'istat_code', 'valid_to', 'name_normalized'],
             self::CHUNK_SIZE,
         );
     }
@@ -88,6 +94,7 @@ final class MunicipalityCsvImporter
             'istat_code' => $row['CODISTAT'],
             'valid_from' => $row['DATAISTITUZIONE'],
             'valid_to' => $this->exclusiveValidTo($row['DATACESSAZIONE']),
+            'name_normalized' => $this->normalizer->normalize($row['DENOMINAZIONE_IT']),
         ];
     }
 
