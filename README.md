@@ -315,7 +315,13 @@ public function rules(): array
 }
 ```
 
-Any argument can be omitted - an omitted field, or one absent from the request data, is skipped rather than forced into a mismatch. Validation fails with a message naming every mismatched field, not just the first.
+Any argument can be omitted - an omitted field, or one absent from the request data, is skipped rather than forced into a mismatch. Validation fails with one message per mismatched field, not just the first.
+
+Both the `codice_fiscale` string rule and `CodiceFiscaleRule` report translated, failure-specific messages - a distinct message per failure reason (bad format, bad checksum, a nonexistent date, an unrecognized birthplace, a birthplace not yet/no longer valid on the encoded date) rather than one generic "invalid" message, plus one `:field`-naming message per mismatched field for `->matching()`. `en` and `it` are bundled under the `codicefiscale` translation namespace; publish and customize them with:
+
+```bash
+php artisan vendor:publish --provider="Robertogallea\CodiceFiscale\Laravel\CodiceFiscaleServiceProvider" --tag="lang"
+```
 
 ### Eloquent cast
 

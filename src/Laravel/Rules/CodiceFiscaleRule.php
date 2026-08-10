@@ -11,6 +11,7 @@ use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Data\PartialPerson;
 use Robertogallea\CodiceFiscale\Enums\Gender;
 use Robertogallea\CodiceFiscale\Enums\PersonField;
+use Robertogallea\CodiceFiscale\Enums\ValidationError;
 use Robertogallea\CodiceFiscale\Matching\Matcher;
 use Robertogallea\CodiceFiscale\Validation\Validator;
 
@@ -76,8 +77,18 @@ final class CodiceFiscaleRule implements DataAwareRule, ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! is_string($value) || ! $this->validator->validate($value)->valid()) {
-            $fail('The :attribute is not a valid codice fiscale.');
+        if (! is_string($value)) {
+            $fail($this->translate(ValidationError::InvalidFormat->value, ['attribute' => $attribute]));
+
+            return;
+        }
+
+        $validationResult = $this->validator->validate($value);
+
+        if (! $validationResult->valid()) {
+            foreach ($validationResult->errors() as $error) {
+                $fail($this->translate($error->value, ['attribute' => $attribute]));
+            }
 
             return;
         }
@@ -88,12 +99,20 @@ final class CodiceFiscaleRule implements DataAwareRule, ValidationRule
 
         $result = $this->matcher->match(CodiceFiscale::from($value), $this->partialPersonFromData());
 
-        if ($result->mismatched() !== []) {
-            $fail(sprintf(
-                'The :attribute does not match the provided %s.',
-                implode(', ', array_map($this->fieldName(...), $result->mismatched())),
-            ));
+        foreach ($result->mismatched() as $field) {
+            $fail($this->translate('mismatch', [
+                'attribute' => $attribute,
+                'field' => $this->fieldName($field),
+            ]));
         }
+    }
+
+    /** @param array<string, string> $replace */
+    private function translate(string $key, array $replace): string
+    {
+        $message = trans("codicefiscale::validation.$key", $replace);
+
+        return is_string($message) ? $message : $key;
     }
 
     private function partialPersonFromData(): PartialPerson
