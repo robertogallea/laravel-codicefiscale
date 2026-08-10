@@ -10,7 +10,9 @@ use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Validator as LaravelValidator;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
+use Robertogallea\CodiceFiscale\Enums\ValidationError;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\CompositeBirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\EloquentBirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
@@ -43,6 +45,7 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
         // since they're resolved lazily, well after boot() completes.
         $this->registerDatabaseConnection();
         $this->migrate();
+        $this->registerTranslations();
         $this->registerValidationRule();
         $this->registerFakerProvider();
 
@@ -129,18 +132,68 @@ class CodiceFiscaleServiceProvider extends ServiceProvider
     }
 
     /**
+     * Mirrors 2.x's own file layout, translation namespace, and
+     * publish-tag convention, so an app that already published
+     * lang/vendor/codicefiscale/it/validation.php under 2.x keeps the
+     * same structural publish-and-override workflow.
+     */
+    private function registerTranslations(): void
+    {
+        $langPath = $this->packagePath('lang');
+
+        $this->loadTranslationsFrom($langPath, 'codicefiscale');
+
+        $this->publishes([
+            $langPath => $this->app->langPath('vendor/codicefiscale'),
+        ], 'lang');
+    }
+
+    /**
      * The 2.x-retained convenience alias: format/checksum/semantics
      * only, exactly what CodiceFiscaleRule::make() alone does, for
      * callers who just need a plain pipe-delimited rule string.
+     *
+     * extend()'s single static message parameter can't vary per
+     * failure reason on its own, so granularity comes from a
+     * Factory::replacer() - the Factory-level equivalent of the
+     * per-instance Validator::addReplacer() 2.x itself used for this
+     * - which recomputes the specific ValidationError list from the
+     * attribute's own value and composes one message per case.
      */
     private function registerValidationRule(): void
     {
-        $this->app->make(ValidationFactory::class)->extend(
+        $validationFactory = $this->app->make(ValidationFactory::class);
+
+        $validationFactory->extend(
             'codice_fiscale',
             fn ($attribute, $value) => is_string($value)
                 && $this->app->make(CodiceFiscaleValidator::class)->validate($value)->valid(),
-            'The :attribute is not a valid codice fiscale.',
         );
+
+        $validationFactory->replacer(
+            'codice_fiscale',
+            function (string $message, string $attribute, string $rule, array $parameters, LaravelValidator $validator): string {
+                $value = $validator->getData()[$attribute] ?? null;
+
+                if (! is_string($value)) {
+                    return self::translate(ValidationError::InvalidFormat->value, $attribute);
+                }
+
+                $errors = $this->app->make(CodiceFiscaleValidator::class)->validate($value)->errors();
+
+                return implode(' ', array_map(
+                    static fn (ValidationError $error): string => self::translate($error->value, $attribute),
+                    $errors,
+                ));
+            },
+        );
+    }
+
+    private static function translate(string $key, string $attribute): string
+    {
+        $message = trans("codicefiscale::validation.$key", ['attribute' => $attribute]);
+
+        return is_string($message) ? $message : $key;
     }
 
     /**
