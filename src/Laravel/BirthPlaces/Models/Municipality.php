@@ -9,6 +9,7 @@ use Robertogallea\CodiceFiscale\Data\DomesticBirthPlace;
 /**
  * @property string $code
  * @property string $name
+ * @property string|null $name_normalized
  * @property string $province
  * @property string $istat_code
  * @property \Carbon\CarbonImmutable $valid_from
@@ -16,7 +17,7 @@ use Robertogallea\CodiceFiscale\Data\DomesticBirthPlace;
  */
 final class Municipality extends AbstractBirthPlaceModel
 {
-    protected $fillable = ['code', 'name', 'province', 'istat_code', 'valid_from', 'valid_to'];
+    protected $fillable = ['code', 'name', 'name_normalized', 'province', 'istat_code', 'valid_from', 'valid_to'];
 
     public function toBirthPlace(): BirthPlace
     {

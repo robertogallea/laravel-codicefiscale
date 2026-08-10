@@ -5,6 +5,8 @@ namespace Tests\Support;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlace;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
+use Robertogallea\CodiceFiscale\Support\BirthPlaceEraOrdering;
+use Robertogallea\CodiceFiscale\Support\PlaceNameNormalizer;
 
 /**
  * The project's one designed test seam: a BirthPlaceRepository seeded
@@ -39,5 +41,29 @@ final class InMemoryBirthPlaceRepository implements BirthPlaceRepository
     public function existedEver(BirthPlaceCode $code): bool
     {
         return isset($this->recordsByCode[$code->value()]);
+    }
+
+    public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array
+    {
+        $normalizer = new PlaceNameNormalizer();
+        $needle = $normalizer->normalize($name);
+
+        $matches = [];
+
+        foreach ($this->recordsByCode as $records) {
+            foreach ($records as $record) {
+                if ($on !== null && ! $record->wasValidOn($on)) {
+                    continue;
+                }
+
+                if (str_contains($normalizer->normalize($record->name()), $needle)) {
+                    $matches[] = $record;
+                }
+            }
+        }
+
+        usort($matches, BirthPlaceEraOrdering::compare(...));
+
+        return $limit === null ? $matches : array_slice($matches, 0, $limit);
     }
 }

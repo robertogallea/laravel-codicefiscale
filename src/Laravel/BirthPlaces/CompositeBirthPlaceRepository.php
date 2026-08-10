@@ -5,6 +5,7 @@ namespace Robertogallea\CodiceFiscale\Laravel\BirthPlaces;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlace;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
+use Robertogallea\CodiceFiscale\Support\BirthPlaceEraOrdering;
 
 /**
  * Routes a domestic code to the Municipality-backed repository and a
@@ -26,6 +27,18 @@ final class CompositeBirthPlaceRepository implements BirthPlaceRepository
     public function existedEver(BirthPlaceCode $code): bool
     {
         return $this->repositoryFor($code)->existedEver($code);
+    }
+
+    public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array
+    {
+        $matches = [
+            ...$this->domestic->search($name, $on),
+            ...$this->foreign->search($name, $on),
+        ];
+
+        usort($matches, BirthPlaceEraOrdering::compare(...));
+
+        return $limit === null ? $matches : array_slice($matches, 0, $limit);
     }
 
     private function repositoryFor(BirthPlaceCode $code): BirthPlaceRepository

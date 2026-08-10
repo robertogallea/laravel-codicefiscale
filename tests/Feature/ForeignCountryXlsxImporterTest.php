@@ -19,7 +19,20 @@ test('imports the real MAECI fixture, mapping CODAT to code and CODISO3166_1_ALP
         ->and($usa->name)->toBe("STATI UNITI D'AMERICA")
         ->and($usa->country_code)->toBe('USA')
         ->and($usa->valid_from->toDateString())->toBe('1900-01-01')
-        ->and($usa->valid_to)->toBeNull();
+        ->and($usa->valid_to)->toBeNull()
+        ->and($usa->name_normalized)->toBe("STATI UNITI D'AMERICA");
+});
+
+test('re-running the import backfills name_normalized on pre-existing rows', function () {
+    $xlsx = file_get_contents(__DIR__.'/../Fixtures/tabella_2_statiesteri_sample.xlsx');
+    $importer = new ForeignCountryXlsxImporter();
+
+    $importer->import($xlsx);
+    ForeignCountry::query()->update(['name_normalized' => null]);
+
+    $importer->import($xlsx);
+
+    expect(ForeignCountry::where('code', 'Z404')->first()->name_normalized)->toBe("STATI UNITI D'AMERICA");
 });
 
 test('re-running the import upserts existing rows instead of duplicating them', function () {
