@@ -30,7 +30,7 @@ use Robertogallea\CodiceFiscale\Validation\Validator;
 function seedRoma(): void
 {
     Municipality::create([
-        'code' => 'H501', 'name' => 'ROMA', 'province' => 'RM',
+        'code' => 'H501', 'name' => 'ROMA', 'name_normalized' => 'ROMA', 'province' => 'RM',
         'istat_code' => '058091', 'valid_from' => '1871-01-01', 'valid_to' => null,
     ]);
 }
@@ -141,6 +141,24 @@ test('README: BirthPlaceRepository find()/existedEver(), domestic and foreign', 
         ->and($usa->country()->value())->toBe('USA');
 
     expect($repository->existedEver(BirthPlaceCode::from('A999')))->toBeFalse();
+});
+
+test('README: BirthPlaceRepository search()', function () {
+    seedRoma();
+    Municipality::create([
+        'code' => 'A004', 'name' => 'ABBADIA CERRETO', 'name_normalized' => 'ABBADIA CERRETO', 'province' => 'MI',
+        'istat_code' => '015001', 'valid_from' => '1861-03-17', 'valid_to' => '1992-04-16',
+    ]);
+
+    $repository = app(BirthPlaceRepository::class);
+
+    $matches = $repository->search('roma');
+    expect($matches)->toHaveCount(1)
+        ->and($matches[0]->name())->toBe('ROMA');
+
+    expect($repository->search('abbadia', new DateTimeImmutable('1950-01-01')))->toHaveCount(1);
+
+    expect($repository->search('san', limit: 10))->toBe([]);
 });
 
 test('README: swapping NameNormalizer changes how Generator encodes a name', function () {

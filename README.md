@@ -267,7 +267,13 @@ $place = $repository->find(BirthPlaceCode::from('H501')); // valid today, or nul
 $place = $repository->find(BirthPlaceCode::from('H501'), new DateTimeImmutable('1900-01-01')); // valid on that date
 
 $repository->existedEver(BirthPlaceCode::from('A999')); // false - distinguishes "never valid" from "valid, wrong date"
+
+$repository->search('roma'); // list<BirthPlace> - case/accent-insensitive substring match, both domestic and foreign
+$repository->search('abbadia', new DateTimeImmutable('1950-01-01')); // only era-records valid on that date
+$repository->search('san', limit: 10); // most-recent-era-first, capped at 10
 ```
+
+`search()` resolves a name a person actually typed to the `BirthPlaceCode`(s) it could mean - useful for building a "pick your birthplace" UI without requiring the code up front. It's unfiltered by validity unless `$on` is given, since a renamed municipality's old name should still be found; results across every matching era are returned, most-recently-valid first. It never feeds back into generation - `Person::$birthPlace` still takes a `BirthPlaceCode`, not a name, so callers resolve ambiguity themselves before generating.
 
 `BirthPlaceCode::isForeign(): bool` tells domestic (Italian) codes apart from `Z`-prefixed foreign ones; `BirthPlaceCode::equals(BirthPlaceCode $other): bool` compares two codes by value. `CountryCode` (an ISO 3166-1 alpha-3 string, e.g. `'USA'`) works the same way - `CountryCode::from()`/`tryFrom()` construct it, `equals()` compares it; it's a value object rather than a PHP enum since ~200 countries would make an enum unmaintainable.
 

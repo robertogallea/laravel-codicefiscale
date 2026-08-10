@@ -36,9 +36,7 @@ final class CompositeBirthPlaceRepository implements BirthPlaceRepository
             ...$this->foreign->search($name, $on),
         ];
 
-        usort($matches, BirthPlaceEraOrdering::compare(...));
-
-        return $limit === null ? $matches : array_slice($matches, 0, $limit);
+        return BirthPlaceEraOrdering::sortAndLimit($matches, $limit);
     }
 
     private function repositoryFor(BirthPlaceCode $code): BirthPlaceRepository

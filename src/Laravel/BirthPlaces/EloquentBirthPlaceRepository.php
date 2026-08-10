@@ -33,12 +33,7 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         // by the constructor's @param, so this is narrowing a type
         // PHPStan can't derive on its own, not overriding a correct one.
         /** @var AbstractBirthPlaceModel|null $row */
-        $row = $this->modelClass::query()
-            ->where('code', $code->value())
-            ->whereDate('valid_from', '<=', $on)
-            ->where(function (Builder $query) use ($on) {
-                $query->whereNull('valid_to')->orWhereDate('valid_to', '>', $on);
-            })
+        $row = $this->validOn($this->modelClass::query()->where('code', $code->value()), $on)
             ->first();
 
         return $row?->toBirthPlace();
@@ -57,10 +52,7 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
             ->where('name_normalized', 'like', '%'.$needle.'%');
 
         if ($on !== null) {
-            $query->whereDate('valid_from', '<=', $on)
-                ->where(function (Builder $query) use ($on) {
-                    $query->whereNull('valid_to')->orWhereDate('valid_to', '>', $on);
-                });
+            $this->validOn($query, $on);
         }
 
         $query->orderByRaw('(valid_to IS NULL) DESC')
@@ -75,5 +67,19 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         $rows = $query->get()->all();
 
         return array_map(static fn (AbstractBirthPlaceModel $row): BirthPlace => $row->toBirthPlace(), $rows);
+    }
+
+    /**
+     * @param  Builder<AbstractBirthPlaceModel>  $query
+     * @return Builder<AbstractBirthPlaceModel>
+     */
+    private function validOn(Builder $query, \DateTimeImmutable $on): Builder
+    {
+        $query->whereDate('valid_from', '<=', $on)
+            ->where(function (Builder $query) use ($on) {
+                $query->whereNull('valid_to')->orWhereDate('valid_to', '>', $on);
+            });
+
+        return $query;
     }
 }

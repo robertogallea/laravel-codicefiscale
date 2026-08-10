@@ -13,6 +13,17 @@ use Robertogallea\CodiceFiscale\Contracts\BirthPlace;
  */
 final class BirthPlaceEraOrdering
 {
+    /**
+     * @param  list<BirthPlace>  $matches
+     * @return list<BirthPlace>
+     */
+    public static function sortAndLimit(array $matches, ?int $limit): array
+    {
+        usort($matches, self::compare(...));
+
+        return $limit === null ? $matches : array_slice($matches, 0, $limit);
+    }
+
     public static function compare(BirthPlace $a, BirthPlace $b): int
     {
         $aOpen = $a->validTo() === null;

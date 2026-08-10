@@ -62,8 +62,6 @@ final class InMemoryBirthPlaceRepository implements BirthPlaceRepository
             }
         }
 
-        usort($matches, BirthPlaceEraOrdering::compare(...));
-
-        return $limit === null ? $matches : array_slice($matches, 0, $limit);
+        return BirthPlaceEraOrdering::sortAndLimit($matches, $limit);
     }
 }
