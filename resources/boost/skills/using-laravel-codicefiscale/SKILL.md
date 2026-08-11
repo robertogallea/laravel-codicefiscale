@@ -11,7 +11,7 @@ Full API reference with runnable examples: `README.md` at this package's root. T
 
 - **`CodiceFiscale::from()`/`::tryFrom()`** - an immutable value object; the only way to hold a codice fiscale. Checks structure only, not checksum/semantics.
 - **`Generator`** - builds a `CodiceFiscale` from a `Person` DTO (`Robertogallea\CodiceFiscale\Data\Person`, with a `BirthPlaceCode`, not a name or string).
-- **`Parser`** - decodes a `CodiceFiscale` into its parts. `surnameCode()`/`nameCode()` are 3-character *encoded fragments*, never the person's real name - there is no way to recover it.
+- **`Parser`** - decodes a `CodiceFiscale` into its parts. `surnameCode()`/`nameCode()` are 3-character *encoded fragments*, never the person's real name - there is no way to recover it. `birthDate()`/`birthYear()` are nullable: the two-digit year is inherently ambiguous between two candidate centuries, resolved via a swappable `Contracts\BirthDateResolver` (default `DefaultBirthDateResolver`); both are `null` when neither candidate is plausible. See README's "Reference-date resolution".
 - **`Validator`** - checks format, checksum, and semantics as independently-callable tiers; never accepts a `Person`. Returns a `ValidationResult` with a `ValidationError` enum, not exceptions.
 - **`Matcher`** - cross-checks a `CodiceFiscale` against a `Person` or `PartialPerson`. This is the only place a codice fiscale gets compared to a person - `Validator` never does this.
 - **`Omocodia`** - `canonical()`, `level()`, `variants()` for the digit/letter substitution scheme used to resolve collisions.
