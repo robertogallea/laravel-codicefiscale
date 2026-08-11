@@ -145,18 +145,19 @@ final class MyNormalizer implements NameNormalizer
 $cf = (new Generator(nameNormalizer: new MyNormalizer()))->generate($person);
 ```
 
-Similarly, `Parser` resolves a codice fiscale's ambiguous two-digit birth year via a swappable `Contracts\CenturyResolver` (default `AgeBasedCenturyResolver(maxAge: 120)`, preferring the youngest plausible reading). Supply your own when you have domain-specific knowledge the default can't have:
+Similarly, `Parser` resolves a codice fiscale's ambiguous two-digit birth year via a swappable `Contracts\BirthDateResolver` (default `DefaultBirthDateResolver(maxAge: 120)`) - see [Reference-date resolution](#reference-date-resolution) below. Supply your own when you have domain-specific knowledge the default can't have:
 
 ```php
-use Robertogallea\CodiceFiscale\Contracts\CenturyResolver;
+use Robertogallea\CodiceFiscale\Contracts\BirthDateResolver;
+use Robertogallea\CodiceFiscale\Data\BirthDateResolutionContext;
 
-final class Post1970Resolver implements CenturyResolver
+final class Post1970Resolver implements BirthDateResolver
 {
     // e.g. "this system only ever has customers born after 1970"
-    public function resolve(array $possibleYears): int { /* ... */ }
+    public function resolve(BirthDateResolutionContext $context): ?DateTimeImmutable { /* ... */ }
 }
 
-$parser = new Parser(app(BirthPlaceRepository::class), centuryResolver: new Post1970Resolver());
+$parser = new Parser(app(BirthPlaceRepository::class), birthDateResolver: new Post1970Resolver());
 ```
 
 ### Parsing
@@ -173,8 +174,8 @@ $parsed = $parser->parse($cf);
 $parsed->surnameCode();    // 'RSS' - a 3-character encoded fragment, NOT the real surname
 $parsed->nameCode();       // 'MRA' - same caveat
 $parsed->gender();         // Gender::Male
-$parsed->birthDate();      // DateTimeImmutable('1985-04-15'), or null if undecodable
-$parsed->birthYear();      // 1985
+$parsed->birthDate();      // DateTimeImmutable('1985-04-15'), or null if no candidate is plausible
+$parsed->birthYear();      // 1985, or null under the same condition as birthDate()
 $parsed->birthMonth();     // 4
 $parsed->birthDay();       // 15
 $parsed->birthPlaceCode(); // BirthPlaceCode('H501')
@@ -184,7 +185,28 @@ $parsed->isOmocodia();     // false
 
 There is no way to recover a person's real first/last name from a codice fiscale - `surnameCode()`/`nameCode()` are the same 3-character encoded fragments the algorithm itself works with, just honestly named (2.x's `getFirstName()`/`getLastName()` implied otherwise).
 
-Two-digit birth years are inherently ambiguous (`85` could mean 1885 or 1985); `Parser` resolves this automatically via `AgeBasedCenturyResolver` (preferring the youngest plausible reading, under a configurable `maxAge`), while still exposing `$parsed->possibleBirthYears(): array{int, int}` for callers who need to see or control the ambiguity themselves.
+#### Reference-date resolution
+
+Two-digit birth years are inherently ambiguous (`85` could mean 1885 or 1985). `Parser` resolves this automatically via **reference-date resolution**, the default `BirthDateResolver` strategy:
+
+1. Discard whichever century candidate isn't a real calendar date (e.g. a Feb 29 that only one century's calendar has).
+2. Discard a candidate after the reference date (today, unless overridden - see below).
+3. Discard a candidate whose exact age as of the reference date exceeds `maxAge` (120 by default).
+4. If no candidate remains, `birthDate()` and `birthYear()` are both `null` - the codice fiscale alone doesn't support a plausible reading.
+5. If one candidate remains, that's the answer.
+6. If two remain, a `BirthPlaceCode` valid (per the same `BirthPlaceRepository` `birthPlace()` uses) at exactly one candidate date selects that date - historical municipality/province changes can carry real evidence.
+7. Otherwise (birthplace history is valid for both dates, or neither), the younger candidate is preferred.
+
+`$parsed->possibleBirthYears(): array{int, int}` still exposes the raw, unfiltered two-digit-year ambiguity for callers who need to see or control it themselves. Supply an explicit reference date to `DefaultBirthDateResolver` for deterministic historical imports and tests:
+
+```php
+use Robertogallea\CodiceFiscale\Parsing\BirthDate\DefaultBirthDateResolver;
+
+$resolver = new DefaultBirthDateResolver(maxAge: 120, referenceDate: new DateTimeImmutable('2010-01-01'));
+$parser = new Parser(app(BirthPlaceRepository::class), birthDateResolver: $resolver);
+```
+
+The codice fiscale itself remains inherently ambiguous - this is a documented default interpretation, not an authoritative identity check. Callers with an actual birth date, or other domain knowledge, can use `possibleBirthYears()` directly or supply a custom `BirthDateResolver`.
 
 ### Validation
 

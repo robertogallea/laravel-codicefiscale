@@ -1,11 +1,14 @@
 <?php
 
 use Robertogallea\CodiceFiscale\CodiceFiscale;
-use Robertogallea\CodiceFiscale\Contracts\CenturyResolver;
+use Robertogallea\CodiceFiscale\Contracts\BirthDateResolver;
+use Robertogallea\CodiceFiscale\Data\BirthDateResolutionContext;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
+use Robertogallea\CodiceFiscale\Data\DomesticBirthPlace;
 use Robertogallea\CodiceFiscale\Data\Person;
 use Robertogallea\CodiceFiscale\Enums\Gender;
 use Robertogallea\CodiceFiscale\Generation\Generator;
+use Robertogallea\CodiceFiscale\Parsing\BirthDate\DefaultBirthDateResolver;
 use Robertogallea\CodiceFiscale\Parsing\Parser;
 use Tests\Support\InMemoryBirthPlaceRepository;
 
@@ -61,7 +64,7 @@ test('possibleBirthYears() exposes both century candidates for the ambiguous 2-d
     expect($parsed->possibleBirthYears())->toBe([1995, 2095]);
 });
 
-test('birthDate() resolves via the default AgeBasedCenturyResolver when none is injected', function () {
+test('birthDate() resolves via the default BirthDateResolver when none is injected', function () {
     $parser = new Parser(new InMemoryBirthPlaceRepository());
     $parsed = $parser->parse(CodiceFiscale::from('RSSMRA95E05F205Z'));
 
@@ -72,18 +75,111 @@ test('birthDate() resolves via the default AgeBasedCenturyResolver when none is 
         ->and($parsed->birthDate())->toEqual(new DateTimeImmutable('1995-05-05'));
 });
 
-test('a custom CenturyResolver is used instead of the default', function () {
-    $alwaysPicksTheFutureCentury = new class implements CenturyResolver {
-        public function resolve(array $possibleYears): int
+test('a custom BirthDateResolver is used instead of the default', function () {
+    $alwaysPicksTheYoungestCandidate = new class implements BirthDateResolver {
+        public function resolve(BirthDateResolutionContext $context): ?DateTimeImmutable
         {
-            return max($possibleYears);
+            $candidates = $context->candidates();
+
+            return $candidates === [] ? null : max($candidates);
         }
     };
 
-    $parser = new Parser(new InMemoryBirthPlaceRepository(), $alwaysPicksTheFutureCentury);
+    $parser = new Parser(new InMemoryBirthPlaceRepository(), $alwaysPicksTheYoungestCandidate);
     $parsed = $parser->parse(CodiceFiscale::from('RSSMRA95E05F205Z'));
 
     expect($parsed->birthYear())->toBe(2095);
+});
+
+test('birthYear() and birthDate() are both null when no candidate is plausible', function () {
+    // Reference date 1975-01-01 puts both '95' candidates (1995 and
+    // 2095) after it, so neither is plausible.
+    $resolver = new DefaultBirthDateResolver(maxAge: 120, referenceDate: new DateTimeImmutable('1975-01-01'));
+    $parser = new Parser(new InMemoryBirthPlaceRepository(), $resolver);
+    $parsed = $parser->parse(CodiceFiscale::from('RSSMRA95E05F205Z'));
+
+    expect($parsed->birthYear())->toBeNull()
+        ->and($parsed->birthDate())->toBeNull()
+        ->and($parsed->birthPlace())->toBeNull();
+});
+
+test('a leap-day code resolves to the century whose calendar actually has that day', function () {
+    $generator = new Generator();
+    $parser = new Parser(new InMemoryBirthPlaceRepository());
+
+    $cf = $generator->generate(new Person(
+        firstName: 'Mario',
+        lastName: 'Rossi',
+        birthDate: new DateTimeImmutable('2000-02-29'),
+        birthPlace: BirthPlaceCode::from('H501'),
+        gender: Gender::Male,
+    ));
+    $parsed = $parser->parse($cf);
+
+    // Year code '00' is ambiguous between 1900 (not a leap year - Feb
+    // 29 doesn't exist) and 2000 (a leap year); only 2000 is a valid
+    // calendar date, so it's the sole plausible candidate.
+    expect($parsed->possibleBirthYears())->toBe([1900, 2000])
+        ->and($parsed->birthDate())->toEqual(new DateTimeImmutable('2000-02-29'));
+});
+
+test('birthplace history selects the older candidate through Parser when it is valid only for that date', function () {
+    $generator = new Generator();
+    $repository = new InMemoryBirthPlaceRepository(
+        new DomesticBirthPlace(BirthPlaceCode::from('H501'), 'ROMA', 'RM', '058091', new DateTimeImmutable('1900-01-01'), new DateTimeImmutable('1950-01-01')),
+    );
+    $resolver = new DefaultBirthDateResolver(maxAge: 120, referenceDate: new DateTimeImmutable('2026-08-09'));
+    $parser = new Parser($repository, $resolver);
+
+    // Year code '26' is ambiguous between 1926 and 2026; both are
+    // plausible on 2026-08-09, so the birthplace record - valid only
+    // through 1950 - breaks the tie in favor of the older candidate.
+    $cf = $generator->generate(new Person(
+        firstName: 'Mario',
+        lastName: 'Rossi',
+        birthDate: new DateTimeImmutable('1926-01-01'),
+        birthPlace: BirthPlaceCode::from('H501'),
+        gender: Gender::Male,
+    ));
+
+    expect($parser->parse($cf)->birthDate())->toEqual(new DateTimeImmutable('1926-01-01'));
+});
+
+test('birthplace history selects the younger candidate through Parser when it is valid only for that date', function () {
+    $generator = new Generator();
+    $repository = new InMemoryBirthPlaceRepository(
+        new DomesticBirthPlace(BirthPlaceCode::from('H501'), 'ROMA', 'RM', '058091', new DateTimeImmutable('2020-01-01')),
+    );
+    $resolver = new DefaultBirthDateResolver(maxAge: 120, referenceDate: new DateTimeImmutable('2026-08-09'));
+    $parser = new Parser($repository, $resolver);
+
+    $cf = $generator->generate(new Person(
+        firstName: 'Mario',
+        lastName: 'Rossi',
+        birthDate: new DateTimeImmutable('2026-01-01'),
+        birthPlace: BirthPlaceCode::from('H501'),
+        gender: Gender::Male,
+    ));
+
+    expect($parser->parse($cf)->birthDate())->toEqual(new DateTimeImmutable('2026-01-01'));
+});
+
+test('birthplace history inconclusive through Parser falls back to the younger plausible candidate', function () {
+    $generator = new Generator();
+    // No record at all for this code: neither candidate resolves to a BirthPlace.
+    $repository = new InMemoryBirthPlaceRepository();
+    $resolver = new DefaultBirthDateResolver(maxAge: 120, referenceDate: new DateTimeImmutable('2026-08-09'));
+    $parser = new Parser($repository, $resolver);
+
+    $cf = $generator->generate(new Person(
+        firstName: 'Mario',
+        lastName: 'Rossi',
+        birthDate: new DateTimeImmutable('2026-01-01'),
+        birthPlace: BirthPlaceCode::from('H501'),
+        gender: Gender::Male,
+    ));
+
+    expect($parser->parse($cf)->birthDate())->toEqual(new DateTimeImmutable('2026-01-01'));
 });
 
 test('birthPlace() returns null - not an exception - for an unrecognized code', function () {

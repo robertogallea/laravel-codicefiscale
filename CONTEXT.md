@@ -23,5 +23,11 @@ _Avoid_: homograph
 The one member of a person's 128 possible codice fiscali where none of the 7 omocodia-sensitive positions are letter-substituted. Reversing substitutions back to digits is a pure mechanical transform on the string itself — it needs no repository or generator.
 _Avoid_: original code, base code
 
+**Reference-date resolution**:
+The default interpretation of a codice fiscale's two-digit birth year as the most plausible complete birth date as of a specified reference date. A candidate birth date after the reference date is not plausible. When both candidates are plausible, a `BirthPlaceCode` valid for only one candidate date selects that date; otherwise the younger candidate is selected. The codice fiscale itself remains inherently ambiguous; callers with additional knowledge may select a different candidate.
+
+**Plausible birth date**:
+A candidate date produced while resolving a two-digit birth year that is not after the reference date and does not imply an age over the configured maximum. When neither candidate is plausible, the default resolution has no birth date.
+
 **Foreign birthplace**:
 A `BirthPlace` for a country (`Z`-prefixed `BirthPlaceCode`), sourced from MAECI's stati-esteri table. Has an ISO 3166-1 alpha-3 code and no province; its `[validFrom, validTo)` is currently always maximally wide because the source table carries no genuine historical data — a country whose meaning changed over time (e.g. a code that once denoted one state and now denotes its successor) is not distinguishable by date in 3.0.
