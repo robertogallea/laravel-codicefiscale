@@ -3,19 +3,19 @@
 namespace Robertogallea\CodiceFiscale\Parsing;
 
 use Robertogallea\CodiceFiscale\CodiceFiscale;
+use Robertogallea\CodiceFiscale\Contracts\BirthDateResolver;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
-use Robertogallea\CodiceFiscale\Contracts\CenturyResolver;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Enums\Gender;
 use Robertogallea\CodiceFiscale\Generation\DateEncoder;
 use Robertogallea\CodiceFiscale\Omocodia\Omocodia;
-use Robertogallea\CodiceFiscale\Parsing\Century\AgeBasedCenturyResolver;
+use Robertogallea\CodiceFiscale\Parsing\BirthDate\DefaultBirthDateResolver;
 
 final class Parser
 {
     public function __construct(
         private readonly BirthPlaceRepository $birthPlaceRepository,
-        private readonly CenturyResolver $centuryResolver = new AgeBasedCenturyResolver(maxAge: 120),
+        private readonly BirthDateResolver $birthDateResolver = new DefaultBirthDateResolver(maxAge: 120),
         private readonly Omocodia $omocodia = new Omocodia(),
     ) {
     }
@@ -49,7 +49,7 @@ final class Parser
             birthPlaceCode: BirthPlaceCode::from(substr($canonical, 11, 4)),
             isOmocodia: $this->omocodia->level($cf) > 0,
             birthPlaceRepository: $this->birthPlaceRepository,
-            centuryResolver: $this->centuryResolver,
+            birthDateResolver: $this->birthDateResolver,
         );
     }
 }

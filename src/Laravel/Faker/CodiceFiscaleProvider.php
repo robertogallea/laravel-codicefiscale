@@ -78,7 +78,7 @@ final class CodiceFiscaleProvider extends Base
 
     /**
      * Bounded to the last 100 years (well within
-     * AgeBasedCenturyResolver's default 120-year window, so a
+     * DefaultBirthDateResolver's default 120-year window, so a
      * round-trip parse never lands on the wrong century) and never
      * before the birthplace's own current era began.
      */

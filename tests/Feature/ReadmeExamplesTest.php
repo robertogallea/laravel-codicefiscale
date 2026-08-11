@@ -1,9 +1,10 @@
 <?php
 
 use Robertogallea\CodiceFiscale\CodiceFiscale;
+use Robertogallea\CodiceFiscale\Contracts\BirthDateResolver;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
-use Robertogallea\CodiceFiscale\Contracts\CenturyResolver;
 use Robertogallea\CodiceFiscale\Contracts\NameNormalizer;
+use Robertogallea\CodiceFiscale\Data\BirthDateResolutionContext;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Data\DomesticBirthPlace;
 use Robertogallea\CodiceFiscale\Data\ForeignBirthPlace;
@@ -18,7 +19,7 @@ use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
 use Robertogallea\CodiceFiscale\Matching\Matcher;
 use Robertogallea\CodiceFiscale\Omocodia\Omocodia;
-use Robertogallea\CodiceFiscale\Parsing\Century\AgeBasedCenturyResolver;
+use Robertogallea\CodiceFiscale\Parsing\BirthDate\DefaultBirthDateResolver;
 use Robertogallea\CodiceFiscale\Parsing\Parser;
 use Robertogallea\CodiceFiscale\Validation\Validator;
 
@@ -175,21 +176,46 @@ test('README: swapping NameNormalizer changes how Generator encodes a name', fun
     expect($customized->value())->not->toBe($default->value());
 });
 
-test('README: supplying a custom CenturyResolver changes which century an ambiguous two-digit year resolves to', function () {
-    $default = new AgeBasedCenturyResolver(maxAge: 120);
+test('README: reference-date resolution picks the plausible candidate, or null when neither is', function () {
+    $resolver = new DefaultBirthDateResolver(maxAge: 120, referenceDate: new DateTimeImmutable('2026-01-01'));
 
-    $always1900s = new class implements CenturyResolver {
-        public function resolve(array $possibleYears): int
+    $context = fn (array $candidates) => new BirthDateResolutionContext(
+        candidates: $candidates,
+        referenceDate: new DateTimeImmutable('2026-01-01'),
+        birthPlaceCode: BirthPlaceCode::from('H501'),
+        birthPlaceRepository: app(BirthPlaceRepository::class),
+    );
+
+    // 1902-06-15 is 124 years before the reference date (over the
+    // 120-year maxAge) - not plausible; 2002-06-15 is.
+    expect($resolver->resolve($context([new DateTimeImmutable('1902-06-15'), new DateTimeImmutable('2002-06-15')])))
+        ->toEqual(new DateTimeImmutable('2002-06-15'));
+
+    // Neither candidate is plausible: both exceed maxAge as of the
+    // reference date.
+    expect($resolver->resolve($context([new DateTimeImmutable('1800-06-15'), new DateTimeImmutable('1900-06-15')])))
+        ->toBeNull();
+});
+
+test('README: supplying a custom BirthDateResolver changes which century an ambiguous two-digit year resolves to', function () {
+    $always1900s = new class implements BirthDateResolver {
+        public function resolve(BirthDateResolutionContext $context): ?DateTimeImmutable
         {
-            return min($possibleYears);
+            $candidates = $context->candidates();
+
+            return $candidates === [] ? null : min($candidates);
         }
     };
 
-    // Code '02': 1902 is 124 years before 2026 (over the default's
-    // 120-year plausibility window), so the built-in default falls
-    // back to 2002 - the youngest plausible reading. A domain that
-    // knows better (e.g. "this system only has customers born after
-    // 1970... but definitely not after 2000") can override that guess.
-    expect($default->resolve([1902, 2002]))->toBe(2002)
-        ->and($always1900s->resolve([1902, 2002]))->toBe(1902);
+    $context = new BirthDateResolutionContext(
+        candidates: [new DateTimeImmutable('1902-06-15'), new DateTimeImmutable('2002-06-15')],
+        referenceDate: new DateTimeImmutable('2026-01-01'),
+        birthPlaceCode: BirthPlaceCode::from('H501'),
+        birthPlaceRepository: app(BirthPlaceRepository::class),
+    );
+
+    // A domain that knows better (e.g. "this system only has
+    // customers born after 1870... but definitely not after 1950")
+    // can override the default's youngest-plausible-reading guess.
+    expect($always1900s->resolve($context))->toEqual(new DateTimeImmutable('1902-06-15'));
 });

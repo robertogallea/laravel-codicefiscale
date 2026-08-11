@@ -2,9 +2,10 @@
 
 namespace Robertogallea\CodiceFiscale\Parsing;
 
+use Robertogallea\CodiceFiscale\Contracts\BirthDateResolver;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlace;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
-use Robertogallea\CodiceFiscale\Contracts\CenturyResolver;
+use Robertogallea\CodiceFiscale\Data\BirthDateResolutionContext;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Enums\Gender;
 
@@ -20,7 +21,7 @@ final readonly class ParsedCodiceFiscale
         private BirthPlaceCode $birthPlaceCode,
         private bool $isOmocodia,
         private BirthPlaceRepository $birthPlaceRepository,
-        private CenturyResolver $centuryResolver,
+        private BirthDateResolver $birthDateResolver,
     ) {
     }
 
@@ -65,27 +66,28 @@ final readonly class ParsedCodiceFiscale
         return [1900 + $this->birthYearCode, 2000 + $this->birthYearCode];
     }
 
-    public function birthYear(): int
+    /**
+     * Null when the resolver finds no plausible complete date - either
+     * because neither candidate is a real calendar date (e.g. a
+     * checksum-invalid or otherwise nonsense code), or because neither
+     * satisfies the resolver's own plausibility policy (e.g. maxAge).
+     */
+    public function birthYear(): ?int
     {
-        return $this->centuryResolver->resolve($this->possibleBirthYears());
+        $birthDate = $this->resolveBirthDate();
+
+        return $birthDate === null ? null : (int) $birthDate->format('Y');
     }
 
     /**
-     * Null when the decoded month/day don't form a real calendar date
-     * (e.g. a checksum-invalid or otherwise nonsense code) - decoding
-     * never throws for data it doesn't recognize as sensible, the
-     * same way birthPlace() returns null rather than throwing for an
+     * Null under the same conditions as birthYear() - decoding never
+     * throws for data it doesn't recognize as sensible, the same way
+     * birthPlace() returns null rather than throwing for an
      * unrecognized code.
      */
     public function birthDate(): ?\DateTimeImmutable
     {
-        $year = $this->birthYear();
-
-        if (! checkdate($this->birthMonthNumber, $this->birthDay, $year)) {
-            return null;
-        }
-
-        return new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $this->birthMonthNumber, $this->birthDay));
+        return $this->resolveBirthDate();
     }
 
     public function birthPlace(): ?BirthPlace
@@ -93,5 +95,29 @@ final readonly class ParsedCodiceFiscale
         $birthDate = $this->birthDate();
 
         return $birthDate === null ? null : $this->birthPlaceRepository->find($this->birthPlaceCode, $birthDate);
+    }
+
+    /** @return list<\DateTimeImmutable> calendar-valid candidates, ascending */
+    private function candidateBirthDates(): array
+    {
+        $candidates = [];
+
+        foreach ($this->possibleBirthYears() as $year) {
+            if (checkdate($this->birthMonthNumber, $this->birthDay, $year)) {
+                $candidates[] = new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $this->birthMonthNumber, $this->birthDay));
+            }
+        }
+
+        return $candidates;
+    }
+
+    private function resolveBirthDate(): ?\DateTimeImmutable
+    {
+        return $this->birthDateResolver->resolve(new BirthDateResolutionContext(
+            candidates: $this->candidateBirthDates(),
+            referenceDate: new \DateTimeImmutable('today'),
+            birthPlaceCode: $this->birthPlaceCode,
+            birthPlaceRepository: $this->birthPlaceRepository,
+        ));
     }
 }
