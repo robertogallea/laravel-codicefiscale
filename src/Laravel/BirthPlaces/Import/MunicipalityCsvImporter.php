@@ -2,6 +2,7 @@
 
 namespace Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import;
 
+use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
 use Robertogallea\CodiceFiscale\Support\PlaceNameNormalizer;
 
@@ -27,14 +28,48 @@ final class MunicipalityCsvImporter
 
     public function import(string $csvContents): int
     {
-        return $this->upsertInChunks(
+        // A handful of long-superseded, pre-1928-merger comuni carry ANPR's
+        // "ND" ("non disponibile") placeholder in CODCATASTALE instead of a
+        // real cadastral code - not a usable BirthPlaceCode, so they're
+        // skipped here rather than persisted and later choking
+        // BirthPlaceCode::from() in Municipality::toBirthPlace().
+        $rows = array_values(array_filter(
             $this->parseCsv($csvContents),
+            static fn (array $row): bool => BirthPlaceCode::tryFrom($row['CODCATASTALE']) !== null,
+        ));
+
+        $count = $this->upsertInChunks(
+            $rows,
             $this->toRecord(...),
             Municipality::class,
             ['code', 'valid_from'],
             ['name', 'province', 'istat_code', 'valid_to', 'name_normalized'],
             self::CHUNK_SIZE,
         );
+
+        $this->pruneInvalidRows();
+
+        return $count;
+    }
+
+    /**
+     * Self-healing cleanup for rows that reached the table before this
+     * validation existed (a places.sqlite imported by a pre-fix version of
+     * this package): delete any persisted row whose code no longer passes
+     * BirthPlaceCode's format. Runs on every import, not just once, so an
+     * already-corrupted install heals itself the next time
+     * codice-fiscale:update-places runs.
+     */
+    private function pruneInvalidRows(): void
+    {
+        $invalidIds = Municipality::query()
+            ->get(['id', 'code'])
+            ->reject(static fn (Municipality $row): bool => BirthPlaceCode::tryFrom($row->code) !== null)
+            ->pluck('id');
+
+        if ($invalidIds->isNotEmpty()) {
+            Municipality::query()->whereIn('id', $invalidIds)->delete();
+        }
     }
 
     /** @return list<array<string, string>> */
