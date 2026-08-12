@@ -63,6 +63,20 @@ test('re-running the import against genuinely updated data updates the existing 
         ->and(ForeignCountry::where('code', 'Z404')->first()->name)->toBe('STATI UNITI (RINOMINATO)');
 });
 
+test('rows with a malformed CODAT are skipped, not imported', function () {
+    $corruptedXlsx = xlsxWithReplacedSharedString(
+        __DIR__.'/../Fixtures/tabella_2_statiesteri_sample.xlsx',
+        'Z404',
+        'ND',
+    );
+
+    $count = (new ForeignCountryXlsxImporter())->import($corruptedXlsx);
+
+    expect($count)->toBe(208)
+        ->and(ForeignCountry::where('country_code', 'USA')->exists())->toBeFalse()
+        ->and(ForeignCountry::where('code', 'ND')->exists())->toBeFalse();
+});
+
 function xlsxWithReplacedSharedString(string $originalPath, string $search, string $replace): string
 {
     $tempFile = tempnam(sys_get_temp_dir(), 'xlsx');

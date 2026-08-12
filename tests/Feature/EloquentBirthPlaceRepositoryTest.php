@@ -143,3 +143,41 @@ test('search() orders results most-recent-era-first and honors limit', function 
     expect($matches)->toHaveCount(1)
         ->and($matches[0]->province())->toBe('LO');
 });
+
+test('search() skips a row with a malformed persisted code instead of throwing', function () {
+    Municipality::create([
+        'code' => 'ND', 'name' => 'SENALE', 'name_normalized' => 'SENALE', 'province' => 'TN',
+        'istat_code' => '022999', 'valid_from' => '1861-03-17', 'valid_to' => '1928-05-06',
+    ]);
+
+    $matches = (new EloquentBirthPlaceRepository(Municipality::class))->search('senale');
+
+    expect($matches)->toBe([]);
+});
+
+test('search() still returns valid rows alongside a skipped malformed one', function () {
+    Municipality::create([
+        'code' => 'H501', 'name' => 'ROMA', 'name_normalized' => 'ROMA', 'province' => 'RM',
+        'istat_code' => '058091', 'valid_from' => '1871-01-01', 'valid_to' => null,
+    ]);
+    Municipality::create([
+        'code' => 'ND', 'name' => 'ROMAGNANO', 'name_normalized' => 'ROMAGNANO', 'province' => 'TN',
+        'istat_code' => '022999', 'valid_from' => '1861-03-17', 'valid_to' => '1928-05-06',
+    ]);
+
+    $matches = (new EloquentBirthPlaceRepository(Municipality::class))->search('roma');
+
+    expect($matches)->toHaveCount(1)
+        ->and($matches[0]->name())->toBe('ROMA');
+});
+
+test('find() returns null instead of throwing when the row has a malformed country_code', function () {
+    ForeignCountry::create([
+        'code' => 'Z404', 'name' => "STATI UNITI D'AMERICA", 'country_code' => 'ND',
+        'valid_from' => '1900-01-01', 'valid_to' => null,
+    ]);
+
+    $repository = new EloquentBirthPlaceRepository(ForeignCountry::class);
+
+    expect($repository->find(BirthPlaceCode::from('Z404')))->toBeNull();
+});

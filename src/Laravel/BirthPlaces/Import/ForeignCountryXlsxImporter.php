@@ -2,6 +2,8 @@
 
 namespace Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import;
 
+use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
+use Robertogallea\CodiceFiscale\Data\CountryCode;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Xlsx\XlsxReader;
 use Robertogallea\CodiceFiscale\Support\PlaceNameNormalizer;
@@ -45,21 +47,52 @@ final class ForeignCountryXlsxImporter
 
         // A handful of rows in the real source are special
         // administrative categories (e.g. "Riconosciuti non cittadini
-        // (lettoni)") with no CODAT at all - not a real birthplace,
-        // nothing to attach a BirthPlaceCode to.
-        $withACode = array_values(array_filter(
+        // (lettoni)") with no CODAT at all, or (mirroring the
+        // municipalities importer's "ND" bug) could carry a
+        // CODAT/CODISO3166_1_ALPHA3 that doesn't parse as a real code -
+        // none of those can attach to a usable
+        // BirthPlaceCode/CountryCode, so they're skipped here rather
+        // than persisted.
+        $validRows = array_values(array_filter(
             $associativeRows,
             static fn (array $row): bool => $row['CODAT'] !== ''
+                && BirthPlaceCode::tryFrom($row['CODAT']) !== null
+                && CountryCode::tryFrom($row['CODISO3166_1_ALPHA3']) !== null
         ));
 
-        return $this->upsertInChunks(
-            $withACode,
+        $count = $this->upsertInChunks(
+            $validRows,
             $this->toRecord(...),
             ForeignCountry::class,
             ['code', 'valid_from'],
             ['name', 'country_code', 'valid_to', 'name_normalized'],
             self::CHUNK_SIZE,
         );
+
+        $this->pruneInvalidRows();
+
+        return $count;
+    }
+
+    /**
+     * Self-healing cleanup for rows that reached the table before this
+     * validation existed (a places.sqlite imported by a pre-fix version
+     * of this package): delete any persisted row whose code or
+     * country_code no longer passes validation. Runs on every import,
+     * not just once, so an already-corrupted install heals itself the
+     * next time codice-fiscale:update-places runs.
+     */
+    private function pruneInvalidRows(): void
+    {
+        $invalidIds = ForeignCountry::query()
+            ->get(['id', 'code', 'country_code'])
+            ->reject(static fn (ForeignCountry $row): bool => BirthPlaceCode::tryFrom($row->code) !== null
+                && CountryCode::tryFrom($row->country_code) !== null)
+            ->pluck('id');
+
+        if ($invalidIds->isNotEmpty()) {
+            ForeignCountry::query()->whereIn('id', $invalidIds)->delete();
+        }
     }
 
     /**

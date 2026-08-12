@@ -2,6 +2,12 @@
 
 All notable changes to `laravel-codicefiscale` are documented here. This file starts at 3.0.0 - see the [GitHub releases](https://github.com/robertogallea/laravel-codicefiscale/releases) for the 1.x/2.x history.
 
+## 3.0.1
+
+### Fixed
+
+- `codice-fiscale:update-places` no longer imports municipalities/foreign countries whose ANPR/MAECI source row carries an unparseable code (e.g. ANPR's `"ND"` placeholder on ~12 long-superseded, pre-1928-merger comuni) - such rows are now skipped at import time, and any already-imported invalid row is pruned automatically on the next run. Previously an invalid persisted code crashed `BirthPlaceRepository::search()`/`find()` entirely with an uncaught `InvalidBirthPlaceCodeException`/`InvalidCountryCodeException` the moment it matched; `EloquentBirthPlaceRepository` now also skips such a row defensively rather than throwing, as a second line of defense. ([#115](https://github.com/robertogallea/laravel-codicefiscale/issues/115))
+
 ## 3.0.0
 
 3.0 is a ground-up rewrite, and an intentional, clean break from 2.x with no compatibility shims. See [UPGRADE.md](UPGRADE.md) for a complete call-by-call migration table.

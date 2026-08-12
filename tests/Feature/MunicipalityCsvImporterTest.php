@@ -74,3 +74,25 @@ test('re-running the import with updated data updates the existing row rather th
     expect(Municipality::count())->toBe(3)
         ->and(Municipality::where('code', 'H501')->first()->name)->toBe('ROMA CAPITALE');
 });
+
+test('rows with a malformed CODCATASTALE (ANPR\'s "ND" placeholder) are skipped, not imported', function () {
+    $csv = file_get_contents(__DIR__.'/../Fixtures/anpr_comuni_with_placeholder_code.csv');
+
+    $count = (new MunicipalityCsvImporter())->import($csv);
+
+    expect($count)->toBe(1)
+        ->and(Municipality::where('code', 'H501')->exists())->toBeTrue()
+        ->and(Municipality::where('name', 'SENALE')->exists())->toBeFalse()
+        ->and(Municipality::where('code', 'ND')->exists())->toBeFalse();
+});
+
+test('re-running the import prunes a pre-existing row whose code no longer validates', function () {
+    Municipality::create([
+        'code' => 'ND', 'name' => 'SENALE', 'name_normalized' => 'SENALE', 'province' => 'TN',
+        'istat_code' => '022999', 'valid_from' => '1861-03-17', 'valid_to' => '1928-05-06',
+    ]);
+
+    (new MunicipalityCsvImporter())->import(file_get_contents(__DIR__.'/../Fixtures/anpr_comuni_with_placeholder_code.csv'));
+
+    expect(Municipality::where('code', 'ND')->exists())->toBeFalse();
+});

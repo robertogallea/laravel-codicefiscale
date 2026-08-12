@@ -36,7 +36,7 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         $row = $this->validOn($this->modelClass::query()->where('code', $code->value()), $on)
             ->first();
 
-        return $row?->toBirthPlace();
+        return $this->safeToBirthPlace($row);
     }
 
     public function existedEver(BirthPlaceCode $code): bool
@@ -66,7 +66,9 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         /** @var list<AbstractBirthPlaceModel> $rows */
         $rows = $query->get()->all();
 
-        return array_map(static fn (AbstractBirthPlaceModel $row): BirthPlace => $row->toBirthPlace(), $rows);
+        $places = array_map(fn (AbstractBirthPlaceModel $row): ?BirthPlace => $this->safeToBirthPlace($row), $rows);
+
+        return array_values(array_filter($places, static fn (?BirthPlace $place): bool => $place !== null));
     }
 
     /**
@@ -81,5 +83,28 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
             });
 
         return $query;
+    }
+
+    /**
+     * A row whose persisted code/country_code fails validation (e.g.
+     * ANPR's "ND" placeholder reaching the DB via a pre-fix import, a
+     * manual edit, or a future importer bug) can't become a BirthPlace.
+     * Import-time validation (MunicipalityCsvImporter /
+     * ForeignCountryXlsxImporter) is the real fix; this is defense in
+     * depth for data that reached the DB some other way - skip the row
+     * rather than let it crash every call whose result set happens to
+     * include it.
+     */
+    private function safeToBirthPlace(?AbstractBirthPlaceModel $row): ?BirthPlace
+    {
+        if ($row === null) {
+            return null;
+        }
+
+        try {
+            return $row->toBirthPlace();
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
     }
 }
