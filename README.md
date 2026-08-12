@@ -20,6 +20,7 @@ laravel-codicefiscale is a package for parsing, generating, and validating the I
 ## Table of contents
 
 - [Setup](#setup)
+- [Quick start](#quick-start)
 - [Core domain](#core-domain)
   - [`CodiceFiscale`](#codicefiscale)
   - [Generation](#generation)
@@ -83,6 +84,69 @@ Update just one dataset at a time if you don't need both refreshed:
 php artisan codice-fiscale:update-places --municipalities-only
 php artisan codice-fiscale:update-places --countries-only
 ```
+
+## Quick start
+
+The essentials - validate a codice fiscale, parse one apart, and generate one. Each is covered in full below; this is just enough to see it working.
+
+**Validate**
+
+```php
+public function rules(): array
+{
+    return [
+        'fiscal_code' => 'codice_fiscale',
+    ];
+}
+```
+
+Need to also cross-check against other request fields (name, birth date, birthplace, gender)? See [Validation rule](#validation-rule) for `CodiceFiscaleRule::make()->matching(...)`.
+
+**Parse**
+
+```php
+use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
+use Robertogallea\CodiceFiscale\Parsing\Parser;
+
+$parser = new Parser(app(BirthPlaceRepository::class));
+$parsed = $parser->parse($cf);
+
+$parsed->surnameCode();    // 'RSS' - a 3-character encoded fragment, NOT the real surname
+$parsed->nameCode();       // 'MRA' - same caveat
+$parsed->gender();         // Gender::Male
+$parsed->birthDate();      // DateTimeImmutable('1985-04-15'), or null if no candidate is plausible
+$parsed->birthYear();      // 1985, or null under the same condition as birthDate()
+$parsed->birthMonth();     // 4
+$parsed->birthDay();       // 15
+$parsed->birthPlaceCode(); // BirthPlaceCode('H501')
+$parsed->birthPlace();     // ?BirthPlace - null if the code isn't recognized, or update-places hasn't run
+$parsed->isOmocodia();     // false
+```
+
+See [Parsing](#parsing) for the full field reference, and [Reference-date resolution](#reference-date-resolution) for how the two-digit birth year gets resolved.
+
+**Generate**
+
+```php
+use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
+use Robertogallea\CodiceFiscale\Data\Person;
+use Robertogallea\CodiceFiscale\Enums\Gender;
+use Robertogallea\CodiceFiscale\Generation\Generator;
+
+$person = new Person(
+    firstName: 'Mario',
+    lastName: 'Rossi',
+    birthDate: new DateTimeImmutable('1985-04-15'),
+    birthPlace: BirthPlaceCode::from('H501'), // Roma
+    gender: Gender::Male,
+);
+
+$cf = (new Generator())->generate($person);
+
+$cf->value(); // 'RSSMRA85D15H501T'
+```
+
+See [Generation](#generation) for name normalization and swapping out the encoders.
 
 ## Core domain
 
