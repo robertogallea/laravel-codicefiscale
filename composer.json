@@ -2,6 +2,7 @@
     "name": "robertogallea/laravel-codicefiscale",
     "description": "Codice fiscale validation for php/laravel",
     "type": "library",
+    "license": "MIT",
     "authors": [
         {
             "name": "Roberto Gallea",
