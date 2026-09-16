@@ -21,7 +21,7 @@
         "friendsofphp/php-cs-fixer": "^3.0",
         "phpstan/phpstan": "^2.0",
         "fakerphp/faker": "^1.20",
-        "laravel/boost": "^2.5"
+        "laravel/boost": "^2.9"
     },
     "suggest": {
         "fakerphp/faker": "Required to use CodiceFiscaleProvider (^1.20)."
