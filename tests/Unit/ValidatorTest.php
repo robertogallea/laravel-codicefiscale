@@ -94,7 +94,7 @@ test('validateSemantics() reports BirthPlaceNotValidOnDate - distinct from Unkno
     // H837 exists, but ceased on 1974-09-18: nobody born in 1990 could
     // have been issued it. (A code instituted *after* the birth is
     // attributable and passes - see the post-merger test below.)
-    $bornAfterCode = (new Generator())->generate(new Person(
+    $bornAfterCodeCeased = (new Generator())->generate(new Person(
         firstName: 'Mario',
         lastName: 'Rossi',
         birthDate: new DateTimeImmutable('1990-01-01'),
@@ -102,7 +102,7 @@ test('validateSemantics() reports BirthPlaceNotValidOnDate - distinct from Unkno
         gender: Gender::Male,
     ));
 
-    $result = $validator->validateSemantics($bornAfterCode);
+    $result = $validator->validateSemantics($bornAfterCodeCeased);
 
     expect($result->valid())->toBeFalse()
         ->and($result->errors())->toBe([ValidationError::BirthPlaceNotValidOnDate]);

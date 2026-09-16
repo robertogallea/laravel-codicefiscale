@@ -62,10 +62,7 @@ final class Validator
             $errors[] = ValidationError::InvalidDate;
         }
 
-        // Attributability, not on-date validity (ADR-0011): a code
-        // instituted after the birth is fine - the tax authority
-        // assigns codes as of issue time. Only a code whose every era
-        // ended before the birth date is rejected.
+        // Attributability, not on-date validity - ADR-0011, see BirthPlaceAttributability.
         $eras = $this->birthPlaceRepository->eras($parsed->birthPlaceCode());
 
         if ($eras === []) {

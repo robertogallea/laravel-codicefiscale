@@ -46,9 +46,7 @@ final readonly class DefaultBirthDateResolver implements BirthDateResolver
     }
 
     /**
-     * Attributability, not on-date validity (ADR-0011): a candidate
-     * is kept if the code was valid then or came into being later,
-     * and ruled out only if every era ended before it.
+     * Attributability, not on-date validity - ADR-0011, see BirthPlaceAttributability.
      *
      * @param  list<\DateTimeImmutable>  $plausible  exactly two candidates
      */

@@ -16,6 +16,26 @@ function seedPalermo(): void
     ]);
 }
 
+/**
+ * The real 1974-09-18 merger of San Felice (H837) into Senale-San
+ * Felice (I603), BZ - the post-merger case from #117.
+ */
+function seedSanFelice(): void
+{
+    Municipality::create([
+        'code' => 'H837', 'name' => 'SAN FELICE', 'province' => 'BZ',
+        'istat_code' => '021081', 'valid_from' => '1948-03-14', 'valid_to' => '1974-09-18',
+    ]);
+}
+
+function seedSenaleSanFelice(): void
+{
+    Municipality::create([
+        'code' => 'I603', 'name' => 'SENALE-SAN FELICE', 'province' => 'BZ',
+        'istat_code' => '021094', 'valid_from' => '1974-09-18', 'valid_to' => null,
+    ]);
+}
+
 function marioRossi(): Person
 {
     return new Person(
@@ -277,10 +297,7 @@ test('CodiceFiscaleRule::make() reports the birth_place_not_valid_on_date messag
     // H837 (San Felice) ceased on 1974-09-18; a code encoding a 1990
     // birth there names a recognized birthplace that no longer existed
     // - the one case the message still covers since ADR-0011.
-    Municipality::create([
-        'code' => 'H837', 'name' => 'SAN FELICE', 'province' => 'BZ',
-        'istat_code' => '021081', 'valid_from' => '1948-03-14', 'valid_to' => '1974-09-18',
-    ]);
+    seedSanFelice();
 
     $cf = (new Generator())->generate(new Person(
         firstName: 'Mario',
@@ -398,14 +415,8 @@ test('the codice_fiscale string-rule alias produces the same translated message 
 test('the codice_fiscale rule accepts a birthplace code instituted after the birth date - the post-merger case', function () {
     // The real 1974-09-18 merger: born 1951 in San Felice (H837), the
     // code issued afterwards as I603 (Senale-San Felice).
-    Municipality::create([
-        'code' => 'H837', 'name' => 'SAN FELICE', 'province' => 'BZ',
-        'istat_code' => '021081', 'valid_from' => '1948-03-14', 'valid_to' => '1974-09-18',
-    ]);
-    Municipality::create([
-        'code' => 'I603', 'name' => 'SENALE-SAN FELICE', 'province' => 'BZ',
-        'istat_code' => '021094', 'valid_from' => '1974-09-18', 'valid_to' => null,
-    ]);
+    seedSanFelice();
+    seedSenaleSanFelice();
 
     $result = LaravelValidator::make(
         ['fiscal_code' => 'RSSMRA51A01I603Z'],

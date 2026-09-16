@@ -254,6 +254,25 @@ test('birthPlace() picks the earliest of several post-birth eras, and is null on
         ->and($parser->parse($bornAfterCodeCeased)->birthPlace())->toBeNull();
 });
 
+/**
+ * #117 / #119 - the century tie-breaker uses attributability (ADR-0006
+ * as amended by ADR-0011).
+ */
+test('a two-digit year resolves to the older century when the birthplace code had ceased before the younger candidate', function () {
+    // Year "26" at today's reference date: 1926 and 2026 are both
+    // plausible (stays so until 1926 exceeds the 120-year maxAge, in
+    // 2046). H837 ceased in 1974, so 2026 is impossible - before
+    // ADR-0011 the younger candidate won here.
+    $bornIn1926 = (new Generator())->generate(new Person(
+        firstName: 'Mario', lastName: 'Rossi',
+        birthDate: new DateTimeImmutable('1926-01-01'),
+        birthPlace: BirthPlaceCode::from('H837'), gender: Gender::Male,
+    ));
+    $parser = new Parser(new InMemoryBirthPlaceRepository(sanFeliceBeforeMerger()));
+
+    expect($parser->parse($bornIn1926)->birthYear())->toBe(1926);
+});
+
 test('never throws for a nonsense birthplace code - birthPlace() returns null, birthDate() is still valid', function () {
     $parser = new Parser(new InMemoryBirthPlaceRepository());
 

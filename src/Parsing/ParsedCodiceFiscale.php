@@ -92,11 +92,8 @@ final readonly class ParsedCodiceFiscale
     }
 
     /**
-     * The attributable era (ADR-0011): the era valid on the birth date
-     * if there is one, else the earliest instituted after it - a code
-     * issued after a merger still names a real birthplace. Null when
-     * the birth date is unresolved, the code is unknown, or every era
-     * of the code ended before the birth date.
+     * The attributable era - ADR-0011, see BirthPlaceAttributability.
+     * Null when the birth date is unresolved or the code has none.
      */
     public function birthPlace(): ?BirthPlace
     {

@@ -259,7 +259,7 @@ Two-digit birth years are inherently ambiguous (`85` could mean 1885 or 1985). `
 4. If no candidate remains, `birthDate()` and `birthYear()` are both `null` - the codice fiscale alone doesn't support a plausible reading.
 5. If one candidate remains, that's the answer.
 6. If two remain, a `BirthPlaceCode` *attributable* (see below) for exactly one candidate date selects that date - a municipality that ceased to exist before one candidate rules it out.
-7. Otherwise (birthplace history is attributable for both dates), the younger candidate is preferred.
+7. Otherwise (birthplace history is attributable for both dates, or for neither - e.g. an unknown code), the younger candidate is preferred.
 
 `$parsed->possibleBirthYears(): array{int, int}` still exposes the raw, unfiltered two-digit-year ambiguity for callers who need to see or control it themselves. Supply an explicit reference date to `DefaultBirthDateResolver` for deterministic historical imports and tests:
 
@@ -356,7 +356,7 @@ $repository = app(BirthPlaceRepository::class);
 $place = $repository->find(BirthPlaceCode::from('H501')); // valid today, or null
 $place = $repository->find(BirthPlaceCode::from('H501'), new DateTimeImmutable('1900-01-01')); // valid on that date
 
-$repository->existedEver(BirthPlaceCode::from('A999')); // false - distinguishes "never valid" from "valid, wrong date"
+$repository->existedEver(BirthPlaceCode::from('A999')); // false - distinguishes "never a valid code" from "valid code, but not attributable on a date"
 
 $repository->eras(BirthPlaceCode::from('A004')); // list<BirthPlace> - every era-record of the code, oldest first; [] if never valid
 
