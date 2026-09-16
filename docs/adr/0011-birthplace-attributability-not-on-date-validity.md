@@ -12,6 +12,7 @@ From 3.1 the rule is **attributability**: a code is accepted when at least one o
 ## Consequences
 
 - `BirthPlaceRepository` gains `eras(BirthPlaceCode)`, returning every era-record of a code in chronological order; the attributability rule is computed once in the framework-agnostic core from that list, never in a repository implementation. `find(code, on)` and `search(name, on)` keep their "valid on that date" meaning.
+- Once every core consumer reads `eras()`, `existedEver()` is redundant (`eras() !== []`) and is deprecated for removal in 4.0 (#120); `find()` is kept as a caller-facing convenience that core no longer uses.
 - Adding a method to the public repository contract is a break for custom implementations, accepted as a 3.1.0 minor with an explicit CHANGELOG note rather than a 4.0.
 - `ValidationError::BirthPlaceNotValidOnDate` keeps its name and `birth_place_not_valid_on_date` value (the code genuinely was not valid on that date); only its meaning narrows and the bundled `en`/`it` messages are reworded.
 - ADR-0006's tie-breaker is amended to use attributability; this is a strict improvement (e.g. `H837` with year `26` now resolves to 1926 rather than the impossible 2026).
