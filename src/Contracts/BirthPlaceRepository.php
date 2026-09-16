@@ -14,10 +14,24 @@ interface BirthPlaceRepository
     public function find(BirthPlaceCode $code, ?\DateTimeImmutable $on = null): ?BirthPlace;
 
     /**
-     * Whether this code was ever valid, at any point in its history -
-     * distinguishes "never a valid code" from "valid code, wrong date".
+     * Whether this code was ever valid, at any point in its history.
+     *
+     * @deprecated since 3.1.0, removed in 4.0 - the same fact is
+     *             `eras($code) !== []`, and since ADR-0011 nothing in
+     *             the core needs it separately.
      */
     public function existedEver(BirthPlaceCode $code): bool;
+
+    /**
+     * Every era-record of this code, oldest first (ascending
+     * validFrom), or an empty list for a code that never existed.
+     * The raw history a caller needs to judge a code against a birth
+     * date (see BirthPlaceAttributability) - unlike find(), which
+     * answers only "valid on this one date".
+     *
+     * @return list<BirthPlace>
+     */
+    public function eras(BirthPlaceCode $code): array;
 
     /**
      * Era-records whose name contains $name (case/accent-insensitive

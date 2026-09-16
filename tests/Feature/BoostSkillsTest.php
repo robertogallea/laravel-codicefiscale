@@ -3,13 +3,16 @@
 use Illuminate\Support\Facades\File;
 use Laravel\Boost\Install\SkillComposer;
 use Laravel\Boost\Install\ThirdPartyPackage;
+use Laravel\Roster\ProjectManager;
 
 /**
  * Testbench's skeleton app has no vendor/ directory of its own, but Boost's
- * third-party discovery reads base_path('vendor') + base_path('composer.json')
- * directly (it doesn't care about PHP autoloading). So we fake a minimal
- * "consuming app" view of this package inside the skeleton, exercised only
- * for the duration of each test.
+ * third-party discovery (via Laravel Roster since Boost 2.9) reads the
+ * project's composer.lock for installed packages, composer.json to tell
+ * direct dependencies from transitive ones, and base_path('vendor') for
+ * each package's files - none of it through PHP autoloading. So we fake a
+ * minimal "consuming app" view of this package inside the skeleton,
+ * exercised only for the duration of each test.
  */
 beforeEach(function () {
     $this->fakeVendorPath = base_path('vendor/robertogallea/laravel-codicefiscale');
@@ -25,10 +28,25 @@ beforeEach(function () {
     $composerData = json_decode($this->originalComposerJson, true);
     $composerData['require']['robertogallea/laravel-codicefiscale'] = '*';
     file_put_contents($this->composerJsonPath, json_encode($composerData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    // The skeleton ships no composer.lock; Roster needs one to consider a
+    // package installed at all.
+    $this->composerLockPath = base_path('composer.lock');
+    $this->originalComposerLock = file_exists($this->composerLockPath) ? file_get_contents($this->composerLockPath) : null;
+    file_put_contents($this->composerLockPath, json_encode([
+        'packages' => [['name' => 'robertogallea/laravel-codicefiscale', 'version' => 'dev-main']],
+        'packages-dev' => [],
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 });
 
 afterEach(function () {
     file_put_contents($this->composerJsonPath, $this->originalComposerJson);
+
+    if ($this->originalComposerLock === null) {
+        File::delete($this->composerLockPath);
+    } else {
+        file_put_contents($this->composerLockPath, $this->originalComposerLock);
+    }
 
     if (is_link($this->fakeVendorPath)) {
         unlink($this->fakeVendorPath);
@@ -36,7 +54,7 @@ afterEach(function () {
 });
 
 test("boost discovers the package's guideline and skill directories", function () {
-    $package = ThirdPartyPackage::discover()->get('robertogallea/laravel-codicefiscale');
+    $package = ThirdPartyPackage::discover(app(ProjectManager::class))->get('robertogallea/laravel-codicefiscale');
 
     expect($package)->not->toBeNull()
         ->and($package->hasGuidelines)->toBeTrue()

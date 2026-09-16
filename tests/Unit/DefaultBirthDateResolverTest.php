@@ -110,7 +110,12 @@ test('birthplace history selects the older candidate when it is valid only for t
     expect($resolver->resolve($context))->toEqual(new DateTimeImmutable('1926-01-01'));
 });
 
-test('birthplace history selects the younger candidate when it is valid only for that date', function () {
+/**
+ * #117 / #119 - under attributability a code instituted after both
+ * candidates is attributable for both, so this is a fall-back case;
+ * it used to be an on-date tie-break in favour of the younger date.
+ */
+test('falls back to the younger candidate when the code was instituted after both dates', function () {
     $resolver = new DefaultBirthDateResolver(maxAge: 120);
     $repository = new InMemoryBirthPlaceRepository(
         new DomesticBirthPlace(BirthPlaceCode::from('H501'), 'ROMA', 'RM', '058091', new DateTimeImmutable('2020-01-01')),
@@ -147,6 +152,25 @@ test('falls back to the younger candidate when birthplace history is valid for n
     );
 
     expect($resolver->resolve($context))->toEqual(new DateTimeImmutable('2026-01-01'));
+});
+
+/**
+ * #117 / #119 - the tie-breaker uses attributability (ADR-0011,
+ * amending ADR-0006): a code whose every era ended before a candidate
+ * date rules that candidate out.
+ */
+test('birthplace history rules out a candidate after the code ceased to exist, even when the code was valid on neither date', function () {
+    $resolver = new DefaultBirthDateResolver(maxAge: 120);
+    // H837 (1948-03-14 -> 1974-09-18): not valid in 1926, ceased before
+    // 2026. Nobody born in 2026 can carry it; someone born in 1926 can.
+    $context = new BirthDateResolutionContext(
+        candidates: [new DateTimeImmutable('1926-01-01'), new DateTimeImmutable('2026-01-01')],
+        referenceDate: new DateTimeImmutable('2026-08-09'),
+        birthPlaceCode: BirthPlaceCode::from('H837'),
+        birthPlaceRepository: new InMemoryBirthPlaceRepository(sanFeliceBeforeMerger()),
+    );
+
+    expect($resolver->resolve($context))->toEqual(new DateTimeImmutable('1926-01-01'));
 });
 
 test('falls back to the context reference date when the resolver has none configured', function () {

@@ -24,9 +24,15 @@ final class CompositeBirthPlaceRepository implements BirthPlaceRepository
         return $this->repositoryFor($code)->find($code, $on);
     }
 
+    /** @deprecated since 3.1.0, removed in 4.0 - use `eras($code) !== []`. */
     public function existedEver(BirthPlaceCode $code): bool
     {
         return $this->repositoryFor($code)->existedEver($code);
+    }
+
+    public function eras(BirthPlaceCode $code): array
+    {
+        return $this->repositoryFor($code)->eras($code);
     }
 
     public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array

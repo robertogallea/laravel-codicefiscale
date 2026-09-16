@@ -39,9 +39,22 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         return $this->safeToBirthPlace($row);
     }
 
+    /** @deprecated since 3.1.0, removed in 4.0 - use `eras($code) !== []`. */
     public function existedEver(BirthPlaceCode $code): bool
     {
         return $this->modelClass::query()->where('code', $code->value())->exists();
+    }
+
+    public function eras(BirthPlaceCode $code): array
+    {
+        /** @var list<AbstractBirthPlaceModel> $rows */
+        $rows = $this->modelClass::query()
+            ->where('code', $code->value())
+            ->orderBy('valid_from')
+            ->get()
+            ->all();
+
+        return $this->toBirthPlaces($rows);
     }
 
     public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array
@@ -66,6 +79,15 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         /** @var list<AbstractBirthPlaceModel> $rows */
         $rows = $query->get()->all();
 
+        return $this->toBirthPlaces($rows);
+    }
+
+    /**
+     * @param  list<AbstractBirthPlaceModel>  $rows
+     * @return list<BirthPlace>
+     */
+    private function toBirthPlaces(array $rows): array
+    {
         $places = array_map(fn (AbstractBirthPlaceModel $row): ?BirthPlace => $this->safeToBirthPlace($row), $rows);
 
         return array_values(array_filter($places, static fn (?BirthPlace $place): bool => $place !== null));

@@ -181,3 +181,40 @@ test('find() returns null instead of throwing when the row has a malformed count
 
     expect($repository->find(BirthPlaceCode::from('Z404')))->toBeNull();
 });
+
+test('eras() returns every era of a code oldest-first, whatever order the rows were inserted in', function () {
+    Municipality::create([
+        'code' => 'A004', 'name' => 'ABBADIA CERRETO', 'province' => 'LO',
+        'istat_code' => '098001', 'valid_from' => '1992-04-16', 'valid_to' => null,
+    ]);
+    Municipality::create([
+        'code' => 'A004', 'name' => 'ABBADIA CERRETO', 'province' => 'MI',
+        'istat_code' => '015001', 'valid_from' => '1861-03-17', 'valid_to' => '1992-04-16',
+    ]);
+    Municipality::create([
+        'code' => 'H501', 'name' => 'ROMA', 'province' => 'RM',
+        'istat_code' => '058091', 'valid_from' => '1871-01-01', 'valid_to' => null,
+    ]);
+
+    $eras = (new EloquentBirthPlaceRepository(Municipality::class))->eras(BirthPlaceCode::from('A004'));
+
+    expect($eras)->toHaveCount(2)
+        ->and($eras[0]->province())->toBe('MI')
+        ->and($eras[1]->province())->toBe('LO');
+});
+
+test('eras() is empty for a code that never existed', function () {
+    expect((new EloquentBirthPlaceRepository(Municipality::class))->eras(BirthPlaceCode::from('Z999')))->toBe([]);
+});
+
+test('eras() works against the ForeignCountry model too', function () {
+    ForeignCountry::create([
+        'code' => 'Z404', 'name' => "STATI UNITI D'AMERICA", 'country_code' => 'USA',
+        'valid_from' => '1900-01-01', 'valid_to' => null,
+    ]);
+
+    $eras = (new EloquentBirthPlaceRepository(ForeignCountry::class))->eras(BirthPlaceCode::from('Z404'));
+
+    expect($eras)->toHaveCount(1)
+        ->and($eras[0]->country()->value())->toBe('USA');
+});

@@ -216,6 +216,63 @@ test('birthPlace() resolves the era-record valid on the parsed birth date', func
         ->and($parser->parse($bornUnderLodi)->birthPlace()->province())->toBe('LO');
 });
 
+/**
+ * #117 / #119 - a birthplace code is judged by attributability, not
+ * by validity on the birth date (ADR-0011).
+ */
+test('birthPlace() resolves the attributable era - the one instituted after the birth date when none was valid on it', function () {
+    // Born 1951, code issued after the 1974 merger as I603: the only
+    // era I603 has post-dates the birth, and it is still the answer.
+    $repository = new InMemoryBirthPlaceRepository(senaleSanFelice(), sanFeliceBeforeMerger());
+    $parsed = (new Parser($repository))->parse(CodiceFiscale::from('RSSMRA51A01I603Z'));
+
+    expect($parsed->birthPlace())->not->toBeNull()
+        ->and($parsed->birthPlace()->name())->toBe('SENALE-SAN FELICE');
+});
+
+/**
+ * #117 / #119 - a birthplace code is judged by attributability, not
+ * by validity on the birth date (ADR-0011).
+ */
+test('birthPlace() picks the earliest of several post-birth eras, and is null once every era ended before the birth date', function () {
+    // I603 split into two eras, both after a 1951 birth: a hypothetical
+    // later renaming on top of the real 1974-09-18 institution. Seeded
+    // newest-first on purpose.
+    $renamedLater = new DomesticBirthPlace(BirthPlaceCode::from('I603'), 'SENALE-SAN FELICE (RENAMED)', 'BZ', '021094', new DateTimeImmutable('2000-01-01'));
+    $instituted1974 = new DomesticBirthPlace(BirthPlaceCode::from('I603'), 'SENALE-SAN FELICE', 'BZ', '021094', new DateTimeImmutable('1974-09-18'), new DateTimeImmutable('2000-01-01'));
+    $repository = new InMemoryBirthPlaceRepository($renamedLater, $instituted1974, sanFeliceBeforeMerger());
+    $parser = new Parser($repository);
+
+    // H837 ceased 1974-09-18; a 1990 birth there is impossible.
+    $bornAfterCodeCeased = (new Generator())->generate(new Person(
+        firstName: 'Mario', lastName: 'Rossi',
+        birthDate: new DateTimeImmutable('1990-01-01'),
+        birthPlace: BirthPlaceCode::from('H837'), gender: Gender::Male,
+    ));
+
+    expect($parser->parse(CodiceFiscale::from('RSSMRA51A01I603Z'))->birthPlace()->name())->toBe('SENALE-SAN FELICE')
+        ->and($parser->parse($bornAfterCodeCeased)->birthPlace())->toBeNull();
+});
+
+/**
+ * #117 / #119 - the century tie-breaker uses attributability (ADR-0006
+ * as amended by ADR-0011).
+ */
+test('a two-digit year resolves to the older century when the birthplace code had ceased before the younger candidate', function () {
+    // Year "26" at today's reference date: 1926 and 2026 are both
+    // plausible (stays so until 1926 exceeds the 120-year maxAge, in
+    // 2046). H837 ceased in 1974, so 2026 is impossible - before
+    // ADR-0011 the younger candidate won here.
+    $bornIn1926 = (new Generator())->generate(new Person(
+        firstName: 'Mario', lastName: 'Rossi',
+        birthDate: new DateTimeImmutable('1926-01-01'),
+        birthPlace: BirthPlaceCode::from('H837'), gender: Gender::Male,
+    ));
+    $parser = new Parser(new InMemoryBirthPlaceRepository(sanFeliceBeforeMerger()));
+
+    expect($parser->parse($bornIn1926)->birthYear())->toBe(1926);
+});
+
 test('never throws for a nonsense birthplace code - birthPlace() returns null, birthDate() is still valid', function () {
     $parser = new Parser(new InMemoryBirthPlaceRepository());
 

@@ -7,6 +7,7 @@ use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Enums\ValidationError;
 use Robertogallea\CodiceFiscale\Generation\Checksum;
 use Robertogallea\CodiceFiscale\Parsing\Parser;
+use Robertogallea\CodiceFiscale\Support\BirthPlaceAttributability;
 
 /**
  * validateFormat()/validate() take a raw string rather than a
@@ -61,9 +62,12 @@ final class Validator
             $errors[] = ValidationError::InvalidDate;
         }
 
-        if (! $this->birthPlaceRepository->existedEver($parsed->birthPlaceCode())) {
+        // Attributability, not on-date validity - ADR-0011, see BirthPlaceAttributability.
+        $eras = $this->birthPlaceRepository->eras($parsed->birthPlaceCode());
+
+        if ($eras === []) {
             $errors[] = ValidationError::UnknownBirthPlace;
-        } elseif ($birthDate !== null && $this->birthPlaceRepository->find($parsed->birthPlaceCode(), $birthDate) === null) {
+        } elseif ($birthDate !== null && BirthPlaceAttributability::era($eras, $birthDate) === null) {
             $errors[] = ValidationError::BirthPlaceNotValidOnDate;
         }
 

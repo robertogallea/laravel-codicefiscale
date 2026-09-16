@@ -83,24 +83,42 @@ test('validateSemantics() reports UnknownBirthPlace for a code that never existe
         ->and($result->errors())->toBe([ValidationError::UnknownBirthPlace]);
 });
 
-test('validateSemantics() reports BirthPlaceNotValidOnDate - distinct from UnknownBirthPlace - for a code that existed, just not on this date', function () {
-    $repository = new InMemoryBirthPlaceRepository(abbadiaCerretoUnderLodi());
+/**
+ * #117 / #119 - a birthplace code is judged by attributability, not
+ * by validity on the birth date (ADR-0011).
+ */
+test('validateSemantics() reports BirthPlaceNotValidOnDate - distinct from UnknownBirthPlace - only for a code whose every era ended before the birth date', function () {
+    $repository = new InMemoryBirthPlaceRepository(sanFeliceBeforeMerger());
     $validator = new Validator($repository);
 
-    // A004 exists (under Lodi, from 1992-04-16), but this person is
-    // encoded as born in 1950 - before that era-record's validFrom.
-    $bornBeforeLodiEra = (new Generator())->generate(new Person(
+    // H837 exists, but ceased on 1974-09-18: nobody born in 1990 could
+    // have been issued it. (A code instituted *after* the birth is
+    // attributable and passes - see the post-merger test below.)
+    $bornAfterCodeCeased = (new Generator())->generate(new Person(
         firstName: 'Mario',
         lastName: 'Rossi',
-        birthDate: new DateTimeImmutable('1950-01-01'),
-        birthPlace: BirthPlaceCode::from('A004'),
+        birthDate: new DateTimeImmutable('1990-01-01'),
+        birthPlace: BirthPlaceCode::from('H837'),
         gender: Gender::Male,
     ));
 
-    $result = $validator->validateSemantics($bornBeforeLodiEra);
+    $result = $validator->validateSemantics($bornAfterCodeCeased);
 
     expect($result->valid())->toBeFalse()
         ->and($result->errors())->toBe([ValidationError::BirthPlaceNotValidOnDate]);
+});
+
+/**
+ * #117 / #119 - a birthplace code is judged by attributability, not
+ * by validity on the birth date (ADR-0011).
+ */
+test('validate() accepts a birthplace code instituted after the birth date - the post-merger case', function () {
+    // Born 1951 in San Felice (H837, merged away 1974-09-18); the code
+    // was issued afterwards as I603 - exactly what the Agenzia delle
+    // Entrate does, so it must validate.
+    $validator = new Validator(new InMemoryBirthPlaceRepository(senaleSanFelice(), sanFeliceBeforeMerger()));
+
+    expect($validator->validate('RSSMRA51A01I603Z')->valid())->toBeTrue();
 });
 
 test('validate() is valid for a fully correct code', function () {

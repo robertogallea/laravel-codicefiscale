@@ -38,9 +38,19 @@ final class InMemoryBirthPlaceRepository implements BirthPlaceRepository
         return null;
     }
 
+    /** @deprecated since 3.1.0, removed in 4.0 - use `eras($code) !== []`. */
     public function existedEver(BirthPlaceCode $code): bool
     {
         return isset($this->recordsByCode[$code->value()]);
+    }
+
+    public function eras(BirthPlaceCode $code): array
+    {
+        $eras = $this->recordsByCode[$code->value()] ?? [];
+
+        usort($eras, BirthPlaceEraOrdering::oldestFirst(...));
+
+        return $eras;
     }
 
     public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array

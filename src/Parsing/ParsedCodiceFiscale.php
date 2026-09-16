@@ -8,6 +8,7 @@ use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Data\BirthDateResolutionContext;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Enums\Gender;
+use Robertogallea\CodiceFiscale\Support\BirthPlaceAttributability;
 
 final readonly class ParsedCodiceFiscale
 {
@@ -90,11 +91,17 @@ final readonly class ParsedCodiceFiscale
         return $this->resolveBirthDate();
     }
 
+    /**
+     * The attributable era - ADR-0011, see BirthPlaceAttributability.
+     * Null when the birth date is unresolved or the code has none.
+     */
     public function birthPlace(): ?BirthPlace
     {
         $birthDate = $this->birthDate();
 
-        return $birthDate === null ? null : $this->birthPlaceRepository->find($this->birthPlaceCode, $birthDate);
+        return $birthDate === null
+            ? null
+            : BirthPlaceAttributability::era($this->birthPlaceRepository->eras($this->birthPlaceCode), $birthDate);
     }
 
     /** @return list<\DateTimeImmutable> calendar-valid candidates, ascending */

@@ -112,3 +112,41 @@ test('search() interleaves domestic and foreign matches by recency, not table-by
         ->and($matches[0])->toBeInstanceOf(ForeignBirthPlace::class)
         ->and($matches[1]->province())->toBe('LO');
 });
+
+test('eras() routes a domestic code to Municipality and a foreign one to ForeignCountry', function () {
+    Municipality::create([
+        'code' => 'A004', 'name' => 'ABBADIA CERRETO', 'province' => 'MI',
+        'istat_code' => '015001', 'valid_from' => '1861-03-17', 'valid_to' => '1992-04-16',
+    ]);
+    Municipality::create([
+        'code' => 'A004', 'name' => 'ABBADIA CERRETO', 'province' => 'LO',
+        'istat_code' => '098001', 'valid_from' => '1992-04-16', 'valid_to' => null,
+    ]);
+    ForeignCountry::create([
+        'code' => 'Z404', 'name' => "STATI UNITI D'AMERICA", 'country_code' => 'USA',
+        'valid_from' => '1900-01-01', 'valid_to' => null,
+    ]);
+    // A same-shaped row in the wrong table must never be picked up.
+    ForeignCountry::create([
+        'code' => 'A004', 'name' => 'WRONG TABLE', 'country_code' => 'XXX',
+        'valid_from' => '1900-01-01', 'valid_to' => null,
+    ]);
+
+    $repository = compositeBirthPlaceRepository();
+    $domestic = $repository->eras(BirthPlaceCode::from('A004'));
+    $foreign = $repository->eras(BirthPlaceCode::from('Z404'));
+
+    expect($domestic)->toHaveCount(2)
+        ->and($domestic[0])->toBeInstanceOf(DomesticBirthPlace::class)
+        ->and($domestic[0]->province())->toBe('MI')
+        ->and($domestic[1]->province())->toBe('LO')
+        ->and($foreign)->toHaveCount(1)
+        ->and($foreign[0])->toBeInstanceOf(ForeignBirthPlace::class);
+});
+
+test('eras() is empty for a code that never existed, on either side', function () {
+    $repository = compositeBirthPlaceRepository();
+
+    expect($repository->eras(BirthPlaceCode::from('A999')))->toBe([])
+        ->and($repository->eras(BirthPlaceCode::from('Z999')))->toBe([]);
+});
