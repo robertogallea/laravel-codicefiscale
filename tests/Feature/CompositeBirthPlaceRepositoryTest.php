@@ -143,3 +143,10 @@ test('eras() routes a domestic code to Municipality and a foreign one to Foreign
         ->and($foreign)->toHaveCount(1)
         ->and($foreign[0])->toBeInstanceOf(ForeignBirthPlace::class);
 });
+
+test('eras() is empty for a code that never existed, on either side', function () {
+    $repository = compositeBirthPlaceRepository();
+
+    expect($repository->eras(BirthPlaceCode::from('A999')))->toBe([])
+        ->and($repository->eras(BirthPlaceCode::from('Z999')))->toBe([]);
+});

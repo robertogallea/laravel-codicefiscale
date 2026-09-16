@@ -53,9 +53,7 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
             ->get()
             ->all();
 
-        $eras = array_map(fn (AbstractBirthPlaceModel $row): ?BirthPlace => $this->safeToBirthPlace($row), $rows);
-
-        return array_values(array_filter($eras, static fn (?BirthPlace $era): bool => $era !== null));
+        return $this->toBirthPlaces($rows);
     }
 
     public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array
@@ -80,6 +78,15 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         /** @var list<AbstractBirthPlaceModel> $rows */
         $rows = $query->get()->all();
 
+        return $this->toBirthPlaces($rows);
+    }
+
+    /**
+     * @param  list<AbstractBirthPlaceModel>  $rows
+     * @return list<BirthPlace>
+     */
+    private function toBirthPlaces(array $rows): array
+    {
         $places = array_map(fn (AbstractBirthPlaceModel $row): ?BirthPlace => $this->safeToBirthPlace($row), $rows);
 
         return array_values(array_filter($places, static fn (?BirthPlace $place): bool => $place !== null));

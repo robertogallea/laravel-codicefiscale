@@ -47,7 +47,7 @@ final class InMemoryBirthPlaceRepository implements BirthPlaceRepository
     {
         $eras = $this->recordsByCode[$code->value()] ?? [];
 
-        usort($eras, static fn (BirthPlace $a, BirthPlace $b): int => $a->validFrom() <=> $b->validFrom());
+        usort($eras, BirthPlaceEraOrdering::oldestFirst(...));
 
         return $eras;
     }

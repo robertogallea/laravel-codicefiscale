@@ -23,7 +23,7 @@ final class BirthPlaceAttributability
      */
     public static function era(array $eras, \DateTimeImmutable $birthDate): ?BirthPlace
     {
-        usort($eras, static fn (BirthPlace $a, BirthPlace $b): int => $a->validFrom() <=> $b->validFrom());
+        usort($eras, BirthPlaceEraOrdering::oldestFirst(...));
 
         foreach ($eras as $era) {
             if ($era->validTo() === null || $era->validTo() > $birthDate) {
