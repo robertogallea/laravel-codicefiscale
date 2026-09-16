@@ -24,10 +24,18 @@ The one member of a person's 128 possible codice fiscali where none of the 7 omo
 _Avoid_: original code, base code
 
 **Reference-date resolution**:
-The default interpretation of a codice fiscale's two-digit birth year as the most plausible complete birth date as of a specified reference date. A candidate birth date after the reference date is not plausible. When both candidates are plausible, a `BirthPlaceCode` valid for only one candidate date selects that date; otherwise the younger candidate is selected. The codice fiscale itself remains inherently ambiguous; callers with additional knowledge may select a different candidate.
+The default interpretation of a codice fiscale's two-digit birth year as the most plausible complete birth date as of a specified reference date. A candidate birth date after the reference date is not plausible. When both candidates are plausible, a `BirthPlaceCode` attributable for only one candidate date selects that date; otherwise the younger candidate is selected. The codice fiscale itself remains inherently ambiguous; callers with additional knowledge may select a different candidate.
 
 **Plausible birth date**:
 A candidate date produced while resolving a two-digit birth year that is not after the reference date and does not imply an age over the configured maximum. When neither candidate is plausible, the default resolution has no birth date.
+
+**Attributable birthplace code**:
+A `BirthPlaceCode` at least one of whose `BirthPlace` eras was valid on a given birth date or on any later date. Because the tax authority assigns the code as of issue time, not birth time, a code instituted after the birth is attributable; only a code whose every era ended before the birth date is not. Validation and reference-date resolution both use attributability, never on-date validity alone.
+_Avoid_: successor code, compatible code, historical code, valid on the birth date (as the acceptance rule)
+
+**Attributable era**:
+The `BirthPlace` record that best describes an attributable `BirthPlaceCode` for a birth date: the era valid on that date if one exists, otherwise the earliest era instituted after it. There is none when the code is not attributable.
+_Avoid_: current era, latest era (as the parsed birthplace)
 
 **Foreign birthplace**:
 A `BirthPlace` for a country (`Z`-prefixed `BirthPlaceCode`), sourced from MAECI's stati-esteri table. Has an ISO 3166-1 alpha-3 code and no province; its `[validFrom, validTo)` is currently always maximally wide because the source table carries no genuine historical data — a country whose meaning changed over time (e.g. a code that once denoted one state and now denotes its successor) is not distinguishable by date in 3.0.
