@@ -12,6 +12,10 @@ All notable changes to `laravel-codicefiscale` are documented here. This file st
 
 - `BirthPlaceRepository::eras(BirthPlaceCode): list<BirthPlace>` - every era-record of a code, oldest first. **Custom `BirthPlaceRepository` implementations must add this method**; the bundled Eloquent and composite repositories already do.
 
+### Deprecated
+
+- `BirthPlaceRepository::existedEver()` - use `eras($code) !== []` instead. Still implemented by the bundled repositories and still required by the contract in 3.x; removed in 4.0. ([#120](https://github.com/robertogallea/laravel-codicefiscale/issues/120))
+
 ## 3.0.1
 
 ### Fixed

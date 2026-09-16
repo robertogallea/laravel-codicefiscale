@@ -38,6 +38,7 @@ final class InMemoryBirthPlaceRepository implements BirthPlaceRepository
         return null;
     }
 
+    /** @deprecated since 3.1.0, removed in 4.0 - use `eras($code) !== []`. */
     public function existedEver(BirthPlaceCode $code): bool
     {
         return isset($this->recordsByCode[$code->value()]);

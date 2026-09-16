@@ -356,8 +356,6 @@ $repository = app(BirthPlaceRepository::class);
 $place = $repository->find(BirthPlaceCode::from('H501')); // valid today, or null
 $place = $repository->find(BirthPlaceCode::from('H501'), new DateTimeImmutable('1900-01-01')); // valid on that date
 
-$repository->existedEver(BirthPlaceCode::from('A999')); // false - distinguishes "never a valid code" from "valid code, but not attributable on a date"
-
 $repository->eras(BirthPlaceCode::from('A004')); // list<BirthPlace> - every era-record of the code, oldest first; [] if never valid
 
 $repository->search('roma'); // list<BirthPlace> - case/accent-insensitive substring match, both domestic and foreign

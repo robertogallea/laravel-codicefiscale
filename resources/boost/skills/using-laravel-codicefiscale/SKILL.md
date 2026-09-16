@@ -15,7 +15,7 @@ Full API reference with runnable examples: `README.md` at this package's root. T
 - **`Validator`** - checks format, checksum, and semantics as independently-callable tiers; never accepts a `Person`. Returns a `ValidationResult` with a `ValidationError` enum, not exceptions. Semantics judge the birthplace by *attributability* (README "Birthplace attributability"): a code instituted after the birth date passes; `BirthPlaceNotValidOnDate` means every era of the code ended before the birth date.
 - **`Matcher`** - cross-checks a `CodiceFiscale` against a `Person` or `PartialPerson`. This is the only place a codice fiscale gets compared to a person - `Validator` never does this.
 - **`Omocodia`** - `canonical()`, `level()`, `variants()` for the digit/letter substitution scheme used to resolve collisions.
-- **Birthplace domain** - `Contracts\BirthPlaceRepository` (`find()`, `existedEver()`, `eras()`, `search()`) backed by real ANPR/MAECI government data via `codice-fiscale:update-places`, not a static list. `search()` resolves a typed name to candidate `BirthPlaceCode`s; it never feeds back into generation.
+- **Birthplace domain** - `Contracts\BirthPlaceRepository` (`find()`, `eras()`, `search()`) backed by real ANPR/MAECI government data via `codice-fiscale:update-places`, not a static list. To check whether a code exists at all, use `eras($code) !== []` - `existedEver()` is deprecated since 3.1.0. `search()` resolves a typed name to candidate `BirthPlaceCode`s; it never feeds back into generation.
 
 ## Laravel-specific
 

@@ -39,6 +39,7 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         return $this->safeToBirthPlace($row);
     }
 
+    /** @deprecated since 3.1.0, removed in 4.0 - use `eras($code) !== []`. */
     public function existedEver(BirthPlaceCode $code): bool
     {
         return $this->modelClass::query()->where('code', $code->value())->exists();
