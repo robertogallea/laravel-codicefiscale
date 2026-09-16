@@ -2,6 +2,16 @@
 
 All notable changes to `laravel-codicefiscale` are documented here. This file starts at 3.0.0 - see the [GitHub releases](https://github.com/robertogallea/laravel-codicefiscale/releases) for the 1.x/2.x history.
 
+## 3.1.0
+
+### Changed
+
+- Semantic validation, `ParsedCodiceFiscale::birthPlace()` and the default century tie-breaker now judge a `BirthPlaceCode` by **attributability** rather than validity on the birth date: a code instituted *after* the birth date is accepted, because the tax authority assigns codes as of issue time - someone born in 1951 in San Felice (BZ, `H837`) whose code was issued after the 1974-09-18 merger legitimately carries `I603` (Senale-San Felice), and was previously rejected with `birth_place_not_valid_on_date`. `ValidationError::BirthPlaceNotValidOnDate` keeps its name and value but is now reported only when every era of the code ended before the birth date; the bundled `en`/`it` messages are reworded accordingly. `birthPlace()` returns the era valid on the birth date or, failing that, the earliest one instituted after it. See `docs/adr/0011-birthplace-attributability-not-on-date-validity.md`. ([#117](https://github.com/robertogallea/laravel-codicefiscale/issues/117))
+
+### Added
+
+- `BirthPlaceRepository::eras(BirthPlaceCode): list<BirthPlace>` - every era-record of a code, oldest first. **Custom `BirthPlaceRepository` implementations must add this method**; the bundled Eloquent and composite repositories already do.
+
 ## 3.0.1
 
 ### Fixed

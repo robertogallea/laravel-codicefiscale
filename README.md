@@ -119,7 +119,7 @@ $parsed->birthYear();      // 1985, or null under the same condition as birthDat
 $parsed->birthMonth();     // 4
 $parsed->birthDay();       // 15
 $parsed->birthPlaceCode(); // BirthPlaceCode('H501')
-$parsed->birthPlace();     // ?BirthPlace - null if the code isn't recognized, or update-places hasn't run
+$parsed->birthPlace();     // ?BirthPlace - the era valid on the birth date, else the earliest instituted after it; null if the code isn't recognized, had ceased before the birth date, or update-places hasn't run
 $parsed->isOmocodia();     // false
 ```
 
@@ -243,7 +243,7 @@ $parsed->birthYear();      // 1985, or null under the same condition as birthDat
 $parsed->birthMonth();     // 4
 $parsed->birthDay();       // 15
 $parsed->birthPlaceCode(); // BirthPlaceCode('H501')
-$parsed->birthPlace();     // ?BirthPlace - null if the code isn't recognized, or update-places hasn't run
+$parsed->birthPlace();     // ?BirthPlace - the era valid on the birth date, else the earliest instituted after it; null if the code isn't recognized, had ceased before the birth date, or update-places hasn't run
 $parsed->isOmocodia();     // false
 ```
 
@@ -258,8 +258,8 @@ Two-digit birth years are inherently ambiguous (`85` could mean 1885 or 1985). `
 3. Discard a candidate whose exact age as of the reference date exceeds `maxAge` (120 by default).
 4. If no candidate remains, `birthDate()` and `birthYear()` are both `null` - the codice fiscale alone doesn't support a plausible reading.
 5. If one candidate remains, that's the answer.
-6. If two remain, a `BirthPlaceCode` valid (per the same `BirthPlaceRepository` `birthPlace()` uses) at exactly one candidate date selects that date - historical municipality/province changes can carry real evidence.
-7. Otherwise (birthplace history is valid for both dates, or neither), the younger candidate is preferred.
+6. If two remain, a `BirthPlaceCode` *attributable* (see below) for exactly one candidate date selects that date - a municipality that ceased to exist before one candidate rules it out.
+7. Otherwise (birthplace history is attributable for both dates), the younger candidate is preferred.
 
 `$parsed->possibleBirthYears(): array{int, int}` still exposes the raw, unfiltered two-digit-year ambiguity for callers who need to see or control it themselves. Supply an explicit reference date to `DefaultBirthDateResolver` for deterministic historical imports and tests:
 
@@ -295,10 +295,14 @@ $result->errors(); // [ValidationError::InvalidFormat]
 ```php
 $validator->validateFormat('RSSMRA85D15H501T');   // structural only
 $validator->validateChecksum($cf);                // needs a real CodiceFiscale, not a raw string
-$validator->validateSemantics($cf);                // valid calendar date + recognized birthplace + valid on that date
+$validator->validateSemantics($cf);                // valid calendar date + recognized birthplace + attributable on that date
 ```
 
 `ValidationError` is a backed enum: `InvalidFormat`, `InvalidChecksum`, `InvalidDate`, `UnknownBirthPlace`, `BirthPlaceNotValidOnDate` - not exceptions. Exceptions are reserved for genuine API misuse (e.g. `CodiceFiscale::from()` on malformed input), not expected validation failures.
+
+#### Birthplace attributability
+
+The tax authority assigns a birthplace code as of *issue* time, not birth time: someone born in 1951 in San Felice (BZ, `H837`, merged into Senale-San Felice `I603` on 1974-09-18) whose code was issued afterwards legitimately carries `I603`. So the semantic check is **attributability**, not validity on the birth date - a `BirthPlaceCode` passes when at least one of its eras was valid on the birth date *or on any later date*, and `BirthPlaceNotValidOnDate` is reported only when every era of the code ended before the birth date (a 1990 birth encoded with `H837`). `birthPlace()` follows the same rule, returning the era valid on the birth date or, failing that, the earliest one instituted after it. See `docs/adr/0011-birthplace-attributability-not-on-date-validity.md`.
 
 ### Matching against a person
 
@@ -405,7 +409,7 @@ public function rules(): array
 
 Any argument can be omitted - an omitted field, or one absent from the request data, is skipped rather than forced into a mismatch. Validation fails with one message per mismatched field, not just the first.
 
-Both the `codice_fiscale` string rule and `CodiceFiscaleRule` report translated, failure-specific messages - a distinct message per failure reason (bad format, bad checksum, a nonexistent date, an unrecognized birthplace, a birthplace not yet/no longer valid on the encoded date) rather than one generic "invalid" message, plus one `:field`-naming message per mismatched field for `->matching()`. `en` and `it` are bundled under the `codicefiscale` translation namespace; publish and customize them with:
+Both the `codice_fiscale` string rule and `CodiceFiscaleRule` report translated, failure-specific messages - a distinct message per failure reason (bad format, bad checksum, a nonexistent date, an unrecognized birthplace, a birthplace that had already ceased to exist on the encoded date) rather than one generic "invalid" message, plus one `:field`-naming message per mismatched field for `->matching()`. `en` and `it` are bundled under the `codicefiscale` translation namespace; publish and customize them with:
 
 ```bash
 php artisan vendor:publish --provider="Robertogallea\CodiceFiscale\Laravel\CodiceFiscaleServiceProvider" --tag="lang"

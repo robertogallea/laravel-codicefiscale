@@ -8,6 +8,7 @@ use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Data\BirthDateResolutionContext;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Enums\Gender;
+use Robertogallea\CodiceFiscale\Support\BirthPlaceAttributability;
 
 final readonly class ParsedCodiceFiscale
 {
@@ -90,11 +91,20 @@ final readonly class ParsedCodiceFiscale
         return $this->resolveBirthDate();
     }
 
+    /**
+     * The attributable era (ADR-0011): the era valid on the birth date
+     * if there is one, else the earliest instituted after it - a code
+     * issued after a merger still names a real birthplace. Null when
+     * the birth date is unresolved, the code is unknown, or every era
+     * of the code ended before the birth date.
+     */
     public function birthPlace(): ?BirthPlace
     {
         $birthDate = $this->birthDate();
 
-        return $birthDate === null ? null : $this->birthPlaceRepository->find($this->birthPlaceCode, $birthDate);
+        return $birthDate === null
+            ? null
+            : BirthPlaceAttributability::era($this->birthPlaceRepository->eras($this->birthPlaceCode), $birthDate);
     }
 
     /** @return list<\DateTimeImmutable> calendar-valid candidates, ascending */

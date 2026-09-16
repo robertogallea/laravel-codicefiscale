@@ -269,20 +269,24 @@ test('CodiceFiscaleRule::make() reports the unknown_birth_place message, transla
         ->toBe('Il campo fiscal_code fa riferimento a un luogo di nascita non riconosciuto.');
 });
 
-test('CodiceFiscaleRule::make() reports the birth_place_not_valid_on_date message, translated per locale', function () {
-    // A004 (Abbadia Cerreto) only seeded from its Lodi era onward
-    // (1992-04-16); a code born well before that is a recognized
-    // birthplace that just wasn't valid yet on the encoded date.
+/**
+ * #117 / #119 - a birthplace code is judged by attributability, not
+ * by validity on the birth date (ADR-0011).
+ */
+test('CodiceFiscaleRule::make() reports the birth_place_not_valid_on_date message, translated per locale, for a birthplace that had ceased before the birth date', function () {
+    // H837 (San Felice) ceased on 1974-09-18; a code encoding a 1990
+    // birth there names a recognized birthplace that no longer existed
+    // - the one case the message still covers since ADR-0011.
     Municipality::create([
-        'code' => 'A004', 'name' => 'ABBADIA CERRETO', 'province' => 'LO',
-        'istat_code' => '098001', 'valid_from' => '1992-04-16', 'valid_to' => null,
+        'code' => 'H837', 'name' => 'SAN FELICE', 'province' => 'BZ',
+        'istat_code' => '021081', 'valid_from' => '1948-03-14', 'valid_to' => '1974-09-18',
     ]);
 
     $cf = (new Generator())->generate(new Person(
         firstName: 'Mario',
         lastName: 'Rossi',
-        birthDate: new DateTimeImmutable('1950-01-01'),
-        birthPlace: BirthPlaceCode::from('A004'),
+        birthDate: new DateTimeImmutable('1990-01-01'),
+        birthPlace: BirthPlaceCode::from('H837'),
         gender: Gender::Male,
     ));
 
@@ -292,12 +296,12 @@ test('CodiceFiscaleRule::make() reports the birth_place_not_valid_on_date messag
     );
 
     expect($validate()->errors()->first('fiscal_code'))
-        ->toBe('The fiscal_code references a birthplace that was not valid on the encoded date.');
+        ->toBe('The fiscal_code references a birthplace that had already ceased to exist on the encoded date.');
 
     app()->setLocale('it');
 
     expect($validate()->errors()->first('fiscal_code'))
-        ->toBe('Il campo fiscal_code fa riferimento a un luogo di nascita non valido alla data codificata.');
+        ->toBe('Il campo fiscal_code fa riferimento a un luogo di nascita già cessato alla data codificata.');
 });
 
 test('CodiceFiscaleRule::make() reports every distinct error when checksum and semantics both fail', function () {
@@ -385,4 +389,28 @@ test('the codice_fiscale string-rule alias produces the same translated message 
 
     expect($stringAliasIt->errors()->first('fiscal_code'))
         ->toBe($classBasedIt->errors()->first('fiscal_code'));
+});
+
+/**
+ * #117 / #119 - a birthplace code is judged by attributability, not
+ * by validity on the birth date (ADR-0011).
+ */
+test('the codice_fiscale rule accepts a birthplace code instituted after the birth date - the post-merger case', function () {
+    // The real 1974-09-18 merger: born 1951 in San Felice (H837), the
+    // code issued afterwards as I603 (Senale-San Felice).
+    Municipality::create([
+        'code' => 'H837', 'name' => 'SAN FELICE', 'province' => 'BZ',
+        'istat_code' => '021081', 'valid_from' => '1948-03-14', 'valid_to' => '1974-09-18',
+    ]);
+    Municipality::create([
+        'code' => 'I603', 'name' => 'SENALE-SAN FELICE', 'province' => 'BZ',
+        'istat_code' => '021094', 'valid_from' => '1974-09-18', 'valid_to' => null,
+    ]);
+
+    $result = LaravelValidator::make(
+        ['fiscal_code' => 'RSSMRA51A01I603Z'],
+        ['fiscal_code' => 'codice_fiscale'],
+    );
+
+    expect($result->passes())->toBeTrue();
 });
