@@ -354,6 +354,8 @@ $place = $repository->find(BirthPlaceCode::from('H501'), new DateTimeImmutable('
 
 $repository->existedEver(BirthPlaceCode::from('A999')); // false - distinguishes "never valid" from "valid, wrong date"
 
+$repository->eras(BirthPlaceCode::from('A004')); // list<BirthPlace> - every era-record of the code, oldest first; [] if never valid
+
 $repository->search('roma'); // list<BirthPlace> - case/accent-insensitive substring match, both domestic and foreign
 $repository->search('abbadia', new DateTimeImmutable('1950-01-01')); // only era-records valid on that date
 $repository->search('san', limit: 10); // most-recent-era-first, capped at 10

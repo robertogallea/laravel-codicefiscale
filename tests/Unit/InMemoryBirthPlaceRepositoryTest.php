@@ -128,3 +128,23 @@ test('search() matches across both domestic and foreign records', function () {
     expect($repository->search('abbadia'))->toHaveCount(1)
         ->and($repository->search('stati'))->toHaveCount(1);
 });
+
+test('eras() returns every era of a code oldest-first, whatever order it was seeded in', function () {
+    $repository = new InMemoryBirthPlaceRepository(
+        abbadiaCerretoUnderLodi(),
+        senaleSanFelice(),
+        abbadiaCerretoUnderMilano(),
+    );
+
+    $eras = $repository->eras(BirthPlaceCode::from('A004'));
+
+    expect($eras)->toHaveCount(2)
+        ->and($eras[0]->province())->toBe('MI')
+        ->and($eras[1]->province())->toBe('LO');
+});
+
+test('eras() is empty for a code that never existed', function () {
+    $repository = new InMemoryBirthPlaceRepository(abbadiaCerretoUnderLodi());
+
+    expect($repository->eras(BirthPlaceCode::from('Z999')))->toBe([]);
+});

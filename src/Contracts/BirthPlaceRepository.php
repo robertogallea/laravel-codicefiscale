@@ -20,6 +20,17 @@ interface BirthPlaceRepository
     public function existedEver(BirthPlaceCode $code): bool;
 
     /**
+     * Every era-record of this code, oldest first (ascending
+     * validFrom), or an empty list for a code that never existed.
+     * The raw history a caller needs to judge a code against a birth
+     * date (see BirthPlaceAttributability) - unlike find(), which
+     * answers only "valid on this one date".
+     *
+     * @return list<BirthPlace>
+     */
+    public function eras(BirthPlaceCode $code): array;
+
+    /**
      * Era-records whose name contains $name (case/accent-insensitive
      * substring match). Unfiltered by validity unless $on is given -
      * a name search surfaces historical names on purpose. Results are

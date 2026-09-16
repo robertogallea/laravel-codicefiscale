@@ -15,7 +15,7 @@ Full API reference with runnable examples: `README.md` at this package's root. T
 - **`Validator`** - checks format, checksum, and semantics as independently-callable tiers; never accepts a `Person`. Returns a `ValidationResult` with a `ValidationError` enum, not exceptions.
 - **`Matcher`** - cross-checks a `CodiceFiscale` against a `Person` or `PartialPerson`. This is the only place a codice fiscale gets compared to a person - `Validator` never does this.
 - **`Omocodia`** - `canonical()`, `level()`, `variants()` for the digit/letter substitution scheme used to resolve collisions.
-- **Birthplace domain** - `Contracts\BirthPlaceRepository` (`find()`, `existedEver()`, `search()`) backed by real ANPR/MAECI government data via `codice-fiscale:update-places`, not a static list. `search()` resolves a typed name to candidate `BirthPlaceCode`s; it never feeds back into generation.
+- **Birthplace domain** - `Contracts\BirthPlaceRepository` (`find()`, `existedEver()`, `eras()`, `search()`) backed by real ANPR/MAECI government data via `codice-fiscale:update-places`, not a static list. `search()` resolves a typed name to candidate `BirthPlaceCode`s; it never feeds back into generation.
 
 ## Laravel-specific
 

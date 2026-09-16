@@ -43,6 +43,15 @@ final class InMemoryBirthPlaceRepository implements BirthPlaceRepository
         return isset($this->recordsByCode[$code->value()]);
     }
 
+    public function eras(BirthPlaceCode $code): array
+    {
+        $eras = $this->recordsByCode[$code->value()] ?? [];
+
+        usort($eras, static fn (BirthPlace $a, BirthPlace $b): int => $a->validFrom() <=> $b->validFrom());
+
+        return $eras;
+    }
+
     public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array
     {
         $normalizer = new PlaceNameNormalizer();

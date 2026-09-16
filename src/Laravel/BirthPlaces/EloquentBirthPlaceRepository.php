@@ -44,6 +44,20 @@ final class EloquentBirthPlaceRepository implements BirthPlaceRepository
         return $this->modelClass::query()->where('code', $code->value())->exists();
     }
 
+    public function eras(BirthPlaceCode $code): array
+    {
+        /** @var list<AbstractBirthPlaceModel> $rows */
+        $rows = $this->modelClass::query()
+            ->where('code', $code->value())
+            ->orderBy('valid_from')
+            ->get()
+            ->all();
+
+        $eras = array_map(fn (AbstractBirthPlaceModel $row): ?BirthPlace => $this->safeToBirthPlace($row), $rows);
+
+        return array_values(array_filter($eras, static fn (?BirthPlace $era): bool => $era !== null));
+    }
+
     public function search(string $name, ?\DateTimeImmutable $on = null, ?int $limit = null): array
     {
         $needle = (new PlaceNameNormalizer())->normalize($name);
