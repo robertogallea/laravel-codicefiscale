@@ -12,6 +12,9 @@ laravel-codicefiscale is a package for parsing, generating, and validating the I
 
 > **Upgrading from 2.x?** 3.0 is an intentional, clean break with no compatibility shims. See [UPGRADE.md](UPGRADE.md) for a complete call-by-call migration table.
 
+## **Show appreciation!** 
+If this package saves you time, consider giving it a ⭐
+
 ## Requirements
 
 - PHP ^8.2
