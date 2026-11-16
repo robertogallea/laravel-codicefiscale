@@ -1,0 +1,28 @@
+name: V2 parity
+
+# Imports the live ANPR/MAECI sources and checks that every birthplace
+# code 2.3.1 resolved still resolves (tests/Feature/V2ParityNetworkTest).
+# Weekly rather than per-push: it depends on third-party downloads.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  v2-parity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run the network parity test
+        run: vendor/bin/pest --group=network

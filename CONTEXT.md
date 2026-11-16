@@ -13,7 +13,7 @@ A single time-bounded record describing a `BirthPlaceCode` during one era: name,
 _Avoid_: City, Municipality, Comune (as the class/API name — "comune" is fine in prose)
 
 **Domestic birthplace**:
-A `BirthPlace` for an Italian comune, sourced from ANPR's comuni archive. Has a real `[validFrom, validTo)` history, a province, and an ISTAT code.
+A `BirthPlace` for an Italian comune, sourced from ANPR's comuni archive or, for a suppressed comune ANPR lacks, ISTAT's report of suppressed comuni, or, for a retired birthplace code no downloadable source carries, a fixed list shipped with the package. Has a `[validFrom, validTo)` history, a province, and usually an ISTAT code. A fixed-list entry has no source dates, so its era is maximally wide and it is always attributable; its province is the one a source records for it or for the comune that absorbed it; otherwise, the province it lies in today; otherwise, for a place now outside Italy, the Italian province that administered it. It has no ISTAT code. A code whose every era ended before 1900 is known but never attributable to a codice fiscale's birth date, since a two-digit year never resolves before then.
 
 **Omocodia**:
 The condition where a computed codice fiscale collides with one already assigned to someone else, resolved by substituting a subset of 7 fixed digit positions (year digits, day digits, birthplace-code digits) with corresponding letters via a fixed digit→letter map, then recomputing the check character. Any of the 2⁷ = 128 subsets of those 7 positions may be substituted independently — omocodia is a per-position combination, not a cumulative single-dimension "level."
@@ -38,8 +38,8 @@ The `BirthPlace` record that best describes an attributable `BirthPlaceCode` for
 _Avoid_: current era, latest era (as the parsed birthplace)
 
 **Foreign birthplace**:
-A `BirthPlace` for a country or territory (`Z`-prefixed `BirthPlaceCode`), sourced from MAECI's stati-esteri table, ISTAT's historical foreign-countries report for codes MAECI lacks, or, for a retired birthplace code no downloadable source carries, a fixed list shipped with the package. Has an ISO alpha-3 country code — its own, the former code of a ceased state, or that of the state the territory belongs to today — and no province. No source dates foreign codes, so every foreign `[validFrom, validTo)` is maximally wide and a foreign code is always attributable.
+A `BirthPlace` for a country or territory (`Z`-prefixed `BirthPlaceCode`), sourced from MAECI's stati-esteri table, ISTAT's historical foreign-countries report for codes MAECI lacks or has reassigned from a ceased entity to its successor (`Z501` stays Antille olandesi, not MAECI's Aruba), or, for a retired birthplace code no downloadable source carries, a fixed list shipped with the package. Has an ISO alpha-3 country code — its own, the former code of a ceased state, or that of the state the territory belongs to today — and no province. No source dates foreign codes, so every foreign `[validFrom, validTo)` is maximally wide and a foreign code is always attributable.
 
 **Retired birthplace code**:
-A `BirthPlaceCode` that no longer denotes any current entity, because the entity ceased (`Z135` USSR, `A073` Agliate) or was recoded (`Z136` → `Z254` Georgia). Codici fiscali issued with it remain valid, so it must still resolve.
+A `BirthPlaceCode` that no longer denotes any comune or country in today's registries, because the entity ceased (`Z135` USSR, `A073` Agliate), was recoded (`Z136` → `Z254` Georgia), or survives only as a part of a comune (`M215` Balbido, now a frazione of Bleggio Superiore). Codici fiscali issued with it remain valid, so it must still resolve.
 _Avoid_: historical code, dead code, obsolete code
