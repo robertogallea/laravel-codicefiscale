@@ -66,3 +66,56 @@ function senaleSanFelice(): DomesticBirthPlace
         validTo: null,
     );
 }
+
+/**
+ * A copy of a real xlsx fixture with one shared string edited - not a
+ * fabricated file format, just a modified copy of the real one.
+ */
+function xlsxWithReplacedSharedString(string $originalPath, string $search, string $replace): string
+{
+    $tempFile = tempnam(sys_get_temp_dir(), 'xlsx');
+    copy($originalPath, $tempFile);
+
+    $zip = new ZipArchive();
+    $zip->open($tempFile);
+    $sharedStrings = $zip->getFromName('xl/sharedStrings.xml');
+    $zip->addFromString('xl/sharedStrings.xml', str_replace($search, $replace, $sharedStrings));
+    $zip->close();
+
+    $contents = file_get_contents($tempFile);
+    unlink($tempFile);
+
+    return $contents;
+}
+
+/**
+ * A codes-only v2-parity fixture (tests/Fixtures/v2-parity), one code
+ * per line, sorted.
+ *
+ * @return list<string>
+ */
+function v2ParityCodes(string $file): array
+{
+    $codes = file(__DIR__.'/Fixtures/v2-parity/'.$file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    sort($codes);
+
+    return $codes;
+}
+
+/**
+ * 2.3.1 codes 3.x does not resolve yet, each owned by the open issue
+ * that will close the gap - code => "#issue".
+ *
+ * @return array<string, string>
+ */
+function v2ParityKnownGaps(): array
+{
+    $gaps = [];
+
+    foreach (v2ParityCodes('known-gaps.txt') as $line) {
+        [$code, $issue] = explode(' ', $line);
+        $gaps[$code] = $issue;
+    }
+
+    return $gaps;
+}

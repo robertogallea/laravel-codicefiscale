@@ -368,7 +368,7 @@ $repository->search('san', limit: 10); // most-recent-era-first, capped at 10
 
 `search()` resolves a name a person actually typed to the `BirthPlaceCode`(s) it could mean - useful for building a "pick your birthplace" UI without requiring the code up front. It's unfiltered by validity unless `$on` is given, since a renamed municipality's old name should still be found; results across every matching era are returned, most-recently-valid first. It never feeds back into generation - `Person::$birthPlace` still takes a `BirthPlaceCode`, not a name, so callers resolve ambiguity themselves before generating.
 
-`BirthPlaceCode::isForeign(): bool` tells domestic (Italian) codes apart from `Z`-prefixed foreign ones; `BirthPlaceCode::equals(BirthPlaceCode $other): bool` compares two codes by value. `CountryCode` (an ISO 3166-1 alpha-3 string, e.g. `'USA'`) works the same way - `CountryCode::from()`/`tryFrom()` construct it, `equals()` compares it; it's a value object rather than a PHP enum since ~200 countries would make an enum unmaintainable.
+`BirthPlaceCode::isForeign(): bool` tells domestic (Italian) codes apart from `Z`-prefixed foreign ones; `BirthPlaceCode::equals(BirthPlaceCode $other): bool` compares two codes by value. `CountryCode` (an ISO alpha-3 string, e.g. `'USA'`; for a retired code with no ISO code of its own, the former code of the ceased state or the code of the state the territory belongs to today - `'VDR'` for `Z245` Vietnam del Nord, `'CAN'` for `Z800` Dipendenze canadesi) works the same way - `CountryCode::from()`/`tryFrom()` construct it, `equals()` compares it; it's a value object rather than a PHP enum since ~200 countries would make an enum unmaintainable.
 
 The default `BirthPlaceRepository` binding is `Laravel\BirthPlaces\CompositeBirthPlaceRepository`, which routes to an Eloquent-backed repository per kind - populated by [`codice-fiscale:update-places`](#codice-fiscaleupdate-places).
 
@@ -463,7 +463,7 @@ If you need a code for a *specific* person rather than a random one, don't use t
 
 ### `codice-fiscale:update-places`
 
-Covered in [Setup](#setup). Downloads the ANPR comuni archive and MAECI stati-esteri table via Laravel's `Http` facade and upserts them into the dedicated SQLite database - safe to re-run at any time; existing rows are updated in place rather than duplicated.
+Covered in [Setup](#setup). Downloads the ANPR comuni archive and MAECI stati-esteri table via Laravel's `Http` facade and upserts them into the dedicated SQLite database, together with a small fixed list of retired foreign codes that no downloadable source carries (e.g. `Z136`, Georgia's pre-recoding code - see `docs/adr/0012-retired-codes-with-no-source-ship-as-a-fixed-list.md`) - safe to re-run at any time; existing rows are updated in place rather than duplicated.
 
 [ico-author]: https://img.shields.io/static/v1?label=author&message=robgallea&color=50ABF1&logo=twitter&style=flat-square
 

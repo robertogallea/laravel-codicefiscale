@@ -7,6 +7,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\ForeignCountryXlsxImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\MunicipalityCsvImporter;
+use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\RetiredForeignCountryImporter;
 
 class UpdatePlacesCommand extends Command
 {
@@ -19,6 +20,7 @@ class UpdatePlacesCommand extends Command
     public function __construct(
         private readonly MunicipalityCsvImporter $municipalityImporter = new MunicipalityCsvImporter(),
         private readonly ForeignCountryXlsxImporter $countryImporter = new ForeignCountryXlsxImporter(),
+        private readonly RetiredForeignCountryImporter $retiredCountryImporter = new RetiredForeignCountryImporter(),
     ) {
         parent::__construct();
     }
@@ -54,9 +56,14 @@ class UpdatePlacesCommand extends Command
         $this->info('Downloading MAECI stati-esteri table...');
 
         $xlsx = $this->download($this->sourceUrl('countries'));
+
+        // Before the source, so the source overwrites any code it also
+        // carries (see RetiredForeignCountryImporter).
+        $retired = $this->retiredCountryImporter->import();
         $count = $this->countryImporter->import($xlsx);
 
         $this->info("Imported {$count} foreign country records.");
+        $this->info("Wrote {$retired} retired foreign codes no source carries.");
     }
 
     private function download(string $url): string

@@ -11,6 +11,11 @@
       <directory suffix="Test.php">./tests</directory>
     </testsuite>
   </testsuites>
+  <groups>
+    <exclude>
+      <group>network</group>
+    </exclude>
+  </groups>
   <logging/>
   <source>
     <include>

@@ -2,6 +2,12 @@
 
 All notable changes to `laravel-codicefiscale` are documented here. This file starts at 3.0.0 - see the [GitHub releases](https://github.com/robertogallea/laravel-codicefiscale/releases) for the 1.x/2.x history.
 
+## Unreleased
+
+### Fixed
+
+- 45 foreign birthplace codes that 2.3.1 resolved, and that no downloadable source carries, are no longer `unknown_birth_place`: retired codes of recoded countries (e.g. `Z136` Georgia, now `Z254`) and ceased territories and dependencies (e.g. `Z244` Vietnam del Sud, `Z800` Dipendenze canadesi). `codice-fiscale:update-places` now also writes them from a fixed list shipped with the package (`Data\RetiredBirthPlaces`); a downloaded source that carries one of these codes always wins. Their `ForeignBirthPlace::country()` is the former ISO code of the ceased entity or the code of the state the territory belongs to today. See `docs/adr/0012-retired-codes-with-no-source-ship-as-a-fixed-list.md` and `docs/adr/0013-foreign-birthplace-country-code-is-never-null.md`. ([#122](https://github.com/robertogallea/laravel-codicefiscale/issues/122))
+
 ## 3.1.0
 
 ### Changed

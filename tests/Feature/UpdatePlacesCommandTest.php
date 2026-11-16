@@ -1,8 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Http;
+use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
+use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
+use Robertogallea\CodiceFiscale\Data\ForeignBirthPlace;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
+use Robertogallea\CodiceFiscale\Validation\Validator;
 
 function fakeUpdatePlacesHttp(): void
 {
@@ -22,7 +26,7 @@ test('running the command against recorded fixtures populates both tables with t
     $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
 
     expect(Municipality::count())->toBe(3)
-        ->and(ForeignCountry::count())->toBe(209);
+        ->and(ForeignCountry::count())->toBe(254);
 });
 
 test('a known tricky row is asserted exactly: the province-changing municipality produces two era-records', function () {
@@ -61,7 +65,7 @@ test('--countries-only updates only the countries dataset', function () {
     $this->artisan('codice-fiscale:update-places', ['--countries-only' => true])->assertExitCode(0);
 
     expect(Municipality::count())->toBe(0)
-        ->and(ForeignCountry::count())->toBe(209);
+        ->and(ForeignCountry::count())->toBe(254);
     Http::assertNotSent(fn ($request) => str_contains($request->url(), 'archivio_comuni'));
 });
 
@@ -72,7 +76,7 @@ test('re-running the command upserts existing rows instead of duplicating them',
     $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
 
     expect(Municipality::count())->toBe(3)
-        ->and(ForeignCountry::count())->toBe(209);
+        ->and(ForeignCountry::count())->toBe(254);
 });
 
 test('re-running the command against genuinely updated fixtures updates the existing row rather than duplicating it', function () {
@@ -90,4 +94,68 @@ test('re-running the command against genuinely updated fixtures updates the exis
 
     expect(Municipality::count())->toBe(3)
         ->and(Municipality::where('code', 'H501')->first()->name)->toBe('ROMA CAPITALE');
+});
+
+test('a retired foreign code no source carries resolves after the import, with its ADR-0013 country code', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
+
+    $eras = app(BirthPlaceRepository::class)->eras(BirthPlaceCode::from('Z136'));
+    expect($eras)->toHaveCount(1)
+        ->and($eras[0])->toBeInstanceOf(ForeignBirthPlace::class)
+        ->and($eras[0]->name())->toBe('GEORGIA')
+        ->and($eras[0]->country()->value())->toBe('GEO');
+});
+
+test('a codice fiscale carrying a retired foreign code is not reported as an unknown birthplace', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
+
+    $result = (new Validator(app(BirthPlaceRepository::class)))->validate('RSSMRA70A01Z136P');
+
+    expect($result->errors())->toBe([]);
+});
+
+test('a retired foreign code is found by name search', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
+
+    $codes = array_map(
+        static fn ($place): string => $place->code()->value(),
+        app(BirthPlaceRepository::class)->search('Vietnam del Sud'),
+    );
+
+    expect($codes)->toContain('Z244');
+});
+
+test('when the downloaded source carries a code that is also on the retired list, the source row wins', function () {
+    // The real MAECI fixture, with the USA row's CODAT changed to Z136:
+    // the source now "carries" Z136, under a name the list never uses.
+    Http::fake([
+        'anagrafenazionale.interno.it/*tabella_2_statiesteri.xlsx' => Http::response(xlsxWithReplacedSharedString(
+            __DIR__.'/../Fixtures/tabella_2_statiesteri_sample.xlsx',
+            '<t>Z404</t>',
+            '<t>Z136</t>',
+        )),
+    ]);
+
+    $this->artisan('codice-fiscale:update-places', ['--countries-only' => true])->assertExitCode(0);
+    $this->artisan('codice-fiscale:update-places', ['--countries-only' => true])->assertExitCode(0);
+
+    $eras = app(BirthPlaceRepository::class)->eras(BirthPlaceCode::from('Z136'));
+    expect($eras)->toHaveCount(1)
+        ->and($eras[0]->name())->toBe("STATI UNITI D'AMERICA")
+        ->and($eras[0]->country()->value())->toBe('USA');
+});
+
+test('re-running the command keeps exactly one era per retired foreign code', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
+    $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
+
+    expect(app(BirthPlaceRepository::class)->eras(BirthPlaceCode::from('Z800')))->toHaveCount(1);
 });

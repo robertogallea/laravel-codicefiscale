@@ -5,8 +5,10 @@ namespace Robertogallea\CodiceFiscale\Data;
 use Robertogallea\CodiceFiscale\Exceptions\InvalidCountryCodeException;
 
 /**
- * An ISO 3166-1 alpha-3 country code, sourced from MAECI's
- * stati-esteri table. Distinct from the Z-prefixed BirthPlaceCode
+ * An ISO alpha-3 country code: a country's own current code, the
+ * former code of a ceased state (`VDR`, `PCZ`), or - for a territory
+ * with no code of its own - the code of the state it belongs to today
+ * (ADR-0013). Distinct from the Z-prefixed BirthPlaceCode
  * a foreign birthplace is looked up by.
  */
 final class CountryCode extends AbstractValidatedCode
