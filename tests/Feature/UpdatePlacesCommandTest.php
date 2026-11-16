@@ -6,6 +6,8 @@ use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Data\ForeignBirthPlace;
 use Robertogallea\CodiceFiscale\Data\RetiredBirthPlaces;
+use Robertogallea\CodiceFiscale\Generation\Checksum;
+use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\ForeignCountryXlsxImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
 use Robertogallea\CodiceFiscale\Parsing\Parser;
@@ -308,4 +310,59 @@ test('after importing the recorded sources, every foreign code 2.3.1 resolved re
 
     expect($foreign)->toHaveCount(283)
         ->and($unresolved)->toBe([]);
+});
+
+/**
+ * @return array<string, array{string, string}> code => [name, ISO alpha-3]
+ */
+function foreignCountriesSnapshot(): array
+{
+    return ForeignCountry::orderBy('code')->get()
+        ->mapWithKeys(static fn (ForeignCountry $row): array => [$row->code => [$row->name, $row->country_code]])
+        ->all();
+}
+
+test('every code ISTAT adds - #123\'s territories and #122\'s ceased states - validates and parses to a birthplace', function (string $code) {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places', ['--countries-only' => true])->assertExitCode(0);
+
+    $first15 = 'RSSMRA70A01'.$code;
+    $cf = $first15.(new Checksum())->calculate($first15);
+    $repository = app(BirthPlaceRepository::class);
+
+    expect((new Validator($repository))->validate($cf)->errors())->toBe([])
+        ->and((new Parser($repository))->parse(CodiceFiscale::from($cf))->birthPlace())->toBeInstanceOf(ForeignBirthPlace::class);
+})->with([
+    // The 24 territories in #123's table.
+    'Z113', 'Z122', 'Z212', 'Z231', 'Z324', 'Z339', 'Z402', 'Z508', 'Z518', 'Z520', 'Z529', 'Z531',
+    'Z607', 'Z609', 'Z702', 'Z706', 'Z710', 'Z714', 'Z715', 'Z716', 'Z722', 'Z723', 'Z725', 'Z727',
+    // #122's group A.
+    'Z105', 'Z111', 'Z118', 'Z135', 'Z157', 'Z250',
+]);
+
+test('every code MAECI supplies keeps MAECI\'s name and country code, except Z501', function () {
+    (new ForeignCountryXlsxImporter())->import(file_get_contents(__DIR__.'/../Fixtures/tabella_2_statiesteri_sample.xlsx'));
+    $maeciOnly = foreignCountriesSnapshot();
+    ForeignCountry::query()->delete();
+
+    fakeUpdatePlacesHttp();
+    $this->artisan('codice-fiscale:update-places', ['--countries-only' => true])->assertExitCode(0);
+    $afterImport = array_intersect_key(foreignCountriesSnapshot(), $maeciOnly);
+
+    expect($maeciOnly)->toHaveCount(209)
+        ->and($maeciOnly['Z501'])->toBe(['ARUBA', 'ABW'])
+        ->and($afterImport)->toHaveCount(209)
+        ->and(array_diff_key($afterImport, ['Z501' => true]))->toBe(array_diff_key($maeciOnly, ['Z501' => true]));
+});
+
+test('re-running the command leaves the foreign_countries contents unchanged', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places', ['--countries-only' => true])->assertExitCode(0);
+    $firstRun = foreignCountriesSnapshot();
+    $this->artisan('codice-fiscale:update-places', ['--countries-only' => true])->assertExitCode(0);
+
+    expect($firstRun)->toHaveCount(FOREIGN_ROWS_AFTER_IMPORT)
+        ->and(foreignCountriesSnapshot())->toBe($firstRun);
 });
