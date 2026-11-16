@@ -2,7 +2,9 @@
 
 All notable changes to `laravel-codicefiscale` are documented here. This file starts at 3.0.0 - see the [GitHub releases](https://github.com/robertogallea/laravel-codicefiscale/releases) for the 1.x/2.x history.
 
-## Unreleased
+## 3.2.0
+
+v2 parity: every birthplace code 2.3.1's default decoder resolved (10,670 codes, 283 of them foreign) is known to 3.x again. **Run `php artisan codice-fiscale:update-places` after upgrading.** The new codes are written to your database only by the import. A published `config/codicefiscale.php` keeps working, because the new source URLs fall back to the package defaults.
 
 ### Fixed
 
@@ -12,9 +14,17 @@ All notable changes to `laravel-codicefiscale` are documented here. This file st
   - **489 comuni suppressed between 1866 and 1923** (e.g. `A073` Agliate, merged into Carate Brianza in 1869). `codice-fiscale:update-places` now also downloads ISTAT's "Elenco comuni soppressi e non ricostituiti" report (Situas report 128, fetched page by page because ISTAT's public endpoint cuts the full report short; the base URL is configurable as `codicefiscale.sources.suppressed_municipalities`, with the package default used when a previously published config lacks the key) and imports the codes ANPR lacks. ANPR keeps every code it carries, unchanged. These codes now carry their real suppression date, so a codice fiscale carrying one is reported as `birth_place_not_valid_on_date`: a two-digit birth year never resolves before 1900, and nobody born after the suppression was born there. See `docs/adr/0015-istat-suppressed-comuni-supplement-anpr.md`.
   - **70 codes no downloadable source carries**: comuni from 1860s and 1920s-1950s mergers ANPR omits (e.g. `M205` Zunico, `I366` Santo Stefano al Mare con Castellaro), places that survive only as frazioni (most of the `M215`-`M252` block, e.g. `M215` Balbido), second codes of comuni that still exist (e.g. `M219` Bono, SS, now `A977`), and places in territory ceded after 1947 (e.g. `M293` Veglia). These are now written from the fixed list in `Data\RetiredBirthPlaces`, with an open-ended era, so they always validate. Their `DomesticBirthPlace::istatCode()` is an empty string, since they have no ISTAT code. `D178` resolves as "CRODO MOZZIO", not 2.3.1's "CROGNALETO". See `docs/adr/0012-retired-codes-with-no-source-ship-as-a-fixed-list.md`.
 
+### Added
+
+- `Data\RetiredBirthPlaces`, with `foreign()` and `domestic()`: the fixed list of retired birthplace codes no downloadable source carries. Each domestic entry records the source of its name and province (ADR-0012).
+- Config keys `codicefiscale.sources.historical_countries` (ISTAT report 469) and `codicefiscale.sources.suppressed_municipalities` (the base URL of ISTAT report 128, fetched page by page).
+- A v2-parity regression test. The offline layer runs with the suite. The network layer imports the live sources and runs weekly in the `V2 parity` workflow (`vendor/bin/pest --group=network`).
+
 ### Changed
 
-- `codice-fiscale:update-places` retries a download up to three times after a dropped connection or a server error. ISTAT's report pages are also retried when a page arrives cut short.
+- `codice-fiscale:update-places` now downloads four sources: ANPR, ISTAT's suppressed-comuni report, MAECI and ISTAT's historical foreign-countries report. It retries a download up to three times after a dropped connection or a server error, and also retries an ISTAT report page that arrives cut short. A client error fails the command at once. A failed download leaves the existing data untouched.
+- A codice fiscale carrying one of the 489 suppressed comuni above is now reported as `birth_place_not_valid_on_date` instead of `unknown_birth_place`.
+- `DomesticBirthPlace::istatCode()` can now return an empty string, for a retired code with no ISTAT code.
 
 ## 3.1.0
 
