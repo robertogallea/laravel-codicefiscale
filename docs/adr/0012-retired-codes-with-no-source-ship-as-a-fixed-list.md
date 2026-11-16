@@ -11,9 +11,22 @@ An entry belongs in the list only when **both** hold:
 1. it is a retired birthplace code, and
 2. no source `update-places` downloads carries it.
 
-When a downloaded source also carries a code, the source wins: the list is written before the sources, on the same `(code, valid_from)` key, so the source's row overwrites the bundled one. Such an entry no longer meets rule 2 and is removed from the list in a later release.
+When a downloaded source also carries a code, the source wins. For foreign codes, the list is written before the sources on the same `(code, valid_from)` key, so the source's row overwrites the bundled one. For domestic codes, a source's eras never share a `valid_from` with the bundled row, so the bundled row is dropped whenever any domestic source carries the code. Such an entry no longer meets rule 2 and is removed from the list in a later release.
 
-Each entry records a source note. The 2.3.1 list alone is not enough (it contains plain errors, e.g. `B411`/`B412` shifted by one row), so each code→name pairing is confirmed independently where a source is reachable — the Agenzia delle Entrate archive search or an ISTAT report. An entry no such source confirms is marked `unconfirmed` and listed for maintainer review in the pull request that adds it; it ships, because v2 parity needs the code to resolve, but its name is known to rest on 2.3.1 alone.
+Each entry records a source note. The 2.3.1 list alone is not enough (it contains plain errors, e.g. `B411`/`B412` shifted by one row, and `D178` named CROGNALETO instead of CRODO MOZZIO), so each code→name pairing is confirmed independently where a source is reachable: the Agenzia delle Entrate archive search, an ISTAT report, or, for domestic codes, the Geoform/Groma "Allegato A – Elenco Codici Catastali dei singoli Comuni" (2013), which confirms 68 of the 70 domestic entries. Allegato A cuts names at about 20 characters and drops apostrophes, so a confirmed entry keeps 2.3.1's full spelling unless Allegato A gives a different name. An entry no such source confirms is marked `unconfirmed` and listed for maintainer review in the pull request that adds it; it ships, because v2 parity needs the code to resolve, but its name is known to rest on 2.3.1 alone.
+
+## Domestic entries (#124)
+
+There are 70 domestic entries, in three groups. Most of the 28 scattered codes (including `M306` Colle Isarco) are comuni from the 1920s–1950s mergers that ANPR omits (`I366` Santo Stefano al Mare con Castellaro, `E005` Ghilarza-Abbasanta). Then there is the `M215`–`M252` Trentino block, whose places survive only as frazioni (`M215` Balbido, now in Bleggio Superiore). Finally there are places in territory now outside Italy (`M293` Veglia, `M296` Piemonte d'Istria, `M310` Sebenico, `B930` Ca' Santo Spirito della Bainsizza). No source gives their dates, and only some of them ever had an ISTAT code.
+
+- **Era**: maximally wide, `validFrom` 1861-03-17 and open-ended, for the same reason ADR-0014 gives for foreign rows. A curated end date that turns out wrong falsely rejects a real codice fiscale, and people born in the 1928–1950 merged comuni can still be alive and hold these codes. So a domestic entry is always attributable, unlike ISTAT-dated suppressed comuni (ADR-0015). A side effect is that `find(code, today)` and `search(name, today)` return these entries as if they were current comuni (`M219` Bono next to Bono SS). Core never uses either method (it reads `eras()`), and the foreign fixed list already behaves the same way (`Z135` under `find('Z135', today)`).
+- **Province** is never null. Like ADR-0013's country code, it is assigned by a fixed rule, in priority order:
+  1. the province a source records for the place, or for the comune that absorbed it (`B930` → `GO`, as ANPR records `I355` Santo Spirito della Bainsizza);
+  2. otherwise, for a place now in Italy, the province it lies in today (Trentino block → `TN`, `D178` → `VB`);
+  3. otherwise, for a place now outside Italy, the Italian province that administered it, using ANPR's historical sigla (`M293` Veglia → `FU`, `M296` → `PL`).
+
+  A province that no source confirms is marked `unconfirmed`, as names are. `M310` Sebenico has no ANPR sigla to reuse, so its province rests on research and is marked `unconfirmed`.
+- **ISTAT code**: the empty string. `DomesticBirthPlace::istatCode()` keeps its `string` type, and an empty value means "no ISTAT code; fixed-list entry". Making it `?string` was rejected for the same reason ADR-0013 rejected `?CountryCode`: it would break existing callers' static analysis. A placeholder such as `000000` was rejected because it can be mistaken for a real code.
 
 ## Considered options
 
