@@ -99,7 +99,8 @@ test('a retired domestic code takes the province a source records, else today\'s
         // 3. Now outside Italy: the Italian province that administered it.
         ->and(retiredDomestic('M293')->province())->toBe('FU')
         ->and(retiredDomestic('M296')->province())->toBe('PL')
-        ->and(retiredDomestic('M310')->province())->toBe('ZA');
+        ->and(retiredDomestic('M310')->province())->toBe('ZA')
+        ->and(retiredDomestic('H993')->province())->toBe('PL');
 });
 
 test('no code is on both the retired domestic and the retired foreign list', function () {
@@ -140,8 +141,15 @@ test('every name is confirmed - by Allegato A or, for the two it lacks, the main
         ->and(retiredDomesticEntries()['D178'][2])->toContain('CROGNALETO');
 });
 
-test('a province resting on a guessed location is marked unconfirmed', function () {
-    expect(retiredDomesticEntries()['H993'][3])->toStartWith('unconfirmed')
-        ->and(retiredDomesticEntries()['D687'][3])->toStartWith('maintainer')
-        ->and(retiredDomesticEntries()['B930'][3])->toStartWith('ANPR');
+test('every province is confirmed by a source: ANPR, a law, OpenStreetMap or the maintainer', function () {
+    $unconfirmedProvinces = array_keys(array_filter(
+        retiredDomesticEntries(),
+        static fn (array $entry): bool => str_starts_with($entry[3], 'unconfirmed'),
+    ));
+
+    expect($unconfirmedProvinces)->toBe([])
+        ->and(retiredDomesticEntries()['B930'][3])->toStartWith('ANPR')
+        ->and(retiredDomesticEntries()['M205'][3])->toStartWith('Legge')
+        ->and(retiredDomesticEntries()['M215'][3])->toStartWith('OSM')
+        ->and(retiredDomesticEntries()['H993'][3])->toStartWith('maintainer');
 });

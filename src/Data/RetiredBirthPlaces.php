@@ -98,9 +98,9 @@ final class RetiredBirthPlaces
      * Elenco Codici Catastali dei singoli Comuni" (2013). That list cuts
      * long names short and drops apostrophes, so a name it confirms keeps
      * 2.3.1's full spelling. Each province note names its source: ANPR,
-     * a law, or OpenStreetMap (OSM) locating the place. A note starting
-     * with "unconfirmed" rests on an identification no source settles,
-     * and is listed for maintainer review.
+     * a law, OpenStreetMap (OSM) locating the place, or the maintainer.
+     * A note starting with "unconfirmed" would mark an identification no
+     * source settles, for maintainer review; none is left.
      *
      * @var array<string, array{string, string, string, string}>
      */
@@ -139,7 +139,6 @@ final class RetiredBirthPlaces
         'E097' => ['GORIANO VALLI', 'AQ', 'Allegato A', 'OSM: Goriano Valli, Tione degli Abruzzi'],
         'I055' => ["SAN NICANDRO D'AQUILA", 'AQ', 'Allegato A', "maintainer (2026-11-16): now a frazione of Prata d'Ansidonia"],
         'D687' => ['FOPPA', 'PV', 'Allegato A', 'maintainer (2026-11-16): Foppa, PV'],
-        'H993' => ['SAN MARTINO IN VALLE', 'FI', 'Allegato A', "unconfirmed: location not established; Greve in Chianti is OSM's only match"],
         'M215' => ['BALBIDO', 'TN', 'Allegato A', 'OSM: Balbido, Bleggio Superiore'],
         'M216' => ['BALLINO', 'TN', 'Allegato A', 'OSM: Ballino, Fiavè'],
         'M217' => ['BARCESINO', 'TN', 'Allegato A', 'OSM: Barcesino, Ledro'],
@@ -178,10 +177,11 @@ final class RetiredBirthPlaces
         // 3. Now outside Italy: the Italian province that administered
         //    it, with ANPR's historical sigla.
         'A141' => ['ALBARO VESCOVA', 'PL', 'Allegato A', 'maintainer (2026-11-16): Albaro Vescovà, now Skofije, Koper; Capodistria was PL (ANPR B665)'],
+        'H993' => ['SAN MARTINO IN VALLE', 'PL', 'Allegato A', 'maintainer (2026-11-16): Istria, merged into Cherso in 1928 (ANPR C601 Cherso: PL)'],
         'D507' => ['FASANA', 'PL', 'Allegato A', 'OSM: Fasana/Fazana, Istria; Istria was the province of Pola (ANPR G778 PL)'],
         'M296' => ["PIEMONTE D'ISTRIA", 'PL', 'Allegato A', 'Istria was the province of Pola (ANPR G915 Portole, E183 Grisignana: PL)'],
         'M293' => ['VEGLIA', 'FU', 'Allegato A', 'maintainer (2026-11-16): the former province of Fiume (ANPR sigla FU, as for M254 Valsantamarina)'],
-        'M310' => ['SEBENICO', 'ZA', 'maintainer (2026-11-16); not in Allegato A (2013)', 'unconfirmed: Governatorato di Dalmazia 1941-1943 (maintainer (2026-11-16)); Zara rather than Spalato per mirrored Wikipedia pages; no ANPR comune'],
+        'M310' => ['SEBENICO', 'ZA', 'maintainer (2026-11-16); not in Allegato A (2013)', 'maintainer (2026-11-16): the province of Zara in 1941-1943 (ANPR sigla ZA, as for M149 Zara)'],
     ];
 
     /**
