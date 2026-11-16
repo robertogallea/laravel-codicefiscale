@@ -14,5 +14,9 @@ return [
     'sources' => [
         'municipalities' => 'https://www.anagrafenazionale.interno.it/wp-content/uploads/ANPR_archivio_comuni.csv',
         'countries' => 'https://www.anagrafenazionale.interno.it/wp-content/uploads/tabella_2_statiesteri.xlsx',
+        // ISTAT's "Storico Paesi esteri" report: fills the foreign codes
+        // MAECI lacks (ADR-0014). The fixed early pdata keeps ceased
+        // states in the result.
+        'historical_countries' => 'https://situas-servizi.istat.it/publish/reportspooljson?pfun=469&pdata=01/01/1990',
     ],
 ];

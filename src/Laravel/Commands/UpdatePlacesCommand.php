@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\ForeignCountryXlsxImporter;
+use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\IstatForeignCountryJsonImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\MunicipalityCsvImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\RetiredForeignCountryImporter;
 
@@ -15,12 +16,13 @@ class UpdatePlacesCommand extends Command
         {--municipalities-only : Only update the Italian municipalities dataset}
         {--countries-only : Only update the foreign countries dataset}';
 
-    protected $description = 'Download and upsert the ANPR comuni archive and MAECI stati-esteri table';
+    protected $description = 'Download and upsert the ANPR comuni archive, the MAECI stati-esteri table and ISTAT\'s historical foreign-countries report';
 
     public function __construct(
         private readonly MunicipalityCsvImporter $municipalityImporter = new MunicipalityCsvImporter(),
         private readonly ForeignCountryXlsxImporter $countryImporter = new ForeignCountryXlsxImporter(),
         private readonly RetiredForeignCountryImporter $retiredCountryImporter = new RetiredForeignCountryImporter(),
+        private readonly IstatForeignCountryJsonImporter $istatCountryImporter = new IstatForeignCountryJsonImporter(),
     ) {
         parent::__construct();
     }
@@ -54,15 +56,23 @@ class UpdatePlacesCommand extends Command
     private function updateCountries(): void
     {
         $this->info('Downloading MAECI stati-esteri table...');
-
         $xlsx = $this->download($this->sourceUrl('countries'));
 
-        // Before the source, so the source overwrites any code it also
-        // carries (see RetiredForeignCountryImporter).
-        $retiredCount = $this->retiredCountryImporter->import();
-        $count = $this->countryImporter->import($xlsx);
+        $this->info('Downloading ISTAT historical foreign-countries report...');
+        $json = $this->download($this->sourceUrl('historical_countries'));
 
-        $this->info("Imported {$count} foreign country records.");
+        // Plain upserts on the shared (code, valid_from) key, so the
+        // last writer of a code wins (ADR-0014): every source beats
+        // the retired list (RetiredForeignCountryImporter), MAECI beats
+        // ISTAT's current rows, and ISTAT's historical rows beat MAECI
+        // where MAECI reassigned a ceased entity's code (Z501).
+        $retiredCount = $this->retiredCountryImporter->import();
+        $istatCount = $this->istatCountryImporter->importCurrent($json);
+        $count = $this->countryImporter->import($xlsx);
+        $istatCount += $this->istatCountryImporter->importHistorical($json);
+
+        $this->info("Imported {$count} foreign country records from MAECI.");
+        $this->info("Imported {$istatCount} foreign country records from ISTAT.");
         $this->info("Wrote {$retiredCount} retired foreign codes no source carries.");
     }
 
@@ -79,12 +89,23 @@ class UpdatePlacesCommand extends Command
 
     private function sourceUrl(string $key): string
     {
-        $url = config("codicefiscale.sources.$key");
+        // A config published by an older version replaces the whole
+        // `sources` array (mergeConfigFrom merges top-level keys only),
+        // so a source added since then falls back to the package default.
+        $url = config("codicefiscale.sources.$key") ?? $this->defaultSourceUrl($key);
 
         if (! is_string($url) || $url === '') {
             throw new \RuntimeException("codicefiscale.sources.$key is not configured.");
         }
 
         return $url;
+    }
+
+    private function defaultSourceUrl(string $key): mixed
+    {
+        /** @var array{sources?: array<string, mixed>} $defaults */
+        $defaults = require dirname(__DIR__, 3).'/config/codicefiscale.php';
+
+        return $defaults['sources'][$key] ?? null;
     }
 }
