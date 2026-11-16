@@ -28,18 +28,8 @@ final class MunicipalityCsvImporter
 
     public function import(string $csvContents): int
     {
-        // A handful of long-superseded, pre-1928-merger comuni carry ANPR's
-        // "ND" ("non disponibile") placeholder in CODCATASTALE instead of a
-        // real cadastral code - not a usable BirthPlaceCode, so they're
-        // skipped here rather than persisted and later choking
-        // BirthPlaceCode::from() in Municipality::toBirthPlace().
-        $rows = array_values(array_filter(
-            $this->parseCsv($csvContents),
-            static fn (array $row): bool => BirthPlaceCode::tryFrom($row['CODCATASTALE']) !== null,
-        ));
-
         $count = $this->upsertInChunks(
-            $rows,
+            $this->rows($csvContents),
             $this->toRecord(...),
             Municipality::class,
             ['code', 'valid_from'],
@@ -50,6 +40,37 @@ final class MunicipalityCsvImporter
         $this->pruneInvalidRows();
 
         return $count;
+    }
+
+    /**
+     * The eras the CSV carries, in the shape the lower-priority domestic
+     * sources defer to (ADR-0012, ADR-0015): code => [valid_from, ...].
+     *
+     * @return array<string, list<string>>
+     */
+    public function eraStarts(string $csvContents): array
+    {
+        $eraStarts = [];
+
+        foreach ($this->rows($csvContents) as $row) {
+            $eraStarts[$row['CODCATASTALE']][] = $row['DATAISTITUZIONE'];
+        }
+
+        return $eraStarts;
+    }
+
+    /** @return list<array<string, string>> */
+    private function rows(string $csvContents): array
+    {
+        // A handful of long-superseded, pre-1928-merger comuni carry ANPR's
+        // "ND" ("non disponibile") placeholder in CODCATASTALE instead of a
+        // real cadastral code - not a usable BirthPlaceCode, so they're
+        // skipped here rather than persisted and later choking
+        // BirthPlaceCode::from() in Municipality::toBirthPlace().
+        return array_values(array_filter(
+            $this->parseCsv($csvContents),
+            static fn (array $row): bool => BirthPlaceCode::tryFrom($row['CODCATASTALE']) !== null,
+        ));
     }
 
     /**

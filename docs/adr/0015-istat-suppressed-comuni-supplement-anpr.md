@@ -1,6 +1,6 @@
 # ISTAT's suppressed-comuni report supplements ANPR as a second domestic source
 
-ANPR's comuni archive lacks 489 municipality codes that 2.3.1 resolved, all of them comuni suppressed between 1866 and 1923 (`A073` Agliate, merged into Carate Brianza in 1869; `D035` Corpi Santi di Milano), so 3.x reported `unknown_birth_place` for them (#124). ISTAT's Situas report 128 "Elenco comuni soppressi e non ricostituiti" (`reportspooljson?pfun=128&pdata=17/03/1861`) carries every one of them, with cadastral code, ISTAT code, province and suppression date. `codice-fiscale:update-places` downloads it alongside ANPR, and its rows fill only the codes ANPR lacks.
+ANPR's comuni archive lacks 489 municipality codes that 2.3.1 resolved, all of them comuni suppressed between 1866 and 1923 (`A073` Agliate, merged into Carate Brianza in 1869; `D035` Corpi Santi di Milano), so 3.x reported `unknown_birth_place` for them (#124). ISTAT's Situas report 128 "Elenco comuni soppressi e non ricostituiti" carries every one of them, with cadastral code, ISTAT code, province and suppression date. `codice-fiscale:update-places` downloads it alongside ANPR, and its rows fill only the codes ANPR lacks.
 
 ## The merge rule
 
@@ -12,14 +12,19 @@ Each row becomes one era: `validFrom` 1861-03-17 (the start of ANPR's archive, s
 
 v2 parity for these codes therefore means **the code is known** (`eras()` is non-empty), not that a codice fiscale carrying it validates. 2.3.1 accepted such codici fiscali only because it never compared a birthplace with a birth date.
 
+## Downloaded page by page
+
+The report is fetched from the paged endpoint the Situas web app uses (`situas.istat.it/ShibO2Module/api/Report/Spool/1861-03-17/128`, POST with a `{}` body, `PageNum`/`PageSize`), 200 rows per page (14 pages as of 2026-11-16). Each page is retried on its own, a page that arrives cut short counts as a failure, and the fetch fails unless it collects exactly the `totalRows` the report declares. Every page is fetched before anything is written.
+
 ## Considered options
 
+- **The public `reportspooljson?pfun=128&pdata=17/03/1861` endpoint**, which report 469 uses (ADR-0014): rejected. It cut the roughly 850 KB payload short in five downloads out of six on 2026-11-16, so retries alone can't make an import reliable. A single 3,000-row page from the paged endpoint was cut short three times out of three as well. Pages of 200 rows arrived whole every time, and on importer fields they hold exactly the rows of the one complete public download. Report 469 is about 60 KB and stays on `reportspooljson`.
 - **Open-ended eras**, so `Validator` accepts these codes as 2.3.1 did: rejected. It invents validity the source contradicts, and it would treat these comuni differently from ANPR's own suppressed ones.
 - **Adding 18xx candidate years** so that `A073` with `80` resolves to 1880: rejected. A codice fiscale has no century digit, and a 146-year-old holder fails ADR-0006's plausibility rule for every living person. That is a separate decision from this source.
 - **Bundling the 489 codes in ADR-0012's fixed list**: rejected. A downloadable source carries them, so they fail ADR-0012's admission rule.
 
 ## Consequences
 
-- **Reliability**: the public `reportspooljson` endpoint sometimes drops the connection while sending the full payload (about 850 KB). The import retries before failing, and a failed download leaves the previously imported rows in place.
+- **An undocumented endpoint**: ISTAT can change or withdraw the paged endpoint without notice. The import then fails loudly rather than importing a partial report, and leaves the previously imported rows in place. The weekly v2-parity network workflow, which imports the live sources, is the canary. `codicefiscale.sources.suppressed_municipalities` holds the endpoint's base URL, without the paging query.
 - **Licence**: downloaded by each installation and never redistributed (ADR-0003), like report 469 (ADR-0014).
 - **Names** come from ISTAT as published, as for report 469. Where 2.3.1 disagrees (`B411` Calice Ossolano, `B412` Calignano, which 2.3.1 shifts by one row), ISTAT is right. The Geoform/Groma "Allegato A" code list agrees with ISTAT on both.

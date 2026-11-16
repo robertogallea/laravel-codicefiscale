@@ -1,6 +1,6 @@
 <?php
 
-use Robertogallea\CodiceFiscale\Data\ForeignBirthPlace;
+use Robertogallea\CodiceFiscale\Contracts\BirthPlace;
 use Robertogallea\CodiceFiscale\Data\RetiredBirthPlaces;
 
 /*
@@ -24,8 +24,8 @@ test('the 2.3.1 fixture pins every code its default decoder resolved', function 
 
 test('every 2.3.1 code is either shipped as retired, expected from a source, or a known gap - exactly one of them', function () {
     $retired = array_map(
-        static fn (ForeignBirthPlace $place): string => $place->code()->value(),
-        RetiredBirthPlaces::foreign(),
+        static fn (BirthPlace $place): string => $place->code()->value(),
+        [...RetiredBirthPlaces::domestic(), ...RetiredBirthPlaces::foreign()],
     );
     $expected = v2ParityCodes('expected-from-sources.txt');
     $gaps = array_keys(v2ParityKnownGaps());
@@ -36,8 +36,6 @@ test('every 2.3.1 code is either shipped as retired, expected from a source, or 
     expect($accountedFor)->toBe(v2ParityCodes('codes.txt'));
 });
 
-test('every known gap is owned by the open issue for its kind of code', function () {
-    foreach (v2ParityKnownGaps() as $code => $issue) {
-        expect($issue)->toBe(str_starts_with($code, 'Z') ? '#123' : '#124', "$code is owned by $issue");
-    }
+test('no 2.3.1 code is a known gap any more: #122, #123 and #124 closed them all', function () {
+    expect(v2ParityKnownGaps())->toBe([]);
 });

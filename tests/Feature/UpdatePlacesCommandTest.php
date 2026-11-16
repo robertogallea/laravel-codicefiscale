@@ -1,16 +1,22 @@
 <?php
 
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 use Robertogallea\CodiceFiscale\CodiceFiscale;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
+use Robertogallea\CodiceFiscale\Data\DomesticBirthPlace;
 use Robertogallea\CodiceFiscale\Data\ForeignBirthPlace;
 use Robertogallea\CodiceFiscale\Data\RetiredBirthPlaces;
+use Robertogallea\CodiceFiscale\Enums\ValidationError;
 use Robertogallea\CodiceFiscale\Generation\Checksum;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\ForeignCountryXlsxImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
 use Robertogallea\CodiceFiscale\Parsing\Parser;
+use Robertogallea\CodiceFiscale\Support\BirthPlaceAttributability;
 use Robertogallea\CodiceFiscale\Validation\Validator;
 
 /*
@@ -20,20 +26,63 @@ use Robertogallea\CodiceFiscale\Validation\Validator;
  */
 const FOREIGN_ROWS_AFTER_IMPORT = 285;
 
-function fakeUpdatePlacesHttp(): void
+/*
+ * Municipality rows after a full import: ANPR's 3, the 490 codes of the
+ * report-128 fixture ANPR's sample lacks, and the 70 retired domestic
+ * codes no source carries.
+ */
+const MUNICIPALITY_ROWS_AFTER_IMPORT = 563;
+
+const ISTAT_REPORT_128_URL = 'situas.istat.it/ShibO2Module/api/Report/Spool/*';
+
+const ISTAT_REPORT_469_URL = 'situas-servizi.istat.it/*pfun=469*';
+
+function istatReport128Fixture(): string
+{
+    return file_get_contents(__DIR__.'/../Fixtures/istat_comuni_soppressi_sample.json');
+}
+
+/**
+ * Serves a report in the {"resultset": [...]} shape page by page, the
+ * way the Situas paged endpoint does, after $failFirst dropped
+ * connections.
+ */
+function istatReport128Pages(string $resultsetJson, int $failFirst = 0): Closure
+{
+    $rows = json_decode($resultsetJson, true)['resultset'];
+    $calls = 0;
+
+    return static function (Request $request) use ($rows, $failFirst, &$calls) {
+        if (++$calls <= $failFirst) {
+            return Http::failedConnection()($request);
+        }
+
+        parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $query);
+        $pageSize = (int) $query['PageSize'];
+        $body = array_slice($rows, ((int) $query['PageNum'] - 1) * $pageSize, $pageSize);
+
+        return Http::response(json_encode(['label' => [], 'totalRows' => count($rows), 'body' => $body]));
+    };
+}
+
+/**
+ * @param  array<string, mixed>  $overrides  URL pattern => fake response, replacing the recorded fixture for that source
+ */
+function fakeUpdatePlacesHttp(array $overrides = []): void
 {
     Http::preventStrayRequests();
-    Http::fake([
+    Http::fake(array_replace([
         'anagrafenazionale.interno.it/*ANPR_archivio_comuni.csv' => Http::response(
             file_get_contents(__DIR__.'/../Fixtures/anpr_comuni_sample.csv')
         ),
         'anagrafenazionale.interno.it/*tabella_2_statiesteri.xlsx' => Http::response(
             file_get_contents(__DIR__.'/../Fixtures/tabella_2_statiesteri_sample.xlsx')
         ),
-        'situas-servizi.istat.it/*' => Http::response(
+        ISTAT_REPORT_128_URL => istatReport128Pages(istatReport128Fixture()),
+        ISTAT_REPORT_469_URL => Http::response(
             file_get_contents(__DIR__.'/../Fixtures/istat_storico_paesi_esteri_sample.json')
         ),
-    ]);
+    ], $overrides));
 }
 
 test('running the command against recorded fixtures populates both tables with the correct row counts', function () {
@@ -41,7 +90,7 @@ test('running the command against recorded fixtures populates both tables with t
 
     $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
 
-    expect(Municipality::count())->toBe(3)
+    expect(Municipality::count())->toBe(MUNICIPALITY_ROWS_AFTER_IMPORT)
         ->and(ForeignCountry::count())->toBe(FOREIGN_ROWS_AFTER_IMPORT);
 });
 
@@ -70,10 +119,10 @@ test('--municipalities-only updates only the municipalities dataset', function (
 
     $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
 
-    expect(Municipality::count())->toBe(3)
+    expect(Municipality::count())->toBe(MUNICIPALITY_ROWS_AFTER_IMPORT)
         ->and(ForeignCountry::count())->toBe(0);
     Http::assertNotSent(fn ($request) => str_contains($request->url(), 'statiesteri'));
-    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'situas-servizi.istat.it'));
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'pfun=469'));
 });
 
 test('--countries-only updates only the countries dataset', function () {
@@ -84,7 +133,8 @@ test('--countries-only updates only the countries dataset', function () {
     expect(Municipality::count())->toBe(0)
         ->and(ForeignCountry::count())->toBe(FOREIGN_ROWS_AFTER_IMPORT);
     Http::assertNotSent(fn ($request) => str_contains($request->url(), 'archivio_comuni'));
-    Http::assertSent(fn ($request) => str_contains($request->url(), 'situas-servizi.istat.it'));
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'Report/Spool'));
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'pfun=469'));
 });
 
 test('re-running the command upserts existing rows instead of duplicating them', function () {
@@ -93,7 +143,7 @@ test('re-running the command upserts existing rows instead of duplicating them',
     $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
     $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
 
-    expect(Municipality::count())->toBe(3)
+    expect(Municipality::count())->toBe(MUNICIPALITY_ROWS_AFTER_IMPORT)
         ->and(ForeignCountry::count())->toBe(FOREIGN_ROWS_AFTER_IMPORT);
 });
 
@@ -101,8 +151,7 @@ test('re-running the command against genuinely updated fixtures updates the exis
     $originalCsv = file_get_contents(__DIR__.'/../Fixtures/anpr_comuni_sample.csv');
     $updatedCsv = str_replace('"ROMA","ROMA"', '"ROMA CAPITALE","ROMA CAPITALE"', $originalCsv);
 
-    Http::preventStrayRequests();
-    Http::fake([
+    fakeUpdatePlacesHttp([
         'anagrafenazionale.interno.it/*ANPR_archivio_comuni.csv' => Http::sequence()
             ->push($originalCsv)
             ->push($updatedCsv),
@@ -111,7 +160,7 @@ test('re-running the command against genuinely updated fixtures updates the exis
     $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
     $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
 
-    expect(Municipality::count())->toBe(3)
+    expect(Municipality::count())->toBe(MUNICIPALITY_ROWS_AFTER_IMPORT)
         ->and(Municipality::where('code', 'H501')->first()->name)->toBe('ROMA CAPITALE');
 });
 
@@ -365,4 +414,173 @@ test('re-running the command leaves the foreign_countries contents unchanged', f
 
     expect($firstRun)->toHaveCount(FOREIGN_ROWS_AFTER_IMPORT)
         ->and(foreignCountriesSnapshot())->toBe($firstRun);
+});
+
+/** @return list<string> valid_from|valid_to|name|province|istat_code per era, in order */
+function municipalityEras(string $code): array
+{
+    return Municipality::where('code', $code)->orderBy('valid_from')->get()
+        ->map(static fn (Municipality $row): string => implode('|', [
+            $row->valid_from->toDateString(), $row->valid_to?->toDateString(), $row->name, $row->province, $row->istat_code,
+        ]))
+        ->all();
+}
+
+test('a comune suppressed before 1900 that ANPR lacks is known after the import, but not attributable to a codice fiscale', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    $repository = app(BirthPlaceRepository::class);
+    $eras = $repository->eras(BirthPlaceCode::from('A073'));
+
+    expect($eras)->toHaveCount(1)
+        ->and($eras[0])->toBeInstanceOf(DomesticBirthPlace::class)
+        ->and($eras[0]->name())->toBe('Agliate')
+        ->and($eras[0]->province())->toBe('MI')
+        ->and($eras[0]->istatCode())->toBe('015802')
+        ->and($eras[0]->validTo()?->format('Y-m-d'))->toBe('1869-04-01')
+        ->and(BirthPlaceAttributability::era($eras, new DateTimeImmutable('1868-05-01'))?->name())->toBe('Agliate')
+        ->and((new Validator($repository))->validate('RSSMRA80A01A073P')->errors())->toBe([ValidationError::BirthPlaceNotValidOnDate])
+        ->and((new Parser($repository))->parse(CodiceFiscale::from('RSSMRA80A01A073P'))->birthPlace())->toBeNull();
+    Http::assertSent(fn ($request) => $request->url() === 'https://situas.istat.it/ShibO2Module/api/Report/Spool/1861-03-17/128?PageNum=1&PageSize=200');
+});
+
+test('every retired domestic code resolves after the import, as the list describes it', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    $repository = app(BirthPlaceRepository::class);
+
+    foreach (RetiredBirthPlaces::domestic() as $retired) {
+        $eras = $repository->eras($retired->code());
+
+        expect($eras)->toHaveCount(1, "{$retired->code()->value()} resolves")
+            ->and($eras[0]->name())->toBe($retired->name())
+            ->and($eras[0]->province())->toBe($retired->province())
+            ->and($eras[0]->istatCode())->toBe('')
+            ->and($eras[0]->validTo())->toBeNull();
+    }
+});
+
+test('a codice fiscale carrying a retired domestic code validates and parses to that birthplace', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    $repository = app(BirthPlaceRepository::class);
+    $birthPlace = (new Parser($repository))->parse(CodiceFiscale::from('RSSMRA80A01M219N'))->birthPlace();
+
+    expect((new Validator($repository))->validate('RSSMRA80A01M219N')->errors())->toBe([])
+        ->and($birthPlace)->toBeInstanceOf(DomesticBirthPlace::class)
+        ->and($birthPlace->name())->toBe('BONO')
+        ->and($birthPlace->province())->toBe('TN');
+});
+
+test('a code both ANPR and ISTAT\'s suppressed-comuni report carry keeps exactly ANPR\'s eras', function () {
+    // The real report-128 fixture, with H837's row moved onto A004.
+    fakeUpdatePlacesHttp([ISTAT_REPORT_128_URL => istatReport128Pages(str_replace('"COD_CATASTO":"H837"', '"COD_CATASTO":"A004"', istatReport128Fixture()))]);
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    expect(municipalityEras('A004'))->toBe([
+        '1861-03-17|1992-04-16|ABBADIA CERRETO|MI|015001',
+        '1992-04-16||ABBADIA CERRETO|LO|098001',
+    ]);
+});
+
+test('once ANPR carries a retired domestic code, the bundled row is gone after the next run', function () {
+    $originalCsv = file_get_contents(__DIR__.'/../Fixtures/anpr_comuni_sample.csv');
+    // The real ANPR fixture, with Roma's row moved onto M219.
+    $csvCarryingM219 = str_replace('"H501","ROMA"', '"M219","ROMA"', $originalCsv);
+    fakeUpdatePlacesHttp([
+        'anagrafenazionale.interno.it/*ANPR_archivio_comuni.csv' => Http::sequence()->push($originalCsv)->push($csvCarryingM219),
+    ]);
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+    $bundled = municipalityEras('M219');
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    expect($bundled)->toBe(['1861-03-17||BONO|TN|'])
+        ->and(municipalityEras('M219'))->toBe(['1992-04-04||ROMA|RM|058091']);
+});
+
+test('once ISTAT\'s suppressed-comuni report carries a retired domestic code, its row replaces the bundled one', function () {
+    // The real report-128 fixture, with Agliate's row moved onto M219.
+    fakeUpdatePlacesHttp([ISTAT_REPORT_128_URL => istatReport128Pages(str_replace('"COD_CATASTO":"A073"', '"COD_CATASTO":"M219"', istatReport128Fixture()))]);
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    expect(municipalityEras('M219'))->toBe(['1861-03-17|1869-04-01|Agliate|MI|015802']);
+});
+
+test('a dropped connection to ISTAT\'s suppressed-comuni report is retried', function () {
+    Sleep::fake();
+    fakeUpdatePlacesHttp([
+        ISTAT_REPORT_128_URL => istatReport128Pages(istatReport128Fixture(), failFirst: 2),
+    ]);
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    // ANPR once, then report 128: two dropped connections and its three pages.
+    expect(app(BirthPlaceRepository::class)->eras(BirthPlaceCode::from('A073')))->toHaveCount(1);
+    Http::assertSentCount(6);
+});
+
+test('when every attempt to download a domestic source fails, the command fails and the existing rows are untouched', function () {
+    Sleep::fake();
+    $calls = 0;
+    $pages = istatReport128Pages(istatReport128Fixture());
+    $csv = file_get_contents(__DIR__.'/../Fixtures/anpr_comuni_sample.csv');
+    fakeUpdatePlacesHttp([
+        // The second run would rename Roma, if it got that far.
+        'anagrafenazionale.interno.it/*ANPR_archivio_comuni.csv' => Http::sequence()
+            ->push($csv)
+            ->push(str_replace('"ROMA","ROMA"', '"ROMA CAPITALE","ROMA CAPITALE"', $csv)),
+        // The first run's three pages arrive; every later request drops.
+        ISTAT_REPORT_128_URL => static function (Request $request) use ($pages, &$calls) {
+            return ++$calls <= 3 ? $pages($request) : Http::failedConnection()($request);
+        },
+    ]);
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+    $before = Municipality::orderBy('id')->get()->toArray();
+
+    expect(fn () => $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->run())
+        ->toThrow(ConnectionException::class)
+        ->and(Municipality::orderBy('id')->get()->toArray())->toBe($before);
+});
+
+test('a config published before the suppressed-comuni source existed still imports it, from the package default URL', function () {
+    fakeUpdatePlacesHttp();
+    config(['codicefiscale.sources' => [
+        'municipalities' => 'https://www.anagrafenazionale.interno.it/wp-content/uploads/ANPR_archivio_comuni.csv',
+        'countries' => 'https://www.anagrafenazionale.interno.it/wp-content/uploads/tabella_2_statiesteri.xlsx',
+    ]]);
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    expect(app(BirthPlaceRepository::class)->eras(BirthPlaceCode::from('A073')))->toHaveCount(1);
+});
+
+test('the suppressed-comuni source URL is configurable', function () {
+    fakeUpdatePlacesHttp();
+    config(['codicefiscale.sources.suppressed_municipalities' => 'https://situas.istat.it/ShibO2Module/api/Report/Spool/1900-01-01/128']);
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    Http::assertSent(fn ($request) => str_starts_with($request->url(), 'https://situas.istat.it/ShibO2Module/api/Report/Spool/1900-01-01/128?PageNum=1'));
+});
+
+test('re-running the command leaves the municipalities contents unchanged', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+    $firstRun = Municipality::orderBy('code')->orderBy('valid_from')->get(['code', 'name', 'province', 'istat_code', 'valid_from', 'valid_to'])->toArray();
+    $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
+
+    expect($firstRun)->toHaveCount(MUNICIPALITY_ROWS_AFTER_IMPORT)
+        ->and(Municipality::orderBy('code')->orderBy('valid_from')->get(['code', 'name', 'province', 'istat_code', 'valid_from', 'valid_to'])->toArray())->toBe($firstRun);
 });

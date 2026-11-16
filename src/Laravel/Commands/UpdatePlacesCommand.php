@@ -3,12 +3,16 @@
 namespace Robertogallea\CodiceFiscale\Laravel\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Http\Client\Response;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\ForeignCountryXlsxImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\IstatForeignCountryJsonImporter;
+use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\IstatPagedReport;
+use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\IstatSuppressedMunicipalityJsonImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\MunicipalityCsvImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\RetiredForeignCountryImporter;
+use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\RetiredMunicipalityImporter;
 
 class UpdatePlacesCommand extends Command
 {
@@ -16,13 +20,21 @@ class UpdatePlacesCommand extends Command
         {--municipalities-only : Only update the Italian municipalities dataset}
         {--countries-only : Only update the foreign countries dataset}';
 
-    protected $description = 'Download and upsert the ANPR comuni archive, the MAECI stati-esteri table and ISTAT\'s historical foreign-countries report';
+    protected $description = 'Download and upsert the ANPR comuni archive, ISTAT\'s suppressed-comuni report, the MAECI stati-esteri table and ISTAT\'s historical foreign-countries report';
+
+    /** Attempts per download, after a dropped connection or a server error. */
+    private const DOWNLOAD_ATTEMPTS = 3;
+
+    private const RETRY_DELAY_MILLISECONDS = 2000;
 
     public function __construct(
         private readonly MunicipalityCsvImporter $municipalityImporter = new MunicipalityCsvImporter(),
         private readonly ForeignCountryXlsxImporter $countryImporter = new ForeignCountryXlsxImporter(),
         private readonly RetiredForeignCountryImporter $retiredCountryImporter = new RetiredForeignCountryImporter(),
         private readonly IstatForeignCountryJsonImporter $istatCountryImporter = new IstatForeignCountryJsonImporter(),
+        private readonly IstatSuppressedMunicipalityJsonImporter $istatMunicipalityImporter = new IstatSuppressedMunicipalityJsonImporter(),
+        private readonly RetiredMunicipalityImporter $retiredMunicipalityImporter = new RetiredMunicipalityImporter(),
+        private readonly IstatPagedReport $istatPagedReport = new IstatPagedReport(),
     ) {
         parent::__construct();
     }
@@ -46,11 +58,25 @@ class UpdatePlacesCommand extends Command
     private function updateMunicipalities(): void
     {
         $this->info('Downloading ANPR comuni archive...');
-
         $csv = $this->download($this->sourceUrl('municipalities'));
-        $count = $this->municipalityImporter->import($csv);
 
-        $this->info("Imported {$count} municipality era-records.");
+        $this->info('Downloading ISTAT suppressed-comuni report...');
+        $json = $this->istatPagedReport->fetch($this->sourceUrl('suppressed_municipalities'));
+
+        // ANPR wins a code outright, then ISTAT's suppressed comuni,
+        // then the retired list: each later writer skips the codes an
+        // earlier one carries and drops its own stale rows for them
+        // (ADR-0012, ADR-0015).
+        $count = $this->municipalityImporter->import($csv);
+        $anprEras = $this->municipalityImporter->eraStarts($csv);
+        $istatCount = $this->istatMunicipalityImporter->import($json, $anprEras);
+        $retiredCount = $this->retiredMunicipalityImporter->import(
+            $anprEras + $this->istatMunicipalityImporter->eraStarts($json),
+        );
+
+        $this->info("Imported {$count} municipality era-records from ANPR.");
+        $this->info("Imported {$istatCount} suppressed comuni ANPR lacks from ISTAT.");
+        $this->info("Wrote {$retiredCount} retired domestic codes no source carries.");
     }
 
     private function updateCountries(): void
@@ -78,13 +104,12 @@ class UpdatePlacesCommand extends Command
 
     private function download(string $url): string
     {
-        $response = Http::get($url);
-
-        if (! $response instanceof Response) {
-            throw new \RuntimeException("Downloading \"$url\" did not return a response (async requests aren't used here).");
-        }
-
-        return $response->throw()->body();
+        return Http::retry(
+            self::DOWNLOAD_ATTEMPTS,
+            self::RETRY_DELAY_MILLISECONDS,
+            static fn (\Throwable $exception): bool => $exception instanceof ConnectionException
+                || ($exception instanceof RequestException && $exception->response->serverError()),
+        )->get($url)->throw()->body();
     }
 
     private function sourceUrl(string $key): string

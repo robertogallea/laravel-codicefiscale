@@ -20,6 +20,10 @@ final readonly class DomesticBirthPlace extends AbstractBirthPlace
         return $this->province;
     }
 
+    /**
+     * Empty for a retired code no downloadable source carries, which
+     * has no ISTAT code (RetiredBirthPlaces::domestic(), ADR-0012).
+     */
     public function istatCode(): string
     {
         return $this->istatCode;
