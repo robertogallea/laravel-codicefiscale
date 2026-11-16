@@ -59,11 +59,11 @@ class UpdatePlacesCommand extends Command
 
         // Before the source, so the source overwrites any code it also
         // carries (see RetiredForeignCountryImporter).
-        $retired = $this->retiredCountryImporter->import();
+        $retiredCount = $this->retiredCountryImporter->import();
         $count = $this->countryImporter->import($xlsx);
 
         $this->info("Imported {$count} foreign country records.");
-        $this->info("Wrote {$retired} retired foreign codes no source carries.");
+        $this->info("Wrote {$retiredCount} retired foreign codes no source carries.");
     }
 
     private function download(string $url): string

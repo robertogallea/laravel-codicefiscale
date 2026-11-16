@@ -1,11 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Http;
+use Robertogallea\CodiceFiscale\CodiceFiscale;
 use Robertogallea\CodiceFiscale\Contracts\BirthPlaceRepository;
 use Robertogallea\CodiceFiscale\Data\BirthPlaceCode;
 use Robertogallea\CodiceFiscale\Data\ForeignBirthPlace;
+use Robertogallea\CodiceFiscale\Data\RetiredBirthPlaces;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\ForeignCountry;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Models\Municipality;
+use Robertogallea\CodiceFiscale\Parsing\Parser;
 use Robertogallea\CodiceFiscale\Validation\Validator;
 
 function fakeUpdatePlacesHttp(): void
@@ -108,14 +111,35 @@ test('a retired foreign code no source carries resolves after the import, with i
         ->and($eras[0]->country()->value())->toBe('GEO');
 });
 
-test('a codice fiscale carrying a retired foreign code is not reported as an unknown birthplace', function () {
+test('every retired foreign code resolves after the import, as the list describes it', function () {
     fakeUpdatePlacesHttp();
 
     $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
 
-    $result = (new Validator(app(BirthPlaceRepository::class)))->validate('RSSMRA70A01Z136P');
+    $repository = app(BirthPlaceRepository::class);
 
-    expect($result->errors())->toBe([]);
+    foreach (RetiredBirthPlaces::foreign() as $retired) {
+        $eras = $repository->eras($retired->code());
+
+        expect($eras)->toHaveCount(1, "{$retired->code()->value()} resolves")
+            ->and($eras[0]->name())->toBe($retired->name())
+            ->and($eras[0]->country()->value())->toBe($retired->country()->value());
+    }
+});
+
+test('a codice fiscale carrying a retired foreign code validates and parses to that birthplace', function () {
+    fakeUpdatePlacesHttp();
+
+    $this->artisan('codice-fiscale:update-places')->assertExitCode(0);
+
+    $repository = app(BirthPlaceRepository::class);
+    $result = (new Validator($repository))->validate('RSSMRA70A01Z136P');
+    $birthPlace = (new Parser($repository))->parse(CodiceFiscale::from('RSSMRA70A01Z136P'))->birthPlace();
+
+    expect($result->errors())->toBe([])
+        ->and($birthPlace)->toBeInstanceOf(ForeignBirthPlace::class)
+        ->and($birthPlace->name())->toBe('GEORGIA')
+        ->and($birthPlace->country()->value())->toBe('GEO');
 });
 
 test('a retired foreign code is found by name search', function () {

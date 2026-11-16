@@ -11,7 +11,9 @@ An entry belongs in the list only when **both** hold:
 1. it is a retired birthplace code, and
 2. no source `update-places` downloads carries it.
 
-When a downloaded source also carries a code, the source wins and the bundled entry is skipped for that code; such an entry no longer meets rule 2 and is removed from the list in a later release. Each entry records a source note: the 2.3.1 list alone is not enough (it contains plain errors, e.g. `B411`/`B412` shifted by one row), so each code→name pairing is confirmed independently, by the Agenzia delle Entrate archive search or an ISTAT report.
+When a downloaded source also carries a code, the source wins: the list is written before the sources, on the same `(code, valid_from)` key, so the source's row overwrites the bundled one. Such an entry no longer meets rule 2 and is removed from the list in a later release.
+
+Each entry records a source note. The 2.3.1 list alone is not enough (it contains plain errors, e.g. `B411`/`B412` shifted by one row), so each code→name pairing is confirmed independently where a source is reachable — the Agenzia delle Entrate archive search or an ISTAT report. An entry no such source confirms is marked `unconfirmed` and listed for maintainer review in the pull request that adds it; it ships, because v2 parity needs the code to resolve, but its name is known to rest on 2.3.1 alone.
 
 ## Considered options
 
