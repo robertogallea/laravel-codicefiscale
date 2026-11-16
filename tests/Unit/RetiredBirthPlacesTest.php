@@ -87,9 +87,14 @@ test('a retired domestic code takes the province a source records, else today\'s
     expect(retiredDomestic('B930')->province())->toBe('GO')
         ->and(retiredDomestic('G380')->province())->toBe('PL')
         ->and(retiredDomestic('M306')->province())->toBe('BZ')
+        // ...including a second code of a comune that still exists.
+        ->and(retiredDomestic('M219')->province())->toBe('SS')
+        ->and(retiredDomestic('M222')->province())->toBe('CN')
         // 2. The province the place lies in today.
         ->and(retiredDomestic('M215')->province())->toBe('TN')
         ->and(retiredDomestic('M224')->province())->toBe('CR')
+        ->and(retiredDomestic('D687')->province())->toBe('PV')
+        ->and(retiredDomestic('F554')->province())->toBe('PU')
         ->and(retiredDomestic('I366')->province())->toBe('IM')
         // 3. Now outside Italy: the Italian province that administered it.
         ->and(retiredDomestic('M293')->province())->toBe('FU')
@@ -123,18 +128,20 @@ test('every retired domestic entry records a source note for its name and for it
     }
 });
 
-test('only the two names Allegato A lacks are unconfirmed, and D178 records 2.3.1\'s wrong name', function () {
+test('every name is confirmed - by Allegato A or, for the two it lacks, the maintainer - and D178 records 2.3.1\'s wrong name', function () {
     $unconfirmedNames = array_keys(array_filter(
         retiredDomesticEntries(),
         static fn (array $entry): bool => str_starts_with($entry[2], 'unconfirmed'),
     ));
 
-    expect($unconfirmedNames)->toEqualCanonicalizing(['M306', 'M310'])
+    expect($unconfirmedNames)->toBe([])
+        ->and(retiredDomesticEntries()['M306'][2])->toStartWith('maintainer')
+        ->and(retiredDomesticEntries()['M310'][2])->toStartWith('maintainer')
         ->and(retiredDomesticEntries()['D178'][2])->toContain('CROGNALETO');
 });
 
 test('a province resting on a guessed location is marked unconfirmed', function () {
-    expect(retiredDomesticEntries()['D687'][3])->toStartWith('unconfirmed')
-        ->and(retiredDomesticEntries()['H993'][3])->toStartWith('unconfirmed')
+    expect(retiredDomesticEntries()['H993'][3])->toStartWith('unconfirmed')
+        ->and(retiredDomesticEntries()['D687'][3])->toStartWith('maintainer')
         ->and(retiredDomesticEntries()['B930'][3])->toStartWith('ANPR');
 });

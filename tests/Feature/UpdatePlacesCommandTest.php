@@ -475,7 +475,7 @@ test('a codice fiscale carrying a retired domestic code validates and parses to 
     expect((new Validator($repository))->validate('RSSMRA80A01M219N')->errors())->toBe([])
         ->and($birthPlace)->toBeInstanceOf(DomesticBirthPlace::class)
         ->and($birthPlace->name())->toBe('BONO')
-        ->and($birthPlace->province())->toBe('TN');
+        ->and($birthPlace->province())->toBe('SS');
 });
 
 test('a code both ANPR and ISTAT\'s suppressed-comuni report carry keeps exactly ANPR\'s eras', function () {
@@ -503,7 +503,7 @@ test('once ANPR carries a retired domestic code, the bundled row is gone after t
     $bundled = municipalityEras('M219');
     $this->artisan('codice-fiscale:update-places', ['--municipalities-only' => true])->assertExitCode(0);
 
-    expect($bundled)->toBe(['1861-03-17||BONO|TN|'])
+    expect($bundled)->toBe(['1861-03-17||BONO|SS|'])
         ->and(municipalityEras('M219'))->toBe(['1992-04-04||ROMA|RM|058091']);
 });
 
