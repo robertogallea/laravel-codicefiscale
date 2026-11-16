@@ -3,9 +3,8 @@
 namespace Robertogallea\CodiceFiscale\Laravel\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\DownloadRetryPolicy;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\ForeignCountryXlsxImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\IstatForeignCountryJsonImporter;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\IstatPagedReport;
@@ -21,11 +20,6 @@ class UpdatePlacesCommand extends Command
         {--countries-only : Only update the foreign countries dataset}';
 
     protected $description = 'Download and upsert the ANPR comuni archive, ISTAT\'s suppressed-comuni report, the MAECI stati-esteri table and ISTAT\'s historical foreign-countries report';
-
-    /** Attempts per download, after a dropped connection or a server error. */
-    private const DOWNLOAD_ATTEMPTS = 3;
-
-    private const RETRY_DELAY_MILLISECONDS = 2000;
 
     public function __construct(
         private readonly MunicipalityCsvImporter $municipalityImporter = new MunicipalityCsvImporter(),
@@ -105,10 +99,9 @@ class UpdatePlacesCommand extends Command
     private function download(string $url): string
     {
         return Http::retry(
-            self::DOWNLOAD_ATTEMPTS,
-            self::RETRY_DELAY_MILLISECONDS,
-            static fn (\Throwable $exception): bool => $exception instanceof ConnectionException
-                || ($exception instanceof RequestException && $exception->response->serverError()),
+            DownloadRetryPolicy::ATTEMPTS,
+            DownloadRetryPolicy::DELAY_MILLISECONDS,
+            DownloadRetryPolicy::isTransient(...),
         )->get($url)->throw()->body();
     }
 

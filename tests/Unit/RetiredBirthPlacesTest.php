@@ -103,3 +103,38 @@ test('no code is on both the retired domestic and the retired foreign list', fun
 
     expect(array_intersect($domestic, $foreign))->toBe([]);
 });
+
+/**
+ * The source notes ADR-0012 requires every entry to record - data in
+ * the list itself, not part of the public API.
+ *
+ * @return array<string, array{string, string, string, string}> code => [name, province, name note, province note]
+ */
+function retiredDomesticEntries(): array
+{
+    return (new ReflectionClassConstant(RetiredBirthPlaces::class, 'DOMESTIC'))->getValue();
+}
+
+test('every retired domestic entry records a source note for its name and for its province', function () {
+    foreach (retiredDomesticEntries() as $code => $entry) {
+        expect($entry)->toHaveCount(4, "$code has a name and a province note")
+            ->and(trim($entry[2]))->not->toBe('', "$code has a name note")
+            ->and(trim($entry[3]))->not->toBe('', "$code has a province note");
+    }
+});
+
+test('only the two names Allegato A lacks are unconfirmed, and D178 records 2.3.1\'s wrong name', function () {
+    $unconfirmedNames = array_keys(array_filter(
+        retiredDomesticEntries(),
+        static fn (array $entry): bool => str_starts_with($entry[2], 'unconfirmed'),
+    ));
+
+    expect($unconfirmedNames)->toEqualCanonicalizing(['M306', 'M310'])
+        ->and(retiredDomesticEntries()['D178'][2])->toContain('CROGNALETO');
+});
+
+test('a province resting on a guessed location is marked unconfirmed', function () {
+    expect(retiredDomesticEntries()['D687'][3])->toStartWith('unconfirmed')
+        ->and(retiredDomesticEntries()['H993'][3])->toStartWith('unconfirmed')
+        ->and(retiredDomesticEntries()['B930'][3])->toStartWith('ANPR');
+});

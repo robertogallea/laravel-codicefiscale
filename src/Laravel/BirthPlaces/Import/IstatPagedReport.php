@@ -2,8 +2,6 @@
 
 namespace Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import;
 
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -15,16 +13,12 @@ use Illuminate\Support\Facades\Http;
  * The public endpoint can't deliver a large report: on 2026-11-16 it
  * cut report 128 (about 850 KB) short in five downloads out of six.
  * Pages of a few hundred rows arrive whole. Each page is retried on
- * its own, a body cut short counts as a failure, and the fetch fails
- * unless it collects exactly the number of rows the report declares
- * (ADR-0015).
+ * its own (DownloadRetryPolicy), a body cut short counts as a
+ * transient failure, and the fetch fails unless it collects exactly
+ * the number of rows the report declares (ADR-0015).
  */
 final class IstatPagedReport
 {
-    private const ATTEMPTS = 3;
-
-    private const RETRY_DELAY_MILLISECONDS = 2000;
-
     /** Guards against a changed API sending the fetch round in circles. */
     private const MAX_PAGES = 200;
 
@@ -64,7 +58,7 @@ final class IstatPagedReport
         $url = $baseUrl.'?'.http_build_query(['PageNum' => $pageNum, 'PageSize' => $this->pageSize]);
 
         return retry(
-            self::ATTEMPTS,
+            DownloadRetryPolicy::ATTEMPTS,
             function () use ($url): array {
                 // The endpoint answers 400 to an empty JSON array and 411 to no body.
                 $decoded = Http::withBody('{}', 'application/json')->post($url)->throw()->json();
@@ -75,10 +69,8 @@ final class IstatPagedReport
 
                 return ['totalRows' => $decoded['totalRows'], 'body' => $decoded['body']];
             },
-            self::RETRY_DELAY_MILLISECONDS,
-            static fn (\Throwable $exception): bool => $exception instanceof ConnectionException
-                || $exception instanceof IncompleteReportPage
-                || ($exception instanceof RequestException && $exception->response->serverError()),
+            DownloadRetryPolicy::DELAY_MILLISECONDS,
+            DownloadRetryPolicy::isTransient(...),
         );
     }
 }

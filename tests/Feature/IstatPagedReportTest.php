@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
 use Robertogallea\CodiceFiscale\Laravel\BirthPlaces\Import\IstatPagedReport;
@@ -83,3 +84,24 @@ test('a report declaring more rows than the page cap allows is refused', functio
 
     (new IstatPagedReport(pageSize: 2))->fetch(PAGED_REPORT_URL);
 })->throws(RuntimeException::class, 'pages');
+
+test('a page refused with a client error fails at once, without retries', function () {
+    Http::fake([
+        'situas.istat.it/*' => Http::response('Bad Request', 400),
+    ]);
+
+    expect(fn () => (new IstatPagedReport(pageSize: 2))->fetch(PAGED_REPORT_URL))->toThrow(RequestException::class);
+    Http::assertSentCount(1);
+});
+
+test('a page answered with a server error is retried', function () {
+    $rows = pagedReportRows();
+    Http::fake([
+        'situas.istat.it/*' => Http::sequence()
+            ->push('Service Unavailable', 503)
+            ->push(pagedReportPage($rows, 3)),
+    ]);
+
+    expect(json_decode((new IstatPagedReport(pageSize: 3))->fetch(PAGED_REPORT_URL), true)['resultset'])->toBe($rows);
+    Http::assertSentCount(2);
+});

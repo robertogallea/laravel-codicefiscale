@@ -91,99 +91,97 @@ final class RetiredBirthPlaces
     ];
 
     /**
-     * code => [name, province], grouped by the ADR-0012 province rule
-     * applied (#124). Names are 2.3.1's, confirmed against the
-     * Geoform/Groma "Allegato A - Elenco Codici Catastali dei singoli
-     * Comuni" (2013), which truncates long names and drops apostrophes;
-     * entries it lacks, or names it contradicts, are noted inline.
-     * Provinces come from the source named in each group's heading;
-     * an inline "unconfirmed" means the place's location itself rests
-     * on research that no source settles, for maintainer review.
+     * code => [name, province, name note, province note] (#124),
+     * grouped by the ADR-0012 province rule applied.
      *
-     * @var array<string, array{string, string}>
+     * Names are 2.3.1's, checked against the Geoform/Groma "Allegato A -
+     * Elenco Codici Catastali dei singoli Comuni" (2013). That list cuts
+     * long names short and drops apostrophes, so a name it confirms keeps
+     * 2.3.1's full spelling. Each province note names its source: ANPR,
+     * a law, or OpenStreetMap (OSM) locating the place. A note starting
+     * with "unconfirmed" rests on an identification no source settles,
+     * and is listed for maintainer review.
+     *
+     * @var array<string, array{string, string, string, string}>
      */
     private const DOMESTIC = [
         // 1. A source records the place itself, under another code:
         //    the province of ANPR's last era for it.
-        'B930' => ["CA' SANTO SPIRITO DELLA BAINSIZZA", 'GO'], // ANPR I355
-        'G380' => ['PAUGNANO', 'PL'],                         // ANPR F485
-        'H237' => ['RUPINGRANDE', 'TS'],                      // ANPR F378
-        'M306' => ['COLLE ISARCO', 'BZ'],                     // ANPR B145; name unconfirmed (not in Allegato A)
-        'F554' => ['MONTEMAGGIORE', 'PA'],                    // Montemaggiore Belsito (ANPR F553) until 1863; unconfirmed
+        'B930' => ["CA' SANTO SPIRITO DELLA BAINSIZZA", 'GO', 'Allegato A', 'ANPR I355 Santo Spirito della Bainsizza'],
+        'G380' => ['PAUGNANO', 'PL', 'Allegato A', 'ANPR F485 Paugnano'],
+        'H237' => ['RUPINGRANDE', 'TS', 'Allegato A', 'ANPR F378 Rupingrande'],
+        'M306' => ['COLLE ISARCO', 'BZ', 'unconfirmed: not in Allegato A (2013); 2.3.1 only', 'ANPR B145 Colle Isarco'],
+        'F554' => ['MONTEMAGGIORE', 'PA', 'Allegato A', 'unconfirmed: taken to be Montemaggiore Belsito (ANPR F553) before its 1863 rename'],
 
-        // 2. The province the place lies in today. The 1862 law that
-        //    suppressed Arcagnano, Zunico (into Carpiano, MI) and San
-        //    Savino (into Due Miglia, now Cremona) locates those three;
-        //    OpenStreetMap locates the rest.
-        'A362' => ['ARCAGNANO', 'MI'],
-        'M205' => ['ZUNICO', 'MI'],
-        'I149' => ['SAN SAVINO', 'CR'],
-        'C026' => ['CASCINE', 'CR'],                          // Cascine Gandini, Palazzo Pignano; unconfirmed
-        'D904' => ['GANDINI', 'CR'],                          // Cascine Gandini, Palazzo Pignano; unconfirmed
-        'D979' => ['GERE DEL PESCE', 'CR'],                   // Gerre del Pesce, Stagno Lombardo
-        'I966' => ['STRACONDOLO', 'CR'],                      // Straconcolo, Stagno Lombardo
-        'M224' => ['CASANOVA DEL MORBASCO', 'CR'],
-        'M252' => ['CREDERA CON ROVERETO', 'CR'],             // Credera Rubbiano
-        'C042' => ['CASTAGNATE OLONA', 'VA'],                 // Castegnate, Castellanza; unconfirmed
-        'E383' => ['JERAGO', 'VA'],
-        'E384' => ['JERAGO CON BESNATE', 'VA'],
-        'F684' => ['MONTONATE', 'VA'],
-        'G501' => ['PESSANO', 'MI'],
-        'D129' => ['CRANA', 'VB'],
-        'D178' => ['CRODO MOZZIO', 'VB'],                     // 2.3.1 says CROGNALETO; Allegato A and the maintainer: CRODO MOZZIO
-        'H051' => ['PRESTINONE', 'VB'],
-        'I366' => ['SANTO STEFANO AL MARE CON CASTELLARO', 'IM'],
-        'L600' => ['VALLECROSIA CON SAN BIAGIO DELLA CIMA', 'IM'],
-        'E005' => ['GHILARZA-ABBASANTA', 'OR'],
-        'E097' => ['GORIANO VALLI', 'AQ'],
-        'I055' => ["SAN NICANDRO D'AQUILA", 'AQ'],
-        'D687' => ['FOPPA', 'MB'],                            // unconfirmed: location not established (Desio is OSM's first match)
-        'H993' => ['SAN MARTINO IN VALLE', 'FI'],             // unconfirmed: location not established (Greve in Chianti is OSM's only match)
-        'M215' => ['BALBIDO', 'TN'],
-        'M216' => ['BALLINO', 'TN'],
-        'M217' => ['BARCESINO', 'TN'],
-        'M218' => ['BONDONE STORO', 'TN'],
-        'M219' => ['BONO', 'TN'],                             // unconfirmed: placed by its neighbours in the block
-        'M220' => ['BRANCOLINO', 'TN'],
-        'M221' => ['BRUSINO', 'TN'],
-        'M222' => ['CANALE', 'TN'],                           // unconfirmed: placed by its neighbours in the block
-        'M223' => ['CARES', 'TN'],
-        'M225' => ['CASTELPIETRA', 'TN'],                     // unconfirmed: placed by its neighbours in the block
-        'M226' => ['CAVRASTO', 'TN'],
-        'M227' => ['COMIGHELLO', 'TN'],
-        'M228' => ['DASINDO', 'TN'],
-        'M229' => ['DUVREDO', 'TN'],
-        'M230' => ['FAVRIO', 'TN'],
-        'M231' => ['GODENZO', 'TN'],
-        'M232' => ["LAGUNA MUSTE'", 'TN'],
-        'M233' => ['LARIDO', 'TN'],
-        'M234' => ['LASES', 'TN'],
-        'M235' => ['LONA', 'TN'],
-        'M236' => ['MADICE', 'TN'],
-        'M237' => ['MALA', 'TN'],
-        'M238' => ['MENAS', 'TN'],
-        'M239' => ['MONTEVACCINO', 'TN'],
-        'M240' => ["ORTISE'", 'TN'],
-        'M241' => ['POIA', 'TN'],
-        'M242' => ['RANGO', 'TN'],
-        'M243' => ['RONCHI DI ALA', 'TN'],
-        'M244' => ['SACCO', 'TN'],
-        'M245' => ['SAVIGNANO', 'TN'],
-        'M246' => ['STRAVINO', 'TN'],
-        'M247' => ['TIGNERONE', 'TN'],
-        'M248' => ['VARANO', 'TN'],
-        'M249' => ['VIGO CAVEDINE', 'TN'],
-        'M250' => ['VIGO LOMASO', 'TN'],
-        'M251' => ['VILLAMONTAGNA', 'TN'],
+        // 2. The province the place lies in today.
+        'A362' => ['ARCAGNANO', 'MI', 'Allegato A', 'Legge 1862 n. 1009: merged into Carpiano (MI)'],
+        'M205' => ['ZUNICO', 'MI', 'Allegato A', 'Legge 1862 n. 1009: merged into Carpiano (MI)'],
+        'I149' => ['SAN SAVINO', 'CR', 'Allegato A', 'Legge 1862 n. 1009: merged into Due Miglia, now part of Cremona'],
+        'C026' => ['CASCINE', 'CR', 'Allegato A', 'unconfirmed: taken to be the Cascine of Cascine Gandini, Palazzo Pignano (OSM)'],
+        'D904' => ['GANDINI', 'CR', 'Allegato A', 'unconfirmed: taken to be the Gandini of Cascine Gandini, Palazzo Pignano (OSM)'],
+        'D979' => ['GERE DEL PESCE', 'CR', 'Allegato A', 'unconfirmed: taken to be Gerre del Pesce, Stagno Lombardo (OSM)'],
+        'I966' => ['STRACONDOLO', 'CR', 'Allegato A', 'unconfirmed: taken to be Straconcolo, Stagno Lombardo (OSM)'],
+        'M224' => ['CASANOVA DEL MORBASCO', 'CR', 'Allegato A', 'OSM: Casanova del Morbasco, Sesto ed Uniti'],
+        'M252' => ['CREDERA CON ROVERETO', 'CR', 'Allegato A', 'unconfirmed: taken to be Credera and its Rovereto frazione, now Credera Rubbiano'],
+        'C042' => ['CASTAGNATE OLONA', 'VA', 'Allegato A', 'unconfirmed: taken to be Castegnate, Castellanza (ISTAT C054 Castegnate Olona)'],
+        'E383' => ['JERAGO', 'VA', 'Allegato A', 'OSM: Jerago, Jerago con Orago'],
+        'E384' => ['JERAGO CON BESNATE', 'VA', 'Allegato A', 'OSM: Jerago, Jerago con Orago, and Besnate, both VA'],
+        'F684' => ['MONTONATE', 'VA', 'Allegato A', 'OSM: Montonate, Mornago'],
+        'G501' => ['PESSANO', 'MI', 'Allegato A', 'OSM: Pessano, Pessano con Bornago'],
+        'D129' => ['CRANA', 'VB', 'Allegato A', 'unconfirmed: taken to be the Crana of Crana Gattugno (ANPR D130), now Santa Maria Maggiore'],
+        'D178' => ['CRODO MOZZIO', 'VB', 'Allegato A and the maintainer; 2.3.1 says CROGNALETO', 'ANPR D177 Crodo and F790 Mozzio; Crodo lies in VB'],
+        'H051' => ['PRESTINONE', 'VB', 'Allegato A', 'OSM: Prestinone, Craveggia'],
+        'I366' => ['SANTO STEFANO AL MARE CON CASTELLARO', 'IM', 'Allegato A', 'ANPR I365 Santo Stefano al Mare, which has no era from 1928 to 1954'],
+        'L600' => ['VALLECROSIA CON SAN BIAGIO DELLA CIMA', 'IM', 'Allegato A', 'ANPR L599 Vallecrosia'],
+        'E005' => ['GHILARZA-ABBASANTA', 'OR', 'Allegato A', 'ANPR E004 Ghilarza and A007 Abbasanta'],
+        'E097' => ['GORIANO VALLI', 'AQ', 'Allegato A', 'OSM: Goriano Valli, Tione degli Abruzzi'],
+        'I055' => ["SAN NICANDRO D'AQUILA", 'AQ', 'Allegato A', "unconfirmed: taken to be San Nicandro, Prata d'Ansidonia"],
+        'D687' => ['FOPPA', 'MB', 'Allegato A', "unconfirmed: location not established; Desio is OSM's first match"],
+        'H993' => ['SAN MARTINO IN VALLE', 'FI', 'Allegato A', "unconfirmed: location not established; Greve in Chianti is OSM's only match"],
+        'M215' => ['BALBIDO', 'TN', 'Allegato A', 'OSM: Balbido, Bleggio Superiore'],
+        'M216' => ['BALLINO', 'TN', 'Allegato A', 'OSM: Ballino, Fiavè'],
+        'M217' => ['BARCESINO', 'TN', 'Allegato A', 'OSM: Barcesino, Ledro'],
+        'M218' => ['BONDONE STORO', 'TN', 'Allegato A', 'OSM: Storo; Bondone, its neighbour, is TN too'],
+        'M219' => ['BONO', 'TN', 'Allegato A', 'unconfirmed: placed by its neighbours in the block'],
+        'M220' => ['BRANCOLINO', 'TN', 'Allegato A', 'OSM: Brancolino, Nogaredo'],
+        'M221' => ['BRUSINO', 'TN', 'Allegato A', 'OSM: Brusino, Cavedine'],
+        'M222' => ['CANALE', 'TN', 'Allegato A', 'unconfirmed: placed by its neighbours in the block'],
+        'M223' => ['CARES', 'TN', 'Allegato A', 'OSM: Cares, Comano Terme'],
+        'M225' => ['CASTELPIETRA', 'TN', 'Allegato A', 'unconfirmed: placed by its neighbours in the block'],
+        'M226' => ['CAVRASTO', 'TN', 'Allegato A', 'OSM: Cavrasto, Bleggio Superiore'],
+        'M227' => ['COMIGHELLO', 'TN', 'Allegato A', 'OSM: Comighello, Comano Terme'],
+        'M228' => ['DASINDO', 'TN', 'Allegato A', 'OSM: Dasindo, Comano Terme'],
+        'M229' => ['DUVREDO', 'TN', 'Allegato A', 'OSM: Duvredo, Comano Terme'],
+        'M230' => ['FAVRIO', 'TN', 'Allegato A', 'OSM: Favrio, Fiavè'],
+        'M231' => ['GODENZO', 'TN', 'Allegato A', 'OSM: Godenzo, Comano Terme'],
+        'M232' => ["LAGUNA MUSTE'", 'TN', 'Allegato A', 'OSM: Laguna-Mustè, Dro'],
+        'M233' => ['LARIDO', 'TN', 'Allegato A', 'OSM: Larido, Bleggio Superiore'],
+        'M234' => ['LASES', 'TN', 'Allegato A', 'OSM: Lases, Lona-Lases'],
+        'M235' => ['LONA', 'TN', 'Allegato A', 'OSM: Lona, Lona-Lases'],
+        'M236' => ['MADICE', 'TN', 'Allegato A', 'OSM: Madice, Bleggio Superiore'],
+        'M237' => ['MALA', 'TN', 'Allegato A', "OSM: Mala, Sant'Orsola Terme"],
+        'M238' => ['MENAS', 'TN', 'Allegato A', 'OSM: Menas, Mezzana'],
+        'M239' => ['MONTEVACCINO', 'TN', 'Allegato A', 'OSM: Montevaccino, Trento'],
+        'M240' => ["ORTISE'", 'TN', 'Allegato A', 'OSM: Ortisè, Mezzana'],
+        'M241' => ['POIA', 'TN', 'Allegato A', 'OSM: Poia, Comano Terme'],
+        'M242' => ['RANGO', 'TN', 'Allegato A', 'Tuttitalia: Balbido-Rango, Bleggio Superiore'],
+        'M243' => ['RONCHI DI ALA', 'TN', 'Allegato A', 'OSM: Ronchi, Ala'],
+        'M244' => ['SACCO', 'TN', 'Allegato A', 'unconfirmed: taken to be Sacco, Rovereto'],
+        'M245' => ['SAVIGNANO', 'TN', 'Allegato A', 'OSM: Savignano, Pomarolo'],
+        'M246' => ['STRAVINO', 'TN', 'Allegato A', 'OSM: Stravino, Cavedine'],
+        'M247' => ['TIGNERONE', 'TN', 'Allegato A', 'OSM: Tignerone, Comano Terme'],
+        'M248' => ['VARANO', 'TN', 'Allegato A', 'OSM: Varano, Mori'],
+        'M249' => ['VIGO CAVEDINE', 'TN', 'Allegato A', 'OSM: Vigo Cavedine, Cavedine'],
+        'M250' => ['VIGO LOMASO', 'TN', 'Allegato A', 'OSM: Vigo Lomaso, Comano Terme'],
+        'M251' => ['VILLAMONTAGNA', 'TN', 'Allegato A', 'OSM: Villamontagna, Trento'],
 
         // 3. Now outside Italy: the Italian province that administered
-        //    it, with ANPR's historical sigla (Istria: Pola; Veglia:
-        //    Fiume, 1941-1943; Sebenico: Zara, 1941-1943).
-        'A141' => ['ALBARO VESCOVA', 'PL'],                   // Skofije, Koper; unconfirmed
-        'D507' => ['FASANA', 'PL'],
-        'M296' => ["PIEMONTE D'ISTRIA", 'PL'],
-        'M293' => ['VEGLIA', 'FU'],
-        'M310' => ['SEBENICO', 'ZA'],                         // name and province unconfirmed (not in Allegato A; no ANPR comune)
+        //    it, with ANPR's historical sigla.
+        'A141' => ['ALBARO VESCOVA', 'PL', 'Allegato A', 'unconfirmed: taken to be Scoffie/Skofije, Koper (OSM); Capodistria was PL (ANPR B665)'],
+        'D507' => ['FASANA', 'PL', 'Allegato A', 'OSM: Fasana/Fazana, Istria; Istria was the province of Pola (ANPR G778 PL)'],
+        'M296' => ["PIEMONTE D'ISTRIA", 'PL', 'Allegato A', 'Istria was the province of Pola (ANPR G915 Portole, E183 Grisignana: PL)'],
+        'M293' => ['VEGLIA', 'FU', 'Allegato A', 'unconfirmed: Veglia/Krk taken to have joined the province of Fiume in 1941-1943 (ANPR M254 Valsantamarina: FU)'],
+        'M310' => ['SEBENICO', 'ZA', 'unconfirmed: not in Allegato A (2013); 2.3.1 only', 'unconfirmed: province of Zara in 1941-1943, per mirrored Wikipedia pages; no ANPR comune'],
     ];
 
     /**
