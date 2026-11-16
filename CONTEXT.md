@@ -38,4 +38,8 @@ The `BirthPlace` record that best describes an attributable `BirthPlaceCode` for
 _Avoid_: current era, latest era (as the parsed birthplace)
 
 **Foreign birthplace**:
-A `BirthPlace` for a country (`Z`-prefixed `BirthPlaceCode`), sourced from MAECI's stati-esteri table. Has an ISO 3166-1 alpha-3 code and no province; its `[validFrom, validTo)` is currently always maximally wide because the source table carries no genuine historical data — a country whose meaning changed over time (e.g. a code that once denoted one state and now denotes its successor) is not distinguishable by date in 3.0.
+A `BirthPlace` for a country or territory (`Z`-prefixed `BirthPlaceCode`), sourced from MAECI's stati-esteri table, ISTAT's historical foreign-countries report for codes MAECI lacks, or, for a retired birthplace code no downloadable source carries, a fixed list shipped with the package. Has an ISO alpha-3 country code — its own, the former code of a ceased state, or that of the state the territory belongs to today — and no province. No source dates foreign codes, so every foreign `[validFrom, validTo)` is maximally wide and a foreign code is always attributable.
+
+**Retired birthplace code**:
+A `BirthPlaceCode` that no longer denotes any current entity, because the entity ceased (`Z135` USSR, `A073` Agliate) or was recoded (`Z136` → `Z254` Georgia). Codici fiscali issued with it remain valid, so it must still resolve.
+_Avoid_: historical code, dead code, obsolete code
